@@ -54,8 +54,8 @@ void ofApp::update(){
 void ofApp::draw(){
 	ofEnableDepthTest();
 
-	ofEnableLighting();
-	mLight.enable();
+	//ofEnableLighting();
+	//mLight.enable();
 	mMainCamera.begin();
 
 	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
@@ -67,8 +67,8 @@ void ofApp::draw(){
 	ofPopStyle();
 
 	mMainCamera.end();
-	mLight.disable();
-	ofDisableLighting();
+	//mLight.disable();
+	//ofDisableLighting();
 
 	ofDisableDepthTest();
 
