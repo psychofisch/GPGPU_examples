@@ -14,9 +14,11 @@ void ofApp::setup(){
 	//mMainCamera.setDistance(-100);
 	//mMainCamera.setPosition(0, 0, 0);
 	//mMainCamera.setupPerspective(true, 90, 0.0f, 100.f);
+	mMainCamera.setPosition(50, 50, -100);
+	mMainCamera.lookAt(mTestBox);
 
 	mLight.setPointLight();
-	mLight.setPosition(mTestBox.getPosition() - ofVec3f(200, 0, 0));
+	mLight.setPosition(ofVec3f(0, 0, 0));
 
 	ofBoxPrimitive testRect;
 
@@ -27,12 +29,18 @@ void ofApp::setup(){
 
 	//mParticlesVBO.setVertexData(mParticleSystem.getPositionPtr(), 3, 1000, GL_DYNAMIC_DRAW);
 	mParticlesVBO.setVertexData(mParticleSystem.getPositionPtr(), 1000, GL_DYNAMIC_DRAW);
+
+	mHud.setup();
+	mHud.add(mHudFps.setup("FPS", "XXX"));
+	mHud.add(mColor.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	float deltaTime =  ofGetLastFrameTime();
 	//std::cout << deltaTime << std::endl;
+
+	mHudFps = ofToString(1 / deltaTime);
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
 	float spinY = cos(ofGetElapsedTimef()*.075f);
@@ -53,7 +61,7 @@ void ofApp::draw(){
 	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
 	ofPushStyle();
-	ofSetColor(0, 255, 0);
+	ofSetColor(mColor);
 	glPointSize(5.f);
 	mParticlesVBO.draw(GL_POINTS, 0, 1000);
 	ofPopStyle();
@@ -61,6 +69,10 @@ void ofApp::draw(){
 	mMainCamera.end();
 	mLight.disable();
 	ofDisableLighting();
+
+	ofDisableDepthTest();
+
+	mHud.draw();
 }
 
 //--------------------------------------------------------------

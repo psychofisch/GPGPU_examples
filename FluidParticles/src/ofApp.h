@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxGui.h"
+
 #include "ParticleSystem.h"
 
 class ofApp : public ofBaseApp{
@@ -27,9 +29,13 @@ class ofApp : public ofBaseApp{
 	private:
 		float mLastFrame;
 		ofBoxPrimitive mTestBox;
-		ofEasyCam mMainCamera;
-		//ofCamera mMainCamera;
+		//ofEasyCam mMainCamera;
+		ofCamera mMainCamera;
 		ofLight mLight;
 		ofVbo mParticlesVBO;
 		ParticleSystem mParticleSystem;
+
+		ofxPanel mHud;
+		ofxLabel mHudFps;
+		ofxColorSlider mColor;
 };
