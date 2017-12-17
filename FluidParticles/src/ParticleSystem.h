@@ -13,10 +13,13 @@ public:
 	~ParticleSystem();
 
 	void setDimensions(ofVec3f dimensions);
-	void setNumberOfParticles(unsigned int nop);
+	void setNumberOfParticles(uint nop);
+	void setRotation(ofVec3f rotation);
 	void init3DGrid(uint rows, uint colums, uint aisles, float gap);
 	void initRandom();
 	ofVec3f* getPositionPtr();
+	ofVec3f getDimensions();
+	uint getNumberOfParticles();
 	void update(float dt);
 
 private:
@@ -24,7 +27,8 @@ private:
 	ofVec3f	*mPositions,
 		*mVelocity,
 		*mPressure,
-		mDimension;
+		mDimension,
+		mGravity;
 
 	ofVec3f i_calculatePressureVector(size_t index);
 };

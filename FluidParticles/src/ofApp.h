@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxGui.h"
+#include <3d\ofMesh.h>
 
 #include "ParticleSystem.h"
 
@@ -32,8 +33,13 @@ class ofApp : public ofBaseApp{
 		//ofEasyCam mMainCamera;
 		ofCamera mMainCamera;
 		ofLight mLight;
+		//ofMesh mParticleMesh;
 		ofVbo mParticlesVBO;
 		ParticleSystem mParticleSystem;
+		int mRotationAxis;
+		ofVec3f mGlobalRotation;
+		ofVec2f mMouse;
+		float mMouseSens;
 
 		ofxPanel mHud;
 		ofxLabel mHudFps;

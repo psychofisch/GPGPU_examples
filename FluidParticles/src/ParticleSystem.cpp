@@ -3,6 +3,7 @@
 
 
 ParticleSystem::ParticleSystem()
+	:mGravity(0.f, -9.81f, 0.f)
 {
 }
 
@@ -19,7 +20,7 @@ void ParticleSystem::setDimensions(ofVec3f dimensions)
 	mDimension = dimensions;
 }
 
-void ParticleSystem::setNumberOfParticles(unsigned int nop)
+void ParticleSystem::setNumberOfParticles(uint nop)
 {
 	mNumberOfParticles = nop;
 	mPositions = new ofVec3f[mNumberOfParticles];
@@ -27,7 +28,13 @@ void ParticleSystem::setNumberOfParticles(unsigned int nop)
 	mPressure = new ofVec3f[mNumberOfParticles];
 }
 
-void ParticleSystem::init3DGrid(uint rows, uint colums, uint aisles, float gap)
+void ParticleSystem::setRotation(ofVec3f rotation)
+{
+	mGravity = ofVec3f(0.f, -9.81f, 0.f);
+	mGravity.rotate(rotation.x, rotation.y, rotation.z);
+}
+
+void ParticleSystem::init3DGrid(uint rows, uint colums, uint aisles, float gap)//TODO: dimension
 {
 	uint position = 0;
 	float x, y, z;
@@ -72,6 +79,16 @@ ofVec3f * ParticleSystem::getPositionPtr()
 	return mPositions;
 }
 
+ofVec3f ParticleSystem::getDimensions()
+{
+	return mDimension;
+}
+
+uint ParticleSystem::getNumberOfParticles()
+{
+	return mNumberOfParticles;
+}
+
 void ParticleSystem::update(float dt)
 {
 	/*for (uint i = 0; i < mNumberOfParticles; i++)
@@ -85,7 +102,7 @@ void ParticleSystem::update(float dt)
 	//optimization
 	maxSpeed = 1.f / maxSpeed;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; i < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
 		ofVec3f particlePosition = mPositions[i];
@@ -100,7 +117,9 @@ void ParticleSystem::update(float dt)
 
 		//static collision
 		if ((particlePosition.x > mDimension.x && particleVelocity.x > 0.f) || (particlePosition.x < 0.f && particleVelocity.x < 0.f))
+		{
 			particleVelocity.x *= -(.1f + 0.2f * r);
+		}
 
 		if ((particlePosition.z > mDimension.z && particleVelocity.z > 0.f) || (particlePosition.z < 0.f && particleVelocity.z < 0.f))
 			particleVelocity.z *= -(.1f + 0.2f * r);
@@ -110,8 +129,12 @@ void ParticleSystem::update(float dt)
 		//*** sc
 
 		//gravity
-		if (particlePosition.y > 0)
-			particleVelocity.y -= 9.81f * dt;
+		/*if (particlePosition.y > 0)
+			particleVelocity.y -= 9.81f * dt;*/
+		if    (((particlePosition.x < mDimension.x) && (particlePosition.x > 0.f))
+			&& ((particlePosition.z < mDimension.z) && (particlePosition.z > 0.f))
+			&& ((particlePosition.y < mDimension.y) && (particlePosition.y > 0.f)))
+			particleVelocity += mGravity * dt;
 
 		if (ofRectangle(0, 0, mDimension.x, mDimension.y).inside(particlePosition.x, particlePosition.y)
 			&& ofRectangle(0, 0, mDimension.x, mDimension.z).inside(particlePosition.x, particlePosition.z)
