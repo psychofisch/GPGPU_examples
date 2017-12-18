@@ -3,6 +3,7 @@
 #include "ofVec3f.h"
 #include "ofRectangle.h"
 #include "ofMath.h"
+#include "ofQuaternion.h"
 
 typedef unsigned int uint;
 
@@ -14,7 +15,7 @@ public:
 
 	void setDimensions(ofVec3f dimensions);
 	void setNumberOfParticles(uint nop);
-	void setRotation(ofVec3f rotation);
+	void setRotation(ofQuaternion rotation);
 	void init3DGrid(uint rows, uint colums, uint aisles, float gap);
 	void initRandom();
 	ofVec3f* getPositionPtr();

@@ -28,10 +28,10 @@ void ParticleSystem::setNumberOfParticles(uint nop)
 	mPressure = new ofVec3f[mNumberOfParticles];
 }
 
-void ParticleSystem::setRotation(ofVec3f rotation)
+void ParticleSystem::setRotation(ofQuaternion rotation)
 {
 	mGravity = ofVec3f(0.f, -9.81f, 0.f);
-	mGravity.rotate(rotation.x, rotation.y, rotation.z);
+	mGravity.rotate(rotation.getEuler().x, rotation.getEuler().y, rotation.getEuler().z);
 }
 
 void ParticleSystem::init3DGrid(uint rows, uint colums, uint aisles, float gap)//TODO: dimension
@@ -131,15 +131,15 @@ void ParticleSystem::update(float dt)
 		//gravity
 		/*if (particlePosition.y > 0)
 			particleVelocity.y -= 9.81f * dt;*/
-		if    (((particlePosition.x < mDimension.x) && (particlePosition.x > 0.f))
-			&& ((particlePosition.z < mDimension.z) && (particlePosition.z > 0.f))
-			&& ((particlePosition.y < mDimension.y) && (particlePosition.y > 0.f)))
-			particleVelocity += mGravity * dt;
+		/*if    (((particlePosition.x < mDimension.x) && (particlePosition.x > 0.f))
+			&& ((particlePosition.y < mDimension.y) && (particlePosition.y > 0.f))
+			&& ((particlePosition.z < mDimension.z) && (particlePosition.z > 0.f)))
+			particleVelocity += mGravity * dt;*/
 
 		if (ofRectangle(0, 0, mDimension.x, mDimension.y).inside(particlePosition.x, particlePosition.y)
 			&& ofRectangle(0, 0, mDimension.x, mDimension.z).inside(particlePosition.x, particlePosition.z)
 			&& ofRectangle(0, 0, mDimension.y, mDimension.z).inside(particlePosition.y, particlePosition.z))
-			particleVelocity += particlePressure * dt;
+			particleVelocity += (mGravity + particlePressure) * dt;
 		//***g
 
 		particleVelocity -= dt * particleVelocity * 0.25f;//damping

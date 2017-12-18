@@ -32,7 +32,6 @@ void ofApp::setup(){
 	//mParticleMesh.addVertices(mParticleSystem.getPositionPtr(), mParticleSystem.getNumberOfParticles());
 
 	mRotationAxis = 0b000;
-	mGlobalRotation = ofVec3f(0.f);
 
 	mMouse = ofVec2f(-1, -1);
 	mMouseSens = 0.8f;
@@ -70,8 +69,8 @@ void ofApp::draw(){
 	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
 	ofPushMatrix();
-	ofRotateX(mGlobalRotation.x);
-	ofRotateY(mGlobalRotation.y);
+	ofRotateX(mGlobalRotation.getEuler().x);
+	ofRotateY(mGlobalRotation.getEuler().y);
 	ofTranslate(-mParticleSystem.getDimensions() * 0.5f);
 	ofPushStyle();
 	ofSetColor(mColor);
@@ -132,8 +131,10 @@ void ofApp::mouseDragged(int x, int y, int button){
 
 		if (mRotationAxis & 0b010)
 		{
-			mGlobalRotation.y += mMouseSens * (x - mMouse.x);
-			mGlobalRotation.x += mMouseSens * (y - mMouse.y);
+			mGlobalRotation.makeRotate(mMouseSens * (x - mMouse.x), 1, 0, 0);
+			mGlobalRotation.makeRotate(mMouseSens * (mMouse.y - y), 0, 1, 0);
+			//mGlobalRotation.y += mMouseSens * (x - mMouse.x);
+			//mGlobalRotation.x += mMouseSens * (mMouse.y - y);
 			mParticleSystem.setRotation(mGlobalRotation);
 			//std::cout << "Y ";
 		}

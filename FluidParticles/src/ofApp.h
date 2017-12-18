@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 #include "ofxGui.h"
-#include <3d\ofMesh.h>
 
 #include "ParticleSystem.h"
 
@@ -37,7 +36,7 @@ class ofApp : public ofBaseApp{
 		ofVbo mParticlesVBO;
 		ParticleSystem mParticleSystem;
 		int mRotationAxis;
-		ofVec3f mGlobalRotation;
+		ofQuaternion mGlobalRotation;
 		ofVec2f mMouse;
 		float mMouseSens;
 
