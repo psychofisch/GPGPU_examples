@@ -23,9 +23,10 @@ void ofApp::setup(){
 	ofBoxPrimitive testRect;
 
 	mParticleSystem.setDimensions(ofVec3f(50.f));
-	mParticleSystem.setNumberOfParticles(100);
-	//mParticleSystem.init3DGrid(10, 10, 10, 5.0f);
-	mParticleSystem.initRandom();
+	mParticleSystem.setNumberOfParticles(200);
+	//mParticleSystem.init3DGrid();
+	//mParticleSystem.initRandom();
+	mParticleSystem.initDamBreak();
 
 	//mParticlesVBO.setVertexData(mParticleSystem.getPositionPtr(), 3, 1000, GL_DYNAMIC_DRAW);
 	mParticlesVBO.setVertexData(mParticleSystem.getPositionPtr(), mParticleSystem.getNumberOfParticles(), GL_DYNAMIC_DRAW);
@@ -36,10 +37,10 @@ void ofApp::setup(){
 	mMouse = ofVec2f(-1, -1);
 	mMouseSens = 0.8f;
 
-	mHud.setup();
-	mHud.add(mHudFps.setup("FPS", "XXX"));
-	mHud.add(mColor.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
-	mHud.loadFromFile("settings.xml");
+	//mHud.setup();
+	//mHud.add(mHudFps.setup("FPS", "XXX"));
+	//mHud.add(mColor.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
+	//mHud.loadFromFile("settings.xml");
 }
 
 //--------------------------------------------------------------
@@ -69,7 +70,7 @@ void ofApp::draw(){
 	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
 	ofPushMatrix();
-	ofRotateX(mGlobalRotation.getEuler().x);
+	//ofRotateX(mGlobalRotation.getEuler().x);
 	ofRotateY(mGlobalRotation.getEuler().y);
 	ofTranslate(-mParticleSystem.getDimensions() * 0.5f);
 	ofPushStyle();
@@ -87,7 +88,7 @@ void ofApp::draw(){
 
 	ofDisableDepthTest();
 
-	mHud.draw();
+	//mHud.draw();
 }
 
 //--------------------------------------------------------------
@@ -108,6 +109,9 @@ void ofApp::keyReleased(int key){
 		case 'h':
 			std::cout << "Camera:" << mMainCamera.getPosition() << std::endl;
 			std::cout << "Box: " << mTestBox.getPosition() << std::endl;
+			break;
+		case 'r':
+			mParticleSystem.initDamBreak();
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;
@@ -131,8 +135,8 @@ void ofApp::mouseDragged(int x, int y, int button){
 
 		if (mRotationAxis & 0b010)
 		{
-			mGlobalRotation.makeRotate(mMouseSens * (x - mMouse.x), 1, 0, 0);
-			mGlobalRotation.makeRotate(mMouseSens * (mMouse.y - y), 0, 1, 0);
+			mGlobalRotation.makeRotate(mMouseSens * (x - mMouse.x), 0, 1, 0);
+			mGlobalRotation.makeRotate(mMouseSens * (mMouse.y - y), 1, 0, 0);
 			//mGlobalRotation.y += mMouseSens * (x - mMouse.x);
 			//mGlobalRotation.x += mMouseSens * (mMouse.y - y);
 			mParticleSystem.setRotation(mGlobalRotation);

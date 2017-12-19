@@ -34,11 +34,18 @@ void ParticleSystem::setRotation(ofQuaternion rotation)
 	mGravity.rotate(rotation.getEuler().x, rotation.getEuler().y, rotation.getEuler().z);
 }
 
-void ParticleSystem::init3DGrid(uint rows, uint colums, uint aisles, float gap)//TODO: dimension
+void ParticleSystem::init3DGrid()//TODO: dimension
 {
-	uint position = 0;
-	float x, y, z;
-	x = y = z = 0.f;
+	uint position = 0,
+		rows, colums, aisles;
+	float x, y, z, gap;
+	x = y = z = 0.01f;
+
+	aisles = mDimension.z / powf(mNumberOfParticles, 1.f / 3.f);
+	rows = mDimension.x / powf(mNumberOfParticles, 1.f / 3.f);
+	colums = mDimension.y / powf(mNumberOfParticles, 1.f / 3.f);
+	gap = powf(mNumberOfParticles, 1.f / 3.f) * 0.95f;
+
 	for (uint l = 0; l < aisles; l++)
 	{
 		for (uint c = 0; c < colums; c++)
@@ -52,14 +59,17 @@ void ParticleSystem::init3DGrid(uint rows, uint colums, uint aisles, float gap)/
 				x += gap;
 				position++;
 
-				if (position >= mNumberOfParticles * 3)
+				if (x > mDimension.x || y > mDimension.y || z > mDimension.z)
+					__debugbreak();
+
+				if (position >= mNumberOfParticles)
 					return;
 			}
-			y += gap;
-			x = 0.f;
+			z += gap;
+			x = 0.01f;
 		}
-		z += gap;
-		y = 0.f;
+		y += gap;
+		z = 0.01f;
 	}
 }
 
@@ -72,6 +82,14 @@ void ParticleSystem::initRandom()
 		mPositions[i].y = ofRandom(mDimension.y);
 		mPositions[i].z = ofRandom(mDimension.z);
 	}
+}
+
+void ParticleSystem::initDamBreak()
+{
+	float tmpX = mDimension.x;
+	mDimension.x *= 0.2f;
+	init3DGrid();
+	mDimension.x = tmpX;
 }
 
 ofVec3f * ParticleSystem::getPositionPtr()

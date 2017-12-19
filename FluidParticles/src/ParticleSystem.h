@@ -16,8 +16,9 @@ public:
 	void setDimensions(ofVec3f dimensions);
 	void setNumberOfParticles(uint nop);
 	void setRotation(ofQuaternion rotation);
-	void init3DGrid(uint rows, uint colums, uint aisles, float gap);
+	void init3DGrid();
 	void initRandom();
+	void initDamBreak();
 	ofVec3f* getPositionPtr();
 	ofVec3f getDimensions();
 	uint getNumberOfParticles();
