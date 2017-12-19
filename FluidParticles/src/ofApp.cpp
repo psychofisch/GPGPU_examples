@@ -37,10 +37,11 @@ void ofApp::setup(){
 	mMouse = ofVec2f(-1, -1);
 	mMouseSens = 0.8f;
 
-	//mHud.setup();
-	//mHud.add(mHudFps.setup("FPS", "XXX"));
-	//mHud.add(mColor.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
-	//mHud.loadFromFile("settings.xml");
+	mHud.setup();
+	mHud.add(mHudFps.setup("FPS", "XXX"));
+	mHud.add(mHudRotation.setup("Rotation", "XXX"));
+	mHud.add(mHudColor.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
+	mHud.loadFromFile("settings.xml");
 }
 
 //--------------------------------------------------------------
@@ -70,11 +71,13 @@ void ofApp::draw(){
 	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
 	ofPushMatrix();
-	//ofRotateX(mGlobalRotation.getEuler().x);
-	ofRotateY(mGlobalRotation.getEuler().y);
+	ofVec3f axis;
+	float angle;
+	mGlobalRotation.getRotate(angle, axis);
+	ofRotate(angle, axis.x, axis.y, axis.z);
 	ofTranslate(-mParticleSystem.getDimensions() * 0.5f);
 	ofPushStyle();
-	ofSetColor(mColor);
+	ofSetColor(mHudColor);
 	glPointSize(5.f);
 	mTestBox.drawAxes(20.f);
 	//mParticleMesh.drawVertices();
@@ -88,7 +91,7 @@ void ofApp::draw(){
 
 	ofDisableDepthTest();
 
-	//mHud.draw();
+	mHud.draw();
 }
 
 //--------------------------------------------------------------
@@ -113,6 +116,8 @@ void ofApp::keyReleased(int key){
 		case 'r':
 			mParticleSystem.initDamBreak();
 			break;
+		case 'n':
+			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;
 	}
@@ -135,11 +140,14 @@ void ofApp::mouseDragged(int x, int y, int button){
 
 		if (mRotationAxis & 0b010)
 		{
-			mGlobalRotation.makeRotate(mMouseSens * (x - mMouse.x), 0, 1, 0);
-			mGlobalRotation.makeRotate(mMouseSens * (mMouse.y - y), 1, 0, 0);
-			//mGlobalRotation.y += mMouseSens * (x - mMouse.x);
-			//mGlobalRotation.x += mMouseSens * (mMouse.y - y);
+			const float sens = 1.f;
+			ofQuaternion xRotation(sens * mMouseSens * (y - mMouse.y), ofVec3f(-1, 0, 0));
+			ofQuaternion yRotation(sens * mMouseSens * (x - mMouse.x), ofVec3f(0, 1, 0));
+			mGlobalRotation *= yRotation * xRotation;
+			
 			mParticleSystem.setRotation(mGlobalRotation);
+
+			mHudRotation = ofToString(mGlobalRotation);
 			//std::cout << "Y ";
 		}
 
@@ -159,31 +167,33 @@ void ofApp::mouseDragged(int x, int y, int button){
 void ofApp::mousePressed(int x, int y, int button){
 	switch (button)
 	{
-	case OF_MOUSE_BUTTON_LEFT: //mRotationAxis.y = 1.f;
+	case OF_MOUSE_BUTTON_LEFT:
 		mRotationAxis = mRotationAxis | 0b010;
 		break;
-	case OF_MOUSE_BUTTON_RIGHT: //mRotationAxis.x = 1.f;
+	case OF_MOUSE_BUTTON_RIGHT: 
 		mRotationAxis = mRotationAxis | 0b100;
 		break;
-	case OF_MOUSE_BUTTON_MIDDLE: //mRotationAxis.z = 1.f;
+	case OF_MOUSE_BUTTON_MIDDLE:
 		mRotationAxis = mRotationAxis | 0b001;
 		break;
 	default:
 		break;
 	}
+
+	mMouse.x = -1.f;
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
 	switch (button)
 	{
-	case OF_MOUSE_BUTTON_LEFT: //mRotationAxis.y = 0.f;
+	case OF_MOUSE_BUTTON_LEFT:
 		mRotationAxis = mRotationAxis & 0b101;
 		break;
-	case OF_MOUSE_BUTTON_RIGHT: //mRotationAxis.x = 0.f;
+	case OF_MOUSE_BUTTON_RIGHT:
 		mRotationAxis = mRotationAxis & 0b011;
 		break;
-	case OF_MOUSE_BUTTON_MIDDLE: //mRotationAxis.z = 0.f;
+	case OF_MOUSE_BUTTON_MIDDLE:
 		mRotationAxis = mRotationAxis & 0b110;
 		break;
 	default:

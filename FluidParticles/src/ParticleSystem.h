@@ -31,6 +31,7 @@ private:
 		*mPressure,
 		mDimension,
 		mGravity;
+	ofQuaternion mRotation;
 
 	ofVec3f i_calculatePressureVector(size_t index);
 };

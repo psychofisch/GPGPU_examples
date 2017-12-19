@@ -30,8 +30,7 @@ void ParticleSystem::setNumberOfParticles(uint nop)
 
 void ParticleSystem::setRotation(ofQuaternion rotation)
 {
-	mGravity = ofVec3f(0.f, -9.81f, 0.f);
-	mGravity.rotate(rotation.getEuler().x, rotation.getEuler().y, rotation.getEuler().z);
+	mRotation = rotation;
 }
 
 void ParticleSystem::init3DGrid()//TODO: dimension
@@ -109,6 +108,14 @@ uint ParticleSystem::getNumberOfParticles()
 
 void ParticleSystem::update(float dt)
 {
+	ofVec3f gravityRotated = mGravity;
+	if (!mRotation.zeroRotation())
+	{
+		ofVec3f axis;
+		float angle;
+		mRotation.getRotate(angle, axis);
+		gravityRotated = mGravity.rotate(angle, axis);
+	}
 	/*for (uint i = 0; i < mNumberOfParticles; i++)
 	{
 		if (mPositions[i].y >= 0.f)
@@ -157,7 +164,7 @@ void ParticleSystem::update(float dt)
 		if (ofRectangle(0, 0, mDimension.x, mDimension.y).inside(particlePosition.x, particlePosition.y)
 			&& ofRectangle(0, 0, mDimension.x, mDimension.z).inside(particlePosition.x, particlePosition.z)
 			&& ofRectangle(0, 0, mDimension.y, mDimension.z).inside(particlePosition.y, particlePosition.z))
-			particleVelocity += (mGravity + particlePressure) * dt;
+			particleVelocity += (gravityRotated + particlePressure) * dt;
 		//***g
 
 		particleVelocity -= dt * particleVelocity * 0.25f;//damping
