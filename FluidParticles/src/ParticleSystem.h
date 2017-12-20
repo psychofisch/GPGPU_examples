@@ -13,19 +13,23 @@ public:
 	ParticleSystem();
 	~ParticleSystem();
 
+	void reserveParticles(uint amount);
 	void setDimensions(ofVec3f dimensions);
 	void setNumberOfParticles(uint nop);
 	void setRotation(ofQuaternion rotation);
 	void init3DGrid();
 	void initRandom();
 	void initDamBreak();
+	void addDrop();
 	ofVec3f* getPositionPtr();
 	ofVec3f getDimensions();
 	uint getNumberOfParticles();
 	void update(float dt);
+	uint debug_testIfParticlesOutside();
 
 private:
-	uint mNumberOfParticles;
+	uint mNumberOfParticles,
+		mCapacity;
 	ofVec3f	*mPositions,
 		*mVelocity,
 		*mPressure,

@@ -37,7 +37,8 @@ void ParticleSystem::init3DGrid()//TODO: dimension
 {
 	uint position = 0,
 		rows, colums, aisles;
-	float x, y, z, gap;
+	float x, y, z;
+	float gap;
 	x = y = z = 0.01f;
 
 	aisles = mDimension.z / powf(mNumberOfParticles, 1.f / 3.f);
@@ -64,12 +65,14 @@ void ParticleSystem::init3DGrid()//TODO: dimension
 				if (position >= mNumberOfParticles)
 					return;
 			}
-			z += gap;
+			y += gap;
 			x = 0.01f;
 		}
-		y += gap;
-		z = 0.01f;
+		z += gap;
+		y = 0.01f;
 	}
+
+	std::cout << "too many particles to fit into given space\n";
 }
 
 void ParticleSystem::initRandom()
@@ -85,10 +88,15 @@ void ParticleSystem::initRandom()
 
 void ParticleSystem::initDamBreak()
 {
-	float tmpX = mDimension.x;
+	float tmp = mDimension.x;
 	mDimension.x *= 0.2f;
 	init3DGrid();
-	mDimension.x = tmpX;
+	mDimension.x = tmp;
+}
+
+void ParticleSystem::addDrop()
+{
+	
 }
 
 ofVec3f * ParticleSystem::getPositionPtr()
@@ -116,11 +124,6 @@ void ParticleSystem::update(float dt)
 		mRotation.getRotate(angle, axis);
 		gravityRotated = mGravity.rotate(angle, axis);
 	}
-	/*for (uint i = 0; i < mNumberOfParticles; i++)
-	{
-		if (mPositions[i].y >= 0.f)
-			mPositions[i].y -= 3.f * dt;
-	}*/
 
 	float maxSpeed = 500.f;
 
@@ -140,6 +143,13 @@ void ParticleSystem::update(float dt)
 		//std::cout << vectorMath::angleD(vectorMath::normalize(newVel) - vectorMath::normalize(m_velocity[i])) << std::endl;
 		//std::cout << vectorMath::radToDeg(atan2f(newVel.y - m_velocity[i].y, newVel.x - m_velocity[i].x)) << std::endl;
 
+		//gravity
+		if (ofRectangle(0, 0, mDimension.x, mDimension.y).inside(particlePosition.x, particlePosition.y)
+			&& ofRectangle(0, 0, mDimension.x, mDimension.z).inside(particlePosition.x, particlePosition.z)
+			&& ofRectangle(0, 0, mDimension.y, mDimension.z).inside(particlePosition.y, particlePosition.z))
+			particleVelocity += (gravityRotated + particlePressure) * dt;
+		//***g
+
 		//static collision
 		if ((particlePosition.x > mDimension.x && particleVelocity.x > 0.f) || (particlePosition.x < 0.f && particleVelocity.x < 0.f))
 		{
@@ -153,21 +163,7 @@ void ParticleSystem::update(float dt)
 			particleVelocity.y *= -(.1f + 0.2f * r);
 		//*** sc
 
-		//gravity
-		/*if (particlePosition.y > 0)
-			particleVelocity.y -= 9.81f * dt;*/
-		/*if    (((particlePosition.x < mDimension.x) && (particlePosition.x > 0.f))
-			&& ((particlePosition.y < mDimension.y) && (particlePosition.y > 0.f))
-			&& ((particlePosition.z < mDimension.z) && (particlePosition.z > 0.f)))
-			particleVelocity += mGravity * dt;*/
-
-		if (ofRectangle(0, 0, mDimension.x, mDimension.y).inside(particlePosition.x, particlePosition.y)
-			&& ofRectangle(0, 0, mDimension.x, mDimension.z).inside(particlePosition.x, particlePosition.z)
-			&& ofRectangle(0, 0, mDimension.y, mDimension.z).inside(particlePosition.y, particlePosition.z))
-			particleVelocity += (gravityRotated + particlePressure) * dt;
-		//***g
-
-		particleVelocity -= dt * particleVelocity * 0.25f;//damping
+		//particleVelocity += dt * particleVelocity * -0.01f;//damping
 		particlePosition += particleVelocity /** dt*/;
 
 		mPositions[i] = particlePosition;
@@ -175,6 +171,23 @@ void ParticleSystem::update(float dt)
 
 		//m_vertices[i].position = particlePosition;
 	}
+}
+
+uint ParticleSystem::debug_testIfParticlesOutside()
+{
+	uint count = 0;
+	for (uint i = 0; i < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
+	{
+		ofVec3f particlePosition = mPositions[i];
+		if (particlePosition.x > mDimension.x || particlePosition.x < 0.f
+			|| particlePosition.y > mDimension.y || particlePosition.y < 0.f
+			|| particlePosition.z > mDimension.z || particlePosition.z < 0.f)
+		{
+			count++;
+			//__debugbreak();
+		}
+	}
+	return count;
 }
 
 ofVec3f ParticleSystem::i_calculatePressureVector(size_t index)

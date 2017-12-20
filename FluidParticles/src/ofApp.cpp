@@ -24,9 +24,9 @@ void ofApp::setup(){
 
 	mParticleSystem.setDimensions(ofVec3f(50.f));
 	mParticleSystem.setNumberOfParticles(200);
-	//mParticleSystem.init3DGrid();
+	mParticleSystem.init3DGrid();
 	//mParticleSystem.initRandom();
-	mParticleSystem.initDamBreak();
+	//mParticleSystem.initDamBreak();
 
 	//mParticlesVBO.setVertexData(mParticleSystem.getPositionPtr(), 3, 1000, GL_DYNAMIC_DRAW);
 	mParticlesVBO.setVertexData(mParticleSystem.getPositionPtr(), mParticleSystem.getNumberOfParticles(), GL_DYNAMIC_DRAW);
@@ -117,6 +117,15 @@ void ofApp::keyReleased(int key){
 			mParticleSystem.initDamBreak();
 			break;
 		case 'n':
+			mGlobalRotation.normalize();
+			mParticleSystem.setRotation(mGlobalRotation);
+			mHudRotation = ofToString(mGlobalRotation);
+			break;
+		case 't':
+			std::cout << mParticleSystem.debug_testIfParticlesOutside() << "\n";
+			break; 
+		case 'u':
+			mParticleSystem.update(0.16f);
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;
@@ -143,9 +152,9 @@ void ofApp::mouseDragged(int x, int y, int button){
 			const float sens = 1.f;
 			ofQuaternion xRotation(sens * mMouseSens * (y - mMouse.y), ofVec3f(-1, 0, 0));
 			ofQuaternion yRotation(sens * mMouseSens * (x - mMouse.x), ofVec3f(0, 1, 0));
-			mGlobalRotation *= yRotation * xRotation;
+			mGlobalRotation *= xRotation * yRotation;
 			
-			mParticleSystem.setRotation(mGlobalRotation);
+			//mParticleSystem.setRotation(mGlobalRotation);
 
 			mHudRotation = ofToString(mGlobalRotation);
 			//std::cout << "Y ";
