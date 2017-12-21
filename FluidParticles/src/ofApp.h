@@ -34,7 +34,7 @@ class ofApp : public ofBaseApp{
 		ofLight mLight;
 		//ofMesh mParticleMesh;
 		ofVbo mParticlesVBO;
-		ParticleSystem mParticleSystem;
+		ParticleSystem *mParticleSystem;
 		int mRotationAxis;
 		ofQuaternion mGlobalRotation;
 		ofVec2f mMouse;

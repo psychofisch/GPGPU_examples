@@ -22,15 +22,15 @@ void ofApp::setup(){
 
 	ofBoxPrimitive testRect;
 
-	mParticleSystem.setDimensions(ofVec3f(50.f));
-	mParticleSystem.setNumberOfParticles(200);
-	mParticleSystem.init3DGrid();
-	//mParticleSystem.initRandom();
-	//mParticleSystem.initDamBreak();
+	mParticleSystem = new ParticleSystem(1000);
+	mParticleSystem->setDimensions(ofVec3f(50.f));
+	mParticleSystem->addDamBreak(200);
+	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);
+	//mParticleSystem->addRandom();
 
-	//mParticlesVBO.setVertexData(mParticleSystem.getPositionPtr(), 3, 1000, GL_DYNAMIC_DRAW);
-	mParticlesVBO.setVertexData(mParticleSystem.getPositionPtr(), mParticleSystem.getNumberOfParticles(), GL_DYNAMIC_DRAW);
-	//mParticleMesh.addVertices(mParticleSystem.getPositionPtr(), mParticleSystem.getNumberOfParticles());
+	//mParticlesVBO.setVertexData(mParticleSystem->getPositionPtr(), 3, 1000, GL_DYNAMIC_DRAW);
+	mParticlesVBO.setVertexData(mParticleSystem->getPositionPtr(), mParticleSystem->getCapacity(), GL_DYNAMIC_DRAW);
+	//mParticleMesh.addVertices(mParticleSystem->getPositionPtr(), mParticleSystem->getNumberOfParticles());
 
 	mRotationAxis = 0b000;
 
@@ -49,14 +49,14 @@ void ofApp::update(){
 	float deltaTime =  ofGetLastFrameTime();
 	//std::cout << deltaTime << std::endl;
 
-	mHudFps = ofToString(1 / deltaTime);
+	mHudFps = ofToString(1 / deltaTime,0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
 	float spinY = cos(ofGetElapsedTimef()*.075f);
 
-	mParticleSystem.update(deltaTime);
+	mParticleSystem->update(deltaTime);
 	//mParticleMesh.haveVertsChanged();
-	mParticlesVBO.updateVertexData(mParticleSystem.getPositionPtr(), mParticleSystem.getNumberOfParticles());
+	mParticlesVBO.updateVertexData(mParticleSystem->getPositionPtr(), mParticleSystem->getNumberOfParticles());
 	//mTestBox.rotate(spinY, 0, 1, 0);
 }
 
@@ -75,13 +75,13 @@ void ofApp::draw(){
 	float angle;
 	mGlobalRotation.getRotate(angle, axis);
 	ofRotate(angle, axis.x, axis.y, axis.z);
-	ofTranslate(-mParticleSystem.getDimensions() * 0.5f);
+	ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
 	ofPushStyle();
 	ofSetColor(mHudColor);
 	glPointSize(5.f);
 	mTestBox.drawAxes(20.f);
 	//mParticleMesh.drawVertices();
-	mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem.getNumberOfParticles());
+	mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
 	ofPopStyle();
 	ofPopMatrix();
 
@@ -114,19 +114,24 @@ void ofApp::keyReleased(int key){
 			std::cout << "Box: " << mTestBox.getPosition() << std::endl;
 			break;
 		case 'r':
-			mParticleSystem.initDamBreak();
+			mParticleSystem->setNumberOfParticles(0);
 			break;
 		case 'n':
 			mGlobalRotation.normalize();
-			mParticleSystem.setRotation(mGlobalRotation);
+			mParticleSystem->setRotation(mGlobalRotation);
 			mHudRotation = ofToString(mGlobalRotation);
 			break;
 		case 't':
-			std::cout << mParticleSystem.debug_testIfParticlesOutside() << "\n";
+			std::cout << mParticleSystem->debug_testIfParticlesOutside() << "\n";
 			break; 
 		case 'u':
-			mParticleSystem.update(0.16f);
+			mParticleSystem->update(0.16f);
 			break;
+		case 'd':
+		{
+			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
+			mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 200);
+		}
 		default: std::cout << "this key hasn't been assigned\n";
 			break;
 	}
@@ -138,23 +143,29 @@ void ofApp::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
+	const float sens = 1.f;
+
 	if (mRotationAxis > 0 && mMouse.x > 0.f)
 	{
 		//std::cout << "rotate around\t";
 		if (mRotationAxis & 0b100)
 		{
+			ofQuaternion xRotation(sens * mMouseSens * (y - mMouse.y), ofVec3f(-1, 0, 0));
+			mGlobalRotation *= xRotation;
 
+			//mParticleSystem->setRotation(mGlobalRotation);
+
+			mHudRotation = ofToString(mGlobalRotation);
 			//std::cout << "X ";
 		}
 
 		if (mRotationAxis & 0b010)
 		{
-			const float sens = 1.f;
-			ofQuaternion xRotation(sens * mMouseSens * (y - mMouse.y), ofVec3f(-1, 0, 0));
+			//ofQuaternion xRotation(sens * mMouseSens * (y - mMouse.y), ofVec3f(-1, 0, 0));
 			ofQuaternion yRotation(sens * mMouseSens * (x - mMouse.x), ofVec3f(0, 1, 0));
-			mGlobalRotation *= xRotation * yRotation;
+			mGlobalRotation *= yRotation;
 			
-			//mParticleSystem.setRotation(mGlobalRotation);
+			//mParticleSystem->setRotation(mGlobalRotation);
 
 			mHudRotation = ofToString(mGlobalRotation);
 			//std::cout << "Y ";
@@ -237,6 +248,8 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 void ofApp::quit()
 {
+	delete mParticleSystem;
+
 	std::cout << "quitting...\n";
 	this->exit();
 }
