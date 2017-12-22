@@ -39,6 +39,7 @@ class ofApp : public ofBaseApp{
 		ofQuaternion mGlobalRotation;
 		ofVec2f mMouse;
 		float mMouseSens;
+		bool mValve;
 
 		ofxPanel mHud;
 		ofxLabel mHudFps;

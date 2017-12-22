@@ -74,45 +74,43 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 		return;
 	}
 
-	uint position = 0,
-		rows, colums, aisles;
-	float x, y, z;
+	float volume = cubeSize.x * cubeSize.y * cubeSize.z;
+	float spacePerParticle = volume / particleAmount;
+	float cubedParticles = powf(particleAmount, 1.f / 3.f) * 3;
+	float ratio;
+	ratio = cubeSize.x / (cubeSize.x + cubeSize.y + cubeSize.z);
 	float gap;
-	x = y = z = 0.f;
+	gap = cubeSize.x / (cubedParticles * ratio);
 
-	aisles = cubeSize.z / powf(particleAmount, 1.f / 3.f);
-	rows = cubeSize.x / powf(particleAmount, 1.f / 3.f);
-	colums = cubeSize.y / powf(particleAmount, 1.f / 3.f);
-	gap = powf(particleAmount, 1.f / 3.f);
+	ofVec3f partPos(0.f);
 
-	for (uint l = 0; l < aisles; l++)
+	for (int i = 0; i < particleAmount; i++)
 	{
-		for (uint c = 0; c < colums; c++)
+		mPositions[mNumberOfParticles + i] = cubePos + partPos;
+		mVelocity[mNumberOfParticles + i] = ofVec3f(0.f);
+
+		partPos.x += gap;
+
+		if (partPos.x > cubeSize.x)
 		{
-			for (uint r = 0; r < rows; r++)
+			partPos.x = 0.f;
+			partPos.z += gap;
+
+			if (partPos.z > cubeSize.z)
 			{
-				mPositions[mNumberOfParticles + position].x = cubePos.x + x;
-				mPositions[mNumberOfParticles + position].y = cubePos.y + y;
-				mPositions[mNumberOfParticles + position].z = cubePos.z + z;
+				partPos.z = 0.f;
+				partPos.y += gap;
 
-				x += gap;
-				position++;
-
-				if (position >= particleAmount)
+				if (partPos.y > cubeSize.y)
 				{
-					mNumberOfParticles += particleAmount;
-					return;
+					std::cout << "addCube: w00t? only " << i << " particles?\n";
+					break;
 				}
 			}
-			y += gap;
-			x = 0.f;
 		}
-		z += gap;
-		y = 0.f;
 	}
 
 	mNumberOfParticles += particleAmount;
-	std::cout << "too many particles to fit into given space\n";
 }
 
 void ParticleSystem::addDrop()
@@ -159,7 +157,7 @@ void ParticleSystem::update(float dt)
 	//optimization
 	maxSpeed = 1.f / maxSpeed;
 
-//#pragma omp parallel for
+#pragma omp parallel for
 	for (int i = 0; i < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
 		ofVec3f particlePosition = mPositions[i];
@@ -173,9 +171,13 @@ void ParticleSystem::update(float dt)
 		//std::cout << vectorMath::radToDeg(atan2f(newVel.y - m_velocity[i].y, newVel.x - m_velocity[i].x)) << std::endl;
 
 		//gravity
-		if	  (ofRectangle(-0.1f, -0.1f, mDimension.x + 0.1f, mDimension.y + 0.1f).inside(particlePosition.x, particlePosition.y)
+		/*if	  (ofRectangle(-0.1f, -0.1f, mDimension.x + 0.1f, mDimension.y + 0.1f).inside(particlePosition.x, particlePosition.y)
 			&& ofRectangle(-0.1f, -0.1f, mDimension.x + 0.1f, mDimension.z + 0.1f).inside(particlePosition.x, particlePosition.z)
 			&& ofRectangle(-0.1f, -0.1f, mDimension.y + 0.1f, mDimension.z + 0.1f).inside(particlePosition.y, particlePosition.z))
+			*/
+		if(!(particlePosition.x > mDimension.x || particlePosition.x <= 0.f
+			|| particlePosition.y > mDimension.y || particlePosition.y <= 0.f
+			|| particlePosition.z > mDimension.z || particlePosition.z <= 0.f))
 			particleVelocity += (gravityRotated + particlePressure) * dt;
 		//***g
 
@@ -193,13 +195,40 @@ void ParticleSystem::update(float dt)
 		//*** sc
 
 		//particleVelocity += dt * particleVelocity * -0.01f;//damping
-		particlePosition += particleVelocity /** dt*/;
+		particlePosition += particleVelocity * dt;
 
 		mPositions[i] = particlePosition;
 		mVelocity[i] = particleVelocity;
 
 		//m_vertices[i].position = particlePosition;
 	}
+}
+
+ofVec3f ParticleSystem::i_calculatePressureVector(size_t index)
+{
+	float smoothingWidth = pow(20.f, 2);
+	//float smoothingWidth = 18.f;
+	float amplitude = 1.f;
+
+	ofVec3f pressureVec;
+	for (uint i = 0; i < mNumberOfParticles; ++i)
+	{
+		if (index == i)
+			continue;
+
+		ofVec3f particlePosition = mPositions[i];
+		ofVec3f dirVec = mPositions[index] - particlePosition;
+		float dist = dirVec.lengthSquared();
+
+		if (dist > smoothingWidth * 1.f)
+			continue;
+
+		//float pressure = 1.f - (dist/smoothingWidth);
+		float pressure = amplitude * expf(-powf(dist, 2) / smoothingWidth);
+		//pressureVec += pressure * vectorMath::normalize(dirVec);
+		pressureVec += pressure * dirVec;
+	}
+	return pressureVec;
 }
 
 uint ParticleSystem::debug_testIfParticlesOutside()
@@ -217,30 +246,4 @@ uint ParticleSystem::debug_testIfParticlesOutside()
 		}
 	}
 	return count;
-}
-
-ofVec3f ParticleSystem::i_calculatePressureVector(size_t index)
-{
-	float smoothingWidth = pow(30.f, 2);
-	float amplitude = 1.f;
-
-	ofVec3f pressureVec;
-	for (uint i = 0; i < mNumberOfParticles; ++i)
-	{
-		if (index == i)
-			continue;
-
-		ofVec3f particlePosition = mPositions[i];
-		ofVec3f dirVec = mPositions[index] - particlePosition;
-		float dist = dirVec.lengthSquared();
-
-		//if (dist > smoothingWidth * .2f)
-		//	continue;
-
-		//float pressure = 1.f - (dist/smoothingWidth);
-		float pressure = amplitude * expf(-powf(dist, 2) / smoothingWidth);
-		//pressureVec += pressure * vectorMath::normalize(dirVec);
-		pressureVec += pressure * dirVec;
-	}
-	return pressureVec;
 }

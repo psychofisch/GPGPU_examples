@@ -32,6 +32,8 @@ void ofApp::setup(){
 	mParticlesVBO.setVertexData(mParticleSystem->getPositionPtr(), mParticleSystem->getCapacity(), GL_DYNAMIC_DRAW);
 	//mParticleMesh.addVertices(mParticleSystem->getPositionPtr(), mParticleSystem->getNumberOfParticles());
 
+	mValve = false;
+
 	mRotationAxis = 0b000;
 
 	mMouse = ofVec2f(-1, -1);
@@ -54,6 +56,11 @@ void ofApp::update(){
 	float spinX = sin(ofGetElapsedTimef()*.35f);
 	float spinY = cos(ofGetElapsedTimef()*.075f);
 
+	if (mValve)
+	{
+		ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
+		mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 1);
+	}
 	mParticleSystem->update(deltaTime);
 	//mParticleMesh.haveVertsChanged();
 	mParticlesVBO.updateVertexData(mParticleSystem->getPositionPtr(), mParticleSystem->getNumberOfParticles());
@@ -64,6 +71,7 @@ void ofApp::update(){
 void ofApp::draw(){
 	ofEnableDepthTest();
 
+	mMainCamera.lookAt(ofVec3f(0.f));
 	//ofEnableLighting();
 	//mLight.enable();
 	mMainCamera.begin();
@@ -98,6 +106,9 @@ void ofApp::draw(){
 void ofApp::keyPressed(int key){
 	switch (key)
 	{
+	case 'v':
+		mValve = true;
+		break;
 	default:
 		break;
 	}
@@ -132,6 +143,10 @@ void ofApp::keyReleased(int key){
 			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
 			mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 200);
 		}
+			break;
+		case 'v':
+			mValve = false;
+			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;
 	}
@@ -150,12 +165,7 @@ void ofApp::mouseDragged(int x, int y, int button){
 		//std::cout << "rotate around\t";
 		if (mRotationAxis & 0b100)
 		{
-			ofQuaternion xRotation(sens * mMouseSens * (y - mMouse.y), ofVec3f(-1, 0, 0));
-			mGlobalRotation *= xRotation;
-
-			//mParticleSystem->setRotation(mGlobalRotation);
-
-			mHudRotation = ofToString(mGlobalRotation);
+			mMainCamera.setPosition(mMainCamera.getPosition() + ofVec3f(0, sens * mMouseSens * (y - mMouse.y), 0));
 			//std::cout << "X ";
 		}
 
