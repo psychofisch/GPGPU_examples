@@ -5,11 +5,18 @@
 ParticleSystem::ParticleSystem(uint maxParticles)
 	:mGravity(0.f, -9.81f, 0.f),
 	mCapacity(maxParticles),
-	mNumberOfParticles(0)
+	mNumberOfParticles(0),
+	mMode(ComputeModes::CPU)
 {
 	mPositions = new ofVec3f[maxParticles];
 	mVelocity = new ofVec3f[maxParticles];
 	mPressure = new ofVec3f[maxParticles];
+
+	mPositionBuffer.allocate(sizeof(ofVec3f) * maxParticles, GL_DYNAMIC_DRAW);
+	mParticlesVBO.setVertexBuffer(mPositionBuffer, 3, sizeof(ofVec3f), 0);
+
+	//computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, "particles.compute");
+	//computeShader.linkProgram();
 }
 
 
@@ -38,6 +45,11 @@ void ParticleSystem::setDimensions(ofVec3f dimensions)
 void ParticleSystem::setRotation(ofQuaternion rotation)
 {
 	mRotation = rotation;
+}
+
+void ParticleSystem::setMode(ComputeModes m)
+{
+	mMode = m;
 }
 
 void ParticleSystem::addRandom(uint particleAmount)
@@ -121,6 +133,11 @@ void ParticleSystem::addDrop()
 	mNumberOfParticles += 20;
 }
 
+void ParticleSystem::draw()
+{
+	mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
+}
+
 ofVec3f * ParticleSystem::getPositionPtr()
 {
 	return mPositions;
@@ -143,15 +160,25 @@ uint ParticleSystem::getCapacity()
 
 void ParticleSystem::update(float dt)
 {
-	ofVec3f gravityRotated = mGravity;
+	mGravityRotated = mGravity;
 	if (!mRotation.zeroRotation())
 	{
 		ofVec3f axis;
 		float angle;
 		mRotation.getRotate(angle, axis);
-		gravityRotated = mGravity.rotate(angle, axis);
+		mGravityRotated = mGravity.rotate(angle, axis);
 	}
 
+	switch (mMode)
+	{
+	case ComputeModes::CPU:
+		iUpdateCPU(dt);
+		break;
+	}
+}
+
+void ParticleSystem::iUpdateCPU(float dt)
+{
 	float maxSpeed = 500.f;
 
 	//optimization
@@ -162,7 +189,7 @@ void ParticleSystem::update(float dt)
 	{
 		ofVec3f particlePosition = mPositions[i];
 		ofVec3f particleVelocity = mVelocity[i];
-		ofVec3f particlePressure = i_calculatePressureVector(i);
+		ofVec3f particlePressure = iCalculatePressureVector(i);
 		float r = 1.f;
 		//float r = m_randoms[i];
 		//m_rng.seed(i * 815, 1337, 420);
@@ -172,13 +199,13 @@ void ParticleSystem::update(float dt)
 
 		//gravity
 		/*if	  (ofRectangle(-0.1f, -0.1f, mDimension.x + 0.1f, mDimension.y + 0.1f).inside(particlePosition.x, particlePosition.y)
-			&& ofRectangle(-0.1f, -0.1f, mDimension.x + 0.1f, mDimension.z + 0.1f).inside(particlePosition.x, particlePosition.z)
-			&& ofRectangle(-0.1f, -0.1f, mDimension.y + 0.1f, mDimension.z + 0.1f).inside(particlePosition.y, particlePosition.z))
-			*/
-		if(	   particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
+		&& ofRectangle(-0.1f, -0.1f, mDimension.x + 0.1f, mDimension.z + 0.1f).inside(particlePosition.x, particlePosition.z)
+		&& ofRectangle(-0.1f, -0.1f, mDimension.y + 0.1f, mDimension.z + 0.1f).inside(particlePosition.y, particlePosition.z))
+		*/
+		if (particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
 			|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
 			|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
-			particleVelocity += (gravityRotated + particlePressure) * dt;
+			particleVelocity += (mGravityRotated + particlePressure) * dt;
 		//***g
 
 		//static collision
@@ -206,9 +233,11 @@ void ParticleSystem::update(float dt)
 
 		//m_vertices[i].position = particlePosition;
 	}
+
+	mPositionBuffer.updateData(mNumberOfParticles * sizeof(ofVec3f), mPositions);
 }
 
-ofVec3f ParticleSystem::i_calculatePressureVector(size_t index)
+ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
 {
 	float smoothingWidth = pow(20.f, 2);
 	//float smoothingWidth = 18.f;

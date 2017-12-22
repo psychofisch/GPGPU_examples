@@ -29,7 +29,6 @@ void ofApp::setup(){
 	//mParticleSystem->addRandom();
 
 	//mParticlesVBO.setVertexData(mParticleSystem->getPositionPtr(), 3, 1000, GL_DYNAMIC_DRAW);
-	mParticlesVBO.setVertexData(mParticleSystem->getPositionPtr(), mParticleSystem->getCapacity(), GL_DYNAMIC_DRAW);
 	//mParticleMesh.addVertices(mParticleSystem->getPositionPtr(), mParticleSystem->getNumberOfParticles());
 
 	mValve = false;
@@ -51,7 +50,7 @@ void ofApp::update(){
 	float deltaTime =  ofGetLastFrameTime();
 	//std::cout << deltaTime << std::endl;
 
-	mHudFps = ofToString(1 / deltaTime,0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
+	mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
 	float spinY = cos(ofGetElapsedTimef()*.075f);
@@ -63,7 +62,6 @@ void ofApp::update(){
 	}
 	mParticleSystem->update(deltaTime);
 	//mParticleMesh.haveVertsChanged();
-	mParticlesVBO.updateVertexData(mParticleSystem->getPositionPtr(), mParticleSystem->getNumberOfParticles());
 	//mTestBox.rotate(spinY, 0, 1, 0);
 }
 
@@ -89,7 +87,8 @@ void ofApp::draw(){
 	glPointSize(5.f);
 	mTestBox.drawAxes(20.f);
 	//mParticleMesh.drawVertices();
-	mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
+	//mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
+	mParticleSystem->draw();
 	ofPopStyle();
 	ofPopMatrix();
 

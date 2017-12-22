@@ -4,22 +4,34 @@
 #include "ofRectangle.h"
 #include "ofMath.h"
 #include "ofQuaternion.h"
+#include "ofShader.h"
+#include "ofVbo.h"
 
 typedef unsigned int uint;
 
 class ParticleSystem
 {
 public:
+	enum class ComputeModes
+	{
+		CPU,
+		COMPUTE_SHADER,
+		CUDA,
+		OPENCL
+	};
+
 	ParticleSystem(uint mp);
 	~ParticleSystem();
 
 	void setDimensions(ofVec3f dimensions);
 	void setNumberOfParticles(uint nop);
 	void setRotation(ofQuaternion rotation);
+	void setMode(ComputeModes m);
 	void addDamBreak(uint particleAmount);
 	void addRandom(uint particleAmount);
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount);
 	void addDrop();
+	void draw();
 	ofVec3f* getPositionPtr();
 	ofVec3f getDimensions();
 	uint getNumberOfParticles();
@@ -30,13 +42,19 @@ public:
 private:
 	uint mNumberOfParticles,
 		mCapacity;
+	ComputeModes mMode;
 	ofVec3f	*mPositions,
 		*mVelocity,
 		*mPressure,
 		mDimension,
-		mGravity;
+		mGravity,
+		mGravityRotated;
+	ofVbo mParticlesVBO;
 	ofQuaternion mRotation;
+	ofShader computeShader;
+	ofBufferObject mPositionBuffer;
 
-	ofVec3f i_calculatePressureVector(size_t index);
+	void iUpdateCPU(float dt);
+	ofVec3f iCalculatePressureVector(size_t index);
 };
 

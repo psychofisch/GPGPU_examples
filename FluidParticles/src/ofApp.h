@@ -33,7 +33,6 @@ class ofApp : public ofBaseApp{
 		ofCamera mMainCamera;
 		ofLight mLight;
 		//ofMesh mParticleMesh;
-		ofVbo mParticlesVBO;
 		ParticleSystem *mParticleSystem;
 		int mRotationAxis;
 		ofQuaternion mGlobalRotation;
