@@ -175,9 +175,9 @@ void ParticleSystem::update(float dt)
 			&& ofRectangle(-0.1f, -0.1f, mDimension.x + 0.1f, mDimension.z + 0.1f).inside(particlePosition.x, particlePosition.z)
 			&& ofRectangle(-0.1f, -0.1f, mDimension.y + 0.1f, mDimension.z + 0.1f).inside(particlePosition.y, particlePosition.z))
 			*/
-		if(!(particlePosition.x > mDimension.x || particlePosition.x <= 0.f
-			|| particlePosition.y > mDimension.y || particlePosition.y <= 0.f
-			|| particlePosition.z > mDimension.z || particlePosition.z <= 0.f))
+		if(	   particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
+			|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
+			|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
 			particleVelocity += (gravityRotated + particlePressure) * dt;
 		//***g
 
@@ -188,10 +188,14 @@ void ParticleSystem::update(float dt)
 		}
 
 		if ((particlePosition.z > mDimension.z && particleVelocity.z > 0.f) || (particlePosition.z < 0.f && particleVelocity.z < 0.f))
+		{
 			particleVelocity.z *= -(.1f + 0.2f * r);
+		}
 
 		if ((particlePosition.y > mDimension.y && particleVelocity.y > 0.f) || (particlePosition.y < 0.f && particleVelocity.y < 0.f))
+		{
 			particleVelocity.y *= -(.1f + 0.2f * r);
+		}
 		//*** sc
 
 		//particleVelocity += dt * particleVelocity * -0.01f;//damping
