@@ -195,10 +195,10 @@ void ParticleSystem::update(float dt)
 		//*** sc
 
 		//particleVelocity += dt * particleVelocity * -0.01f;//damping
-		particlePosition += particleVelocity * dt;
+		particlePosition += particleVelocity * dt * 15.f;//timeScaling
 
-		mPositions[i] = particlePosition;
 		mVelocity[i] = particleVelocity;
+		mPositions[i] = particlePosition;
 
 		//m_vertices[i].position = particlePosition;
 	}
