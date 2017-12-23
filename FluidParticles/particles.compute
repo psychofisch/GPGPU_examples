@@ -1,5 +1,19 @@
 #version 440 core
 
-void main{
+layout (std430, binding = 0) particlePos{
+	vec3 globalParticlePos;
+}
 
+layout (std430, binding = 1) particlePosOut{
+	vec3 particlePosOut;
+}
+
+//layout (std430, binding = 2) velocity{
+//	vec3 velocity;
+//}
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+void main(){
+	vec3 particlePosition = globalParticlePos[gl_GlobalInvocationID.x].xyz;
+	particlePosOut[gl_GlobalInvocationID.x].y -= 1.f;
 }

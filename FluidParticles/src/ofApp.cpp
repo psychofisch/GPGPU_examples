@@ -22,7 +22,8 @@ void ofApp::setup(){
 
 	ofBoxPrimitive testRect;
 
-	mParticleSystem = new ParticleSystem(1000);
+	mParticleSystem = new ParticleSystem(5000);
+	mParticleSystem->setMode(ParticleSystem::ComputeModes::COMPUTE_SHADER);
 	mParticleSystem->setDimensions(ofVec3f(50.f));
 	mParticleSystem->addDamBreak(200);
 	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);

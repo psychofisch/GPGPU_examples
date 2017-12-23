@@ -9,6 +9,12 @@
 
 typedef unsigned int uint;
 
+class ofVec3f16Align : ofVec3f
+{
+public:
+	float offset;
+};
+
 class ParticleSystem
 {
 public:
@@ -51,10 +57,12 @@ private:
 		mGravityRotated;
 	ofVbo mParticlesVBO;
 	ofQuaternion mRotation;
-	ofShader computeShader;
+	ofShader mComputeShader;
 	ofBufferObject mPositionBuffer;
+	ofBufferObject mPositionOutBuffer;
 
 	void iUpdateCPU(float dt);
+	void iUpdateCompute(float dt);
 	ofVec3f iCalculatePressureVector(size_t index);
 };
 
