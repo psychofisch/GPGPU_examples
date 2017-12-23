@@ -8,13 +8,13 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mNumberOfParticles(0),
 	mMode(ComputeModes::CPU)
 {
-	mPositions = new ofVec3f[maxParticles];
-	mVelocity = new ofVec3f[maxParticles];
-	mPressure = new ofVec3f[maxParticles];
+	mPositions = new ofVec4f[maxParticles];
+	mVelocity = new ofVec4f[maxParticles];
+	//mPressure = new ofVec3f[maxParticles];
 
-	mPositionOutBuffer.allocate(sizeof(ofVec3f) * maxParticles, GL_DYNAMIC_DRAW);
-	mPositionBuffer.allocate(sizeof(ofVec3f) * maxParticles, GL_DYNAMIC_DRAW);
-	mParticlesVBO.setVertexBuffer(mPositionBuffer, 3, sizeof(ofVec3f), 0);
+	mPositionOutBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
+	mPositionBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
+	mParticlesVBO.setVertexBuffer(mPositionBuffer, 3, sizeof(ofVec4f), 0);
 
 	if (!mComputeShader.setupShaderFromFile(GL_COMPUTE_SHADER, "particles.compute"))
 		exit(1);
@@ -26,7 +26,7 @@ ParticleSystem::~ParticleSystem()
 {
 	delete[] mPositions;
 	delete[] mVelocity;
-	delete[] mPressure;
+	//delete[] mPressure;
 }
 
 void ParticleSystem::setNumberOfParticles(uint nop)
@@ -140,7 +140,7 @@ void ParticleSystem::draw()
 	mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
 }
 
-ofVec3f * ParticleSystem::getPositionPtr()
+ofVec4f * ParticleSystem::getPositionPtr()
 {
 	return mPositions;
 }
@@ -189,7 +189,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 	//optimization
 	maxSpeed = 1.f / maxSpeed;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; i < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
 		ofVec3f particlePosition = mPositions[i];
@@ -239,7 +239,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		//m_vertices[i].position = particlePosition;
 	}
 
-	mPositionBuffer.updateData(mNumberOfParticles * sizeof(ofVec3f), mPositions);
+	mPositionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mPositions);
 }
 
 void ParticleSystem::iUpdateCompute(float dt)

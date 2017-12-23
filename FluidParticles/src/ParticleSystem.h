@@ -9,12 +9,6 @@
 
 typedef unsigned int uint;
 
-class ofVec3f16Align : ofVec3f
-{
-public:
-	float offset;
-};
-
 class ParticleSystem
 {
 public:
@@ -38,7 +32,7 @@ public:
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount);
 	void addDrop();
 	void draw();
-	ofVec3f* getPositionPtr();
+	ofVec4f* getPositionPtr();
 	ofVec3f getDimensions();
 	uint getNumberOfParticles();
 	uint getCapacity();
@@ -49,10 +43,10 @@ private:
 	uint mNumberOfParticles,
 		mCapacity;
 	ComputeModes mMode;
-	ofVec3f	*mPositions,
-		*mVelocity,
-		*mPressure,
-		mDimension,
+	ofVec4f	*mPositions,
+		*mVelocity;
+		//*mPressure,
+	ofVec3f	mDimension,
 		mGravity,
 		mGravityRotated;
 	ofVbo mParticlesVBO;
