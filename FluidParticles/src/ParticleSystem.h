@@ -52,8 +52,9 @@ private:
 	ofVbo mParticlesVBO;
 	ofQuaternion mRotation;
 	ofShader mComputeShader;
-	ofBufferObject mPositionBuffer;
-	ofBufferObject mPositionOutBuffer;
+	ofBufferObject	mPositionBuffer,
+					mPositionOutBuffer,
+					mVelocityBuffer;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);

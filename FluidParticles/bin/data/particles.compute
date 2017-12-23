@@ -1,0 +1,121 @@
+#version 440
+
+layout (std140, binding = 0) buffer PositionBuffer{
+	vec4 positionBuffer[];
+};
+
+layout (std140, binding = 1) buffer PositionOutBuffer{
+	vec4 positionOutBuffer[];
+};
+
+layout (std140, binding = 2) buffer VelocityBuffer{
+	vec4 velocityBuffer[];
+};
+
+//layout (std430, binding = 2) velocity{
+//	vec3 velocity;
+//}
+
+uniform float dt;
+uniform vec3 gravity;
+uniform uint numberOfParticles;
+uniform vec3 mDimension;
+//uniform bool callAddCube;
+uniform vec3 cubePos;
+uniform vec3 cubeSize;
+
+vec3 calculatePressure(uint index);
+//void addCube(vec3 cubePos, vec3 cubeSize, int particleAmount);
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+void main(){
+	//vec3 particlePosition = positionBuffer[gl_GlobalInvocationID.x];
+	//positionOutBuffer[gl_GlobalInvocationID.x] = particlePosition + vec3(0.0, 0.1, 0.0);
+
+	uint index = gl_GlobalInvocationID.x;
+	vec3 particlePosition = positionBuffer[index].xyz;
+	vec3 particleVelocity = velocityBuffer[index].xyz;
+	vec3 particlePressure = calculatePressure(index);
+	//vec3 particlePressure = vec3(0,0,0);
+
+	if (particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
+		|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
+		|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
+		particleVelocity += (gravity + particlePressure) * dt;
+	//***g
+
+	//static collision
+	if ((particlePosition.x > mDimension.x && particleVelocity.x > 0.f) || (particlePosition.x < 0.f && particleVelocity.x < 0.f))
+	{
+		particleVelocity.x *= -(.3f);
+	}
+
+	if ((particlePosition.z > mDimension.z && particleVelocity.z > 0.f) || (particlePosition.z < 0.f && particleVelocity.z < 0.f))
+	{
+		particleVelocity.z *= -(.3f);
+	}
+
+	if ((particlePosition.y > mDimension.y && particleVelocity.y > 0.f) || (particlePosition.y < 0.f && particleVelocity.y < 0.f))
+	{
+		particleVelocity.y *= -(.3f);
+	}
+	//*** sc
+
+	//particleVelocity += dt * particleVelocity * -0.01f;//damping
+	particlePosition += particleVelocity * dt * 15.f;//timeScaling
+
+	velocityBuffer[index] = vec4(particleVelocity, 1.f);
+	positionOutBuffer[index] = vec4(particlePosition, 0.f);
+}
+
+vec3 calculatePressure(uint index)
+{
+	float smoothingWidth = pow(20.f, 2);
+	//float smoothingWidth = 18.f;
+	float amplitude = 1.f;
+
+	vec3 pressureVec;
+	for (uint i = 0; i < numberOfParticles; ++i)
+	{
+		if (index == i)
+			continue;
+
+		vec3 dirVec = positionBuffer[index].xyz - positionBuffer[i].xyz;
+		float dist = dirVec.length();
+
+		if (dist > smoothingWidth * 1.f)
+			continue;
+
+		//float pressure = 1.f - (dist/smoothingWidth);
+		float pressure = amplitude * exp(-pow(dist, 2) / smoothingWidth);
+		//pressureVec += pressure * vectorMath::normalize(dirVec);
+		pressureVec += pressure * dirVec;
+	}
+	return pressureVec;
+}
+
+// void addCube()
+// {
+	
+	// mPositions[mNumberOfParticles + i] = cubePos + partPos;
+	// mVelocity[mNumberOfParticles + i] = ofVec3f(0.f);
+
+	// partPos.x += gap;
+
+	// if (partPos.x > cubeSize.x)
+	// {
+		// partPos.x = 0.f;
+		// partPos.z += gap;
+
+		// if (partPos.z > cubeSize.z)
+		// {
+			// partPos.z = 0.f;
+			// partPos.y += gap;
+
+			// if (partPos.y > cubeSize.y)
+			// {
+				// break;
+			// }
+		// }
+	// }
+// }

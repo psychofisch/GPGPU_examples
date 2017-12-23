@@ -14,6 +14,7 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 	mPositionOutBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
 	mPositionBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
+	mVelocityBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
 	mParticlesVBO.setVertexBuffer(mPositionBuffer, 3, sizeof(ofVec4f), 0);
 
 	if (!mComputeShader.setupShaderFromFile(GL_COMPUTE_SHADER, "particles.compute"))
@@ -123,6 +124,9 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 			}
 		}
 	}
+
+	//mPositionBuffer.updateData(mNumberOfParticles, sizeof(ofVec4f) * particleAmount, mPositions + mNumberOfParticles);
+	mPositionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mPositions);
 
 	mNumberOfParticles += particleAmount;
 }
@@ -248,15 +252,20 @@ void ParticleSystem::iUpdateCompute(float dt)
 
 	mPositionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
 	mPositionOutBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
+	mVelocityBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 2);
 
 	mComputeShader.begin();
+	mComputeShader.setUniform1f("dt", dt);
+	mComputeShader.setUniform3f("gravity", mGravity);
+	mComputeShader.setUniform1i("numberOfParticles", mNumberOfParticles);
+	mComputeShader.setUniform3f("mDimension", mDimension);
 	mComputeShader.dispatchCompute(mNumberOfParticles, 1, 1);
 	mComputeShader.end();
 
 	mPositionOutBuffer.copyTo(mPositionBuffer);
 
-	ofVec3f* tmpPositionFromGPU = mPositionBuffer.map<ofVec3f>(GL_READ_ONLY);
-	mPositionBuffer.unmap();
+	//ofVec3f* tmpPositionFromGPU = mPositionBuffer.map<ofVec3f>(GL_READ_ONLY);
+	//mPositionBuffer.unmap();
 }
 
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
