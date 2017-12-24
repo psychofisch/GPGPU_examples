@@ -23,9 +23,9 @@ void ofApp::setup(){
 	ofBoxPrimitive testRect;
 
 	mParticleSystem = new ParticleSystem(5000);
-	mParticleSystem->setMode(ParticleSystem::ComputeModes::COMPUTE_SHADER);
+	mParticleSystem->setMode(ParticleSystem::ComputeModes::CPU);
 	mParticleSystem->setDimensions(ofVec3f(50.f));
-	mParticleSystem->addDamBreak(200);
+	//mParticleSystem->addDamBreak(200);
 	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);
 	//mParticleSystem->addRandom();
 
@@ -146,6 +146,12 @@ void ofApp::keyReleased(int key){
 			break;
 		case 'v':
 			mValve = false;
+			break;
+		case 'm':
+			if (mParticleSystem->getMode() == ParticleSystem::ComputeModes::CPU)
+				mParticleSystem->setMode(ParticleSystem::ComputeModes::COMPUTE_SHADER);
+			else
+				mParticleSystem->setMode(ParticleSystem::ComputeModes::CPU);
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;

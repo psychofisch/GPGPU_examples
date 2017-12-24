@@ -36,6 +36,7 @@ public:
 	ofVec3f getDimensions();
 	uint getNumberOfParticles();
 	uint getCapacity();
+	ComputeModes getMode();
 	void update(float dt);
 	uint debug_testIfParticlesOutside();
 
