@@ -66,7 +66,7 @@ void main(){
 
 vec4 calculatePressure(uint index)
 {
-	float smoothingWidth = 1.f;
+	float smoothingWidth = 10.f;
 	//float smoothingWidth = 18.f;
 	float amplitude = 1.f;
 	vec3 particlePosition = positionBuffer[index].xyz;
@@ -94,9 +94,9 @@ vec4 calculatePressure(uint index)
 		pressureVec += vec4(pressure * normalize(dirVec), 0.f);
 		// pressureVec += vec4(dirVec, 0.f);
 		
-		pressureVec.w = pressure;
+		pressureVec.w = dist;
 		
-		break;
+		//break;
 	}
 	
 	return pressureVec;

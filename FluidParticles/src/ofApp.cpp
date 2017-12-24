@@ -61,7 +61,9 @@ void ofApp::update(){
 		ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
 		mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 1);
 	}
-	mParticleSystem->update(deltaTime);
+
+	//mParticleSystem->update(deltaTime);
+	mParticleSystem->update(0.016f);
 	//mParticleMesh.haveVertsChanged();
 	//mTestBox.rotate(spinY, 0, 1, 0);
 }
