@@ -41,14 +41,17 @@ void ofApp::setup(){
 
 	mHud.setup();
 	mHud.add(mHudFps.setup("FPS", "XXX"));
+	mHud.add(mHudMode.setup("Mode", "XXX"));
 	mHud.add(mHudRotation.setup("Rotation", "XXX"));
 	mHud.add(mHudColor.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
 	mHud.loadFromFile("settings.xml");
+
+	mHudMode = ofToString((mParticleSystem->getMode()==ParticleSystem::ComputeModes::CPU)?"C":"G") + "PU";
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	float deltaTime =  ofGetLastFrameTime();
+	float deltaTime =  std::min(0.1, ofGetLastFrameTime());
 	//std::cout << deltaTime << std::endl;
 
 	mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
@@ -62,8 +65,8 @@ void ofApp::update(){
 		mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 1);
 	}
 
-	//mParticleSystem->update(deltaTime);
-	mParticleSystem->update(0.016f);
+	mParticleSystem->update(deltaTime);
+	//mParticleSystem->update(0.016f);
 	//mParticleMesh.haveVertsChanged();
 	//mTestBox.rotate(spinY, 0, 1, 0);
 }
@@ -154,6 +157,7 @@ void ofApp::keyReleased(int key){
 				mParticleSystem->setMode(ParticleSystem::ComputeModes::COMPUTE_SHADER);
 			else
 				mParticleSystem->setMode(ParticleSystem::ComputeModes::CPU);
+			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeModes::CPU) ? "C" : "G") + "PU";
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;

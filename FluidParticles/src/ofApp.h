@@ -42,6 +42,7 @@ class ofApp : public ofBaseApp{
 
 		ofxPanel mHud;
 		ofxLabel mHudFps;
+		ofxLabel mHudMode;
 		ofxLabel mHudRotation;
 		ofxColorSlider mHudColor;
 };

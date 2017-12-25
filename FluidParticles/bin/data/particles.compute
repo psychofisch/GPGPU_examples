@@ -26,6 +26,10 @@ vec4 calculatePressure(uint index);
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 void main(){
 	uint index = gl_GlobalInvocationID.x;
+	
+	if(index >= numberOfParticles)
+		return;
+	
 	// positionOutBuffer[index] = positionBuffer[index];
 	// velocityBuffer[index] = calculatePressure(index);
 	vec3 particlePosition = positionBuffer[index].xyz;
@@ -85,7 +89,7 @@ vec4 calculatePressure(uint index)
 			// pressureVec = vec4(positionBuffer[i].xyz, i);
 			// break;
 		// }
-		if (dist > smoothingWidth * 1.0f)
+		if (dist > smoothingWidth * 1.0f || dist < 0.01f)
 			continue;
 
 		float pressure = 1.f - (dist/smoothingWidth);
