@@ -6,7 +6,8 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	:mGravity(0.f, -9.81f, 0.f),
 	mCapacity(maxParticles),
 	mNumberOfParticles(0),
-	mMode(ComputeModes::CPU)
+	mMode(ComputeModes::CPU),
+	mShaderStorageSwap(false)
 {
 	mPositions = new ofVec4f[maxParticles];
 	mVelocity = new ofVec4f[maxParticles];
@@ -17,8 +18,6 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mVelocityBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
 
 	mVelocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity);
-	ofVec4f* tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mVelocityBuffer.unmap();
 
 	mParticlesVBO.setVertexBuffer(mPositionBuffer, 3, sizeof(ofVec4f), 0);
 
@@ -100,20 +99,20 @@ void ParticleSystem::addDamBreak(uint particleAmount)
 
 void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmount)
 {
-	if (mCapacity < mNumberOfParticles + particleAmount)
+	/*if (mCapacity < mNumberOfParticles + particleAmount)
 	{
 		std::cout << "no more particles can be spawned!\n";
 		return;
-	}
+	}*/
 
-	if (mMode != ComputeModes::CPU)
+	if (mMode != ComputeModes::CPU && mNumberOfParticles > 0)
 	{
 		ofVec4f* tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mPositions);
+		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles - 1, mPositions);
 		mPositionBuffer.unmap();
 
 		tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
-		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mVelocity);
+		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles - 1, mVelocity);
 		mVelocityBuffer.unmap();
 	}
 
@@ -127,8 +126,16 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 
 	ofVec3f partPos(0.f);
 
+	int particleCap = -1;
 	for (int i = 0; i < particleAmount; i++)
 	{
+		if (mNumberOfParticles + i >= mCapacity)
+		{
+			std::cout << "no more particles can be spawned!\n";
+			particleCap = i;
+			break;
+		}
+
 		mPositions[mNumberOfParticles + i] = cubePos + partPos;
 		mVelocity[mNumberOfParticles + i] = ofVec3f(0.f);
 
@@ -147,12 +154,15 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 				if (partPos.y > cubeSize.y)
 				{
 					std::cout << "addCube: w00t? only " << i << " particles?\n";
+					particleCap = i;
 					break;
 				}
 			}
 		}
 	}
 
+	if (particleCap == -1)
+		particleCap = particleAmount;
 	/*mPositionBuffer.updateData(mNumberOfParticles, sizeof(ofVec4f) * particleAmount, mPositions + mNumberOfParticles);
 	mVelocityBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleAmount), mVelocity);
 
@@ -163,7 +173,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	mVelocityBuffer.unmap();*/
 	//mPositionBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleAmount), mPositions);
 
-	mNumberOfParticles += particleAmount;
+	mNumberOfParticles += particleCap;
 
 	mPositionBuffer.setData(mNumberOfParticles * sizeof(ofVec4f), mPositions, GL_DYNAMIC_DRAW);
 	mVelocityBuffer.setData(mNumberOfParticles * sizeof(ofVec4f), mVelocity, GL_DYNAMIC_DRAW);
@@ -179,6 +189,10 @@ void ParticleSystem::addDrop()
 
 void ParticleSystem::draw()
 {
+	/*if(mShaderStorageSwap)
+		mParticlesVBO.setVertexBuffer(mPositionBuffer, 3, sizeof(ofVec4f), 0);
+	else
+		mParticlesVBO.setVertexBuffer(mPositionOutBuffer, 3, sizeof(ofVec4f), 0);*/
 	mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
 }
 
@@ -294,11 +308,12 @@ void ParticleSystem::iUpdateCPU(float dt)
 
 void ParticleSystem::iUpdateCompute(float dt)
 {
-	//ofVec4f* tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	//mPositionBuffer.unmap();
+	ofVec4f* tmpPositionFromGPU;
+	/*tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mPositionBuffer.unmap();
 
-	//tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
-	//mVelocityBuffer.unmap();
+	/*tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mVelocityBuffer.unmap();*/
 
 	//mPositionBuffer.updateData(sizeof(ofVec3f) * mNumberOfParticles, mPositions);
 
@@ -311,16 +326,16 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeShader.setUniform3f("gravity", mGravityRotated);
 	mComputeShader.setUniform1i("numberOfParticles", mNumberOfParticles);
 	mComputeShader.setUniform3f("mDimension", mDimension);
-	mComputeShader.dispatchCompute(std::max(1, int(mNumberOfParticles)), 1, 1);
+	mComputeShader.dispatchCompute(mNumberOfParticles, 1, 1);
 	mComputeShader.end();
 
 	mPositionOutBuffer.copyTo(mPositionBuffer);
 
-	/*ofVec4f *tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mPositionBuffer.unmap();
+	/*tmpPositionFromGPU = mPositionOutBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mPositionOutBuffer.unmap();//*/
 
-	tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mPositionBuffer.unmap();//*/
+	/*tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mVelocityBuffer.unmap();//*/
 }
 
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)

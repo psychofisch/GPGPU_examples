@@ -63,9 +63,9 @@ void main(){
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt * 15.f;//timeScaling
 
-	velocityBuffer[index] = vec4(particleVelocity, 0.f);
+	positionOutBuffer[index] = vec4(particlePosition, numberOfParticles);
+	velocityBuffer[index] = vec4(particleVelocity, numberOfParticles);
 	//velocityBuffer[index] = particlePressure;
-	positionOutBuffer[index] = vec4(particlePosition, 0.f);
 }
 
 vec4 calculatePressure(uint index)
