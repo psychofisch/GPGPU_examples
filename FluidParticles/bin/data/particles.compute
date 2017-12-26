@@ -89,7 +89,8 @@ vec4 calculatePressure(uint index)
 			// pressureVec = vec4(positionBuffer[i].xyz, i);
 			// break;
 		// }
-		if (dist > smoothingWidth * 1.0f || dist < 0.01f)
+		//if (dist > smoothingWidth * 1.0f || dist < 0.01f)
+		if (dist > smoothingWidth * 1.0f)
 			continue;
 
 		float pressure = 1.f - (dist/smoothingWidth);

@@ -6,20 +6,18 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	:mGravity(0.f, -9.81f, 0.f),
 	mCapacity(maxParticles),
 	mNumberOfParticles(0),
-	mMode(ComputeModes::CPU),
-	mShaderStorageSwap(false)
+	mMode(ComputeModes::CPU)
+	//,mShaderStorageSwap(false)
 {
 	mPositions = new ofVec4f[maxParticles];
 	mVelocity = new ofVec4f[maxParticles];
 	//mPressure = new ofVec3f[maxParticles];
 
-	mPositionOutBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
-	mPositionBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
-	mVelocityBuffer.allocate(sizeof(ofVec4f) * maxParticles, GL_DYNAMIC_DRAW);
+	mPositionOutBuffer.allocate(sizeof(ofVec4f) * maxParticles, mPositions, GL_DYNAMIC_DRAW);
+	mPositionBuffer.allocate(sizeof(ofVec4f) * maxParticles, mPositions, GL_DYNAMIC_DRAW);
+	mVelocityBuffer.allocate(sizeof(ofVec4f) * maxParticles, mVelocity, GL_DYNAMIC_DRAW);
 
-	mVelocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity);
-
-	mParticlesVBO.setVertexBuffer(mPositionBuffer, 3, sizeof(ofVec4f), 0);
+	mParticlesVBO.setVertexBuffer(mPositionBuffer, 3, sizeof(ofVec4f));
 
 	if (!mComputeShader.setupShaderFromFile(GL_COMPUTE_SHADER, "particles.compute"))
 		exit(1);
@@ -108,11 +106,11 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	if (mMode != ComputeModes::CPU && mNumberOfParticles > 0)
 	{
 		ofVec4f* tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles - 1, mPositions);
+		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mPositions);
 		mPositionBuffer.unmap();
 
 		tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
-		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles - 1, mVelocity);
+		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mVelocity);
 		mVelocityBuffer.unmap();
 	}
 
@@ -163,20 +161,34 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 
 	if (particleCap == -1)
 		particleCap = particleAmount;
-	/*mPositionBuffer.updateData(mNumberOfParticles, sizeof(ofVec4f) * particleAmount, mPositions + mNumberOfParticles);
-	mVelocityBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleAmount), mVelocity);
-
+	
 	ofVec4f* tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
 	mPositionBuffer.unmap();
 
-	tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mVelocityBuffer.unmap();*/
+	//these update calls are the problem
+	std::cout << glGetError() << std::endl;
+	mPositionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mPositions + mNumberOfParticles);
+	mVelocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mVelocity + mNumberOfParticles);
+
+	/*mVelocityBuffer.updateData(mNumberOfParticles, sizeof(ofVec4f) * particleCap, mVelocity + particleCap);
+	std::cout << glGetError() << std::endl;*/
+	/*mPositionBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleCap), mPositions);
+	std::cout << glGetError() << std::endl;
+	mVelocityBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleCap), mVelocity);
+	std::cout << glGetError() << std::endl;*/
+
+
+	tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mPositionBuffer.unmap();
+
+	/*tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mVelocityBuffer.unmap();//*/
 	//mPositionBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleAmount), mPositions);
 
 	mNumberOfParticles += particleCap;
 
-	mPositionBuffer.setData(mNumberOfParticles * sizeof(ofVec4f), mPositions, GL_DYNAMIC_DRAW);
-	mVelocityBuffer.setData(mNumberOfParticles * sizeof(ofVec4f), mVelocity, GL_DYNAMIC_DRAW);
+	/*mPositionBuffer.setData(sizeof(ofVec4f) * mNumberOfParticles, mPositions, GL_DYNAMIC_DRAW);
+	mVelocityBuffer.setData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity, GL_DYNAMIC_DRAW);*/
 }
 
 void ParticleSystem::addDrop()
@@ -326,7 +338,7 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeShader.setUniform3f("gravity", mGravityRotated);
 	mComputeShader.setUniform1i("numberOfParticles", mNumberOfParticles);
 	mComputeShader.setUniform3f("mDimension", mDimension);
-	mComputeShader.dispatchCompute(mNumberOfParticles, 1, 1);
+	mComputeShader.dispatchCompute(std::max(1, int(mNumberOfParticles)/1), 1, 1);
 	mComputeShader.end();
 
 	mPositionOutBuffer.copyTo(mPositionBuffer);

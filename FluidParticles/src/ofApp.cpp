@@ -146,7 +146,7 @@ void ofApp::keyReleased(int key){
 		case 'd':
 		{
 			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-			mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 500);
+			mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 10);
 		}
 			break;
 		case 'v':

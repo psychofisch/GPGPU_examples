@@ -60,6 +60,6 @@ private:
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
 	ofVec3f iCalculatePressureVector(size_t index);
-	bool mShaderStorageSwap;
+	//bool mShaderStorageSwap;
 };
 
