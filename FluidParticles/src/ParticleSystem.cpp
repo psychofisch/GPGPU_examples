@@ -162,8 +162,8 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	if (particleCap == -1)
 		particleCap = particleAmount;
 	
-	ofVec4f* tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mPositionBuffer.unmap();
+	/*ofVec4f* tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mPositionBuffer.unmap();*/
 
 	//these update calls are the problem
 	std::cout << glGetError() << std::endl;
@@ -178,8 +178,8 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	std::cout << glGetError() << std::endl;*/
 
 
-	tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mPositionBuffer.unmap();
+	/*tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mPositionBuffer.unmap();*/
 
 	/*tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
 	mVelocityBuffer.unmap();//*/
@@ -320,9 +320,9 @@ void ParticleSystem::iUpdateCPU(float dt)
 
 void ParticleSystem::iUpdateCompute(float dt)
 {
-	ofVec4f* tmpPositionFromGPU;
-	/*tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mPositionBuffer.unmap();
+	/*ofVec4f* tmpPositionFromGPU;
+	tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
+	mPositionBuffer.unmap();*/
 
 	/*tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
 	mVelocityBuffer.unmap();*/
@@ -338,7 +338,9 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeShader.setUniform3f("gravity", mGravityRotated);
 	mComputeShader.setUniform1i("numberOfParticles", mNumberOfParticles);
 	mComputeShader.setUniform3f("mDimension", mDimension);
-	mComputeShader.dispatchCompute(std::max(1, int(mNumberOfParticles)/1), 1, 1);
+	if (std::ceilf(float(mNumberOfParticles) / 512) < 1.f)
+		__debugbreak();
+	mComputeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles)/512), 1, 1);
 	mComputeShader.end();
 
 	mPositionOutBuffer.copyTo(mPositionBuffer);

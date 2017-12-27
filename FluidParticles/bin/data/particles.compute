@@ -23,7 +23,7 @@ uniform vec3 mDimension;
 vec4 calculatePressure(uint index);
 //void addCube(vec3 cubePos, vec3 cubeSize, int particleAmount);
 
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
 void main(){
 	uint index = gl_GlobalInvocationID.x;
 	
@@ -63,7 +63,7 @@ void main(){
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt * 15.f;//timeScaling
 
-	positionOutBuffer[index] = vec4(particlePosition, numberOfParticles);
+	positionOutBuffer[index] = vec4(particlePosition, index);
 	velocityBuffer[index] = vec4(particleVelocity, numberOfParticles);
 	//velocityBuffer[index] = particlePressure;
 }
