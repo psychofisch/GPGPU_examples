@@ -24,7 +24,6 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mComputeShader.linkProgram();
 }
 
-
 ParticleSystem::~ParticleSystem()
 {
 	delete[] mPositions;
