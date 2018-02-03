@@ -381,7 +381,7 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
 uint ParticleSystem::debug_testIfParticlesOutside()
 {
 	uint count = 0;
-	for (uint i = 0; i < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
+	for (uint i = 0; i < mNumberOfParticles; ++i)
 	{
 		ofVec3f particlePosition = mPositions[i];
 		if (particlePosition.x > mDimension.x || particlePosition.x < 0.f
