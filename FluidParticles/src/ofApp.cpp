@@ -8,14 +8,16 @@ void ofApp::setup(){
 	ofBackground(69, 69, 69);
 
 	mTestBox.setResolution(1);
-	mTestBox.setScale(0.5f);
+	mTestBox.setScale(1.f);
 	mTestBox.setPosition(ofVec3f(0.f));
 
 	//mMainCamera.setDistance(-100);
 	//mMainCamera.setPosition(0, 0, 0);
 	//mMainCamera.setupPerspective(true, 90, 0.0f, 100.f);
-	mMainCamera.setPosition(0, 0, -100);
+	mMainCamera.setPosition(0, 0, -2);
 	mMainCamera.lookAt(ofVec3f(0.f));
+	mMainCamera.setNearClip(0.01f);
+	mMainCamera.setFarClip(50.f);
 
 	mLight.setPointLight();
 	mLight.setPosition(ofVec3f(0.f));
@@ -24,7 +26,7 @@ void ofApp::setup(){
 
 	mParticleSystem = new ParticleSystem(5000);
 	mParticleSystem->setMode(ParticleSystem::ComputeModes::CPU);
-	mParticleSystem->setDimensions(ofVec3f(50.f));
+	mParticleSystem->setDimensions(ofVec3f(1.f));
 	//mParticleSystem->addDamBreak(200);
 	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);
 	//mParticleSystem->addRandom();
@@ -48,7 +50,7 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
 
 	mHudSimulationGroup.setName("Simulation Settings");
-	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", 10.f, 0.0f, 100.f));
+	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", .1f, 0.0f, 1.f));
 
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
@@ -104,7 +106,7 @@ void ofApp::draw(){
 	ofPushStyle();
 	ofSetColor(mHudColor);
 	glPointSize(5.f);
-	mTestBox.drawAxes(20.f);
+	mTestBox.drawAxes(1.f);
 	//mParticleMesh.drawVertices();
 	//mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
 	mParticleSystem->draw();
@@ -190,7 +192,7 @@ void ofApp::mouseDragged(int x, int y, int button){
 		//std::cout << "rotate around\t";
 		if (mRotationAxis & 0b100)
 		{
-			mMainCamera.setPosition(mMainCamera.getPosition() + ofVec3f(0, sens * mMouseSens * (y - mMouse.y), 0));
+			mMainCamera.setPosition(mMainCamera.getPosition() + ofVec3f(0, .01f * sens * mMouseSens * (y - mMouse.y), 0));
 			//std::cout << "X ";
 		}
 

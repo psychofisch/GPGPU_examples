@@ -62,7 +62,7 @@ void main(){
 	// *** sc
 
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
-	particlePosition += particleVelocity * dt * 15.f;//timeScaling
+	particlePosition += particleVelocity * dt;
 
 	positionOutBuffer[index] = vec4(particlePosition, index);
 	velocityBuffer[index] = vec4(particleVelocity, numberOfParticles);

@@ -313,7 +313,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		//*** sc
 
 		//particleVelocity += dt * particleVelocity * -0.01f;//damping
-		particlePosition += particleVelocity * dt * 15.f;//timeScaling
+		particlePosition += particleVelocity * dt;
 
 		mVelocity[i] = particleVelocity;
 		mPositions[i] = particlePosition;
