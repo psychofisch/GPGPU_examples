@@ -13,6 +13,7 @@ layout (std140, binding = 2) buffer VelocityBuffer{
 };
 
 uniform float dt;
+uniform float smoothingWidth;
 uniform vec3 gravity;
 uniform int numberOfParticles;
 uniform vec3 mDimension;
@@ -20,7 +21,7 @@ uniform vec3 mDimension;
 //uniform vec3 cubePos;
 //uniform vec3 cubeSize;
 
-vec4 calculatePressure(uint index);
+vec4 calculatePressure(uint index, float smoothingWidth);
 //void addCube(vec3 cubePos, vec3 cubeSize, int particleAmount);
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
@@ -34,7 +35,7 @@ void main(){
 	// velocityBuffer[index] = calculatePressure(index);
 	vec3 particlePosition = positionBuffer[index].xyz;
 	vec3 particleVelocity = velocityBuffer[index].xyz;
-	vec4 particlePressure = calculatePressure(index);
+	vec4 particlePressure = calculatePressure(index, smoothingWidth);
 	// vec3 particlePressure = vec3(0,0,0);
 	
 	if (   particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
@@ -68,9 +69,8 @@ void main(){
 	//velocityBuffer[index] = particlePressure;
 }
 
-vec4 calculatePressure(uint index)
+vec4 calculatePressure(uint index, float smoothingWidth)
 {
-	float smoothingWidth = 10.f;
 	//float smoothingWidth = 18.f;
 	float amplitude = 1.f;
 	vec3 particlePosition = positionBuffer[index].xyz;

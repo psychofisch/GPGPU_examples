@@ -41,8 +41,15 @@ class ofApp : public ofBaseApp{
 		bool mValve;
 
 		ofxPanel mHud;
-		ofxLabel mHudFps;
-		ofxLabel mHudMode;
-		ofxLabel mHudRotation;
-		ofxColorSlider mHudColor;
+
+		ofParameterGroup mHudDebugGroup;
+		ofParameter<float> mHudFps;
+		ofParameter<ofQuaternion> mHudRotation;
+
+		ofParameterGroup mHudControlGroup;
+		ofParameter<std::string> mHudMode;
+		ofParameter<ofColor> mHudColor;
+
+		ofParameterGroup mHudSimulationGroup;
+		ofParameter<float> mHudSmoothingWidth;
 };

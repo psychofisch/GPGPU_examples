@@ -270,4 +270,9 @@
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="bin\data\particles.compute">
+      <Filter>src</Filter>
+    </FxCompile>
+  </ItemGroup>
 </Project>
