@@ -39,14 +39,24 @@ void ofApp::setup(){
 	mMouse = ofVec2f(-1, -1);
 	mMouseSens = 0.8f;
 
+	mHudDebugGroup.setName("Debug Information");
+	mHudDebugGroup.add(mHudFps.set("FPS", -1.f));
+	//mHudDebugGroup.add(mHudRotation.set("Rotation", mGlobalRotation));
+
+	mHudControlGroup.setName("Program Information");
+	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
+	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
+
+	mHudSimulationGroup.setName("Simulation Settings");
+	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", 10.f, 0.0f, 100.f));
+
 	mHud.setup();
-	mHud.add(mHudFps.setup("FPS", "XXX"));
-	mHud.add(mHudMode.setup("Mode", "XXX"));
-	mHud.add(mHudRotation.setup("Rotation", "XXX"));
-	mHud.add(mHudColor.setup("color", ofColor(100, 100, 140), ofColor(0, 0), ofColor(255, 255)));
+	mHud.add(mHudDebugGroup);
+	mHud.add(mHudControlGroup);
+	mHud.add(mHudSimulationGroup);
 	mHud.loadFromFile("settings.xml");
 
-	mHudMode = ofToString((mParticleSystem->getMode()==ParticleSystem::ComputeModes::CPU)?"C":"G") + "PU";
+	mHudMode = ofToString((mParticleSystem->getMode()==ParticleSystem::ComputeModes::CPU)?"CPU":"GPU");
 }
 
 //--------------------------------------------------------------
@@ -54,7 +64,10 @@ void ofApp::update(){
 	float deltaTime =  std::min(0.1, ofGetLastFrameTime());
 	//std::cout << deltaTime << std::endl;
 
-	mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
+	mHudFps = std::round(ofGetFrameRate());
+	//mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
+
+	mParticleSystem->setSmoothingWidth(mHudSmoothingWidth);
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
 	float spinY = cos(ofGetElapsedTimef()*.075f);
@@ -135,7 +148,7 @@ void ofApp::keyReleased(int key){
 		case 'n':
 			mGlobalRotation.normalize();
 			mParticleSystem->setRotation(mGlobalRotation);
-			mHudRotation = ofToString(mGlobalRotation);
+			mHudRotation = mGlobalRotation;
 			break;
 		case 't':
 			std::cout << mParticleSystem->debug_testIfParticlesOutside() << "\n";
@@ -157,7 +170,7 @@ void ofApp::keyReleased(int key){
 				mParticleSystem->setMode(ParticleSystem::ComputeModes::COMPUTE_SHADER);
 			else
 				mParticleSystem->setMode(ParticleSystem::ComputeModes::CPU);
-			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeModes::CPU) ? "C" : "G") + "PU";
+			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeModes::CPU) ? "CPU" : "GPU");
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;
@@ -189,7 +202,7 @@ void ofApp::mouseDragged(int x, int y, int button){
 			
 			//mParticleSystem->setRotation(mGlobalRotation);
 
-			mHudRotation = ofToString(mGlobalRotation);
+			mHudRotation = mGlobalRotation;
 			//std::cout << "Y ";
 		}
 

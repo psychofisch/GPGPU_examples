@@ -9,6 +9,19 @@
 
 typedef unsigned int uint;
 
+struct SimulationData
+{
+	float smoothingWidth;
+};
+
+struct ComputeShaderData
+{
+	ofShader computeShader;
+	ofBufferObject positionBuffer;
+	ofBufferObject positionOutBuffer;
+	ofBufferObject velocityBuffer;
+};
+
 class ParticleSystem
 {
 public:
@@ -27,6 +40,7 @@ public:
 	void setNumberOfParticles(uint nop);
 	void setRotation(ofQuaternion rotation);
 	void setMode(ComputeModes m);
+	void setSmoothingWidth(float sw);
 	void addDamBreak(uint particleAmount);
 	void addRandom(uint particleAmount);
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount);
@@ -52,10 +66,8 @@ private:
 		mGravityRotated;
 	ofVbo mParticlesVBO;
 	ofQuaternion mRotation;
-	ofShader mComputeShader;
-	ofBufferObject	mPositionBuffer,
-					mPositionOutBuffer,
-					mVelocityBuffer;
+	ComputeShaderData mComputeData;
+	SimulationData mSimData;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
