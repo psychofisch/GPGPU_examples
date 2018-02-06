@@ -255,3 +255,5 @@ paket-files/
 *.dll
 *.lib
 *.exp
+
+!myclinfo.exe
