@@ -296,19 +296,12 @@ void ParticleSystem::iUpdateCPU(float dt)
 		//***g
 
 		//static collision
-		if ((particlePosition.x > mDimension.x && particleVelocity.x > 0.f) || (particlePosition.x < 0.f && particleVelocity.x < 0.f))
+		for (int i = 0; i < 3; ++i)
 		{
-			particleVelocity.x *= -(.1f + 0.2f * r);
-		}
-
-		if ((particlePosition.z > mDimension.z && particleVelocity.z > 0.f) || (particlePosition.z < 0.f && particleVelocity.z < 0.f))
-		{
-			particleVelocity.z *= -(.1f + 0.2f * r);
-		}
-
-		if ((particlePosition.y > mDimension.y && particleVelocity.y > 0.f) || (particlePosition.y < 0.f && particleVelocity.y < 0.f))
-		{
-			particleVelocity.y *= -(.1f + 0.2f * r);
+			if ((particlePosition[i] > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] < 0.f && particleVelocity[i] < 0.f))
+			{
+				particleVelocity[i] *= -(.1f + 0.2f * r);
+			}
 		}
 		//*** sc
 
