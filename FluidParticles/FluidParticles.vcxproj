@@ -125,7 +125,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <AdditionalDependencies>%(AdditionalDependencies);assimp.lib;oclUtils64D.lib;shrUtils64.lib;OpenCL.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);assimp.lib;OpenCL.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\NvidiaOpenCL\lib\x64;%(AdditionalLibraryDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
@@ -169,14 +169,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <AdditionalDependencies>%(AdditionalDependencies);assimp.lib;oclUtils64.lib;shrUtils64.lib;OpenCL.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);assimp.lib;OpenCL.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\NvidiaOpenCL\lib\x64;%(AdditionalLibraryDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\oclManager.cpp" />
+    <ClCompile Include="src\oclHelper.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.cpp" />
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpMeshHelper.cpp" />
@@ -197,6 +197,7 @@
     <ClCompile Include="src\ParticleSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\oclHelper.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpMeshHelper.h" />

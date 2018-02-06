@@ -1,7 +1,5 @@
 #include "ParticleSystem.h"
 
-
-
 ParticleSystem::ParticleSystem(uint maxParticles)
 	:mGravity(0.f, -9.81f, 0.f),
 	mCapacity(maxParticles),
@@ -25,7 +23,7 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 	mSimData.smoothingWidth = 10.0f;
 
-	
+	oclHelp::setupOpenCLContext(1);
 }
 
 ParticleSystem::~ParticleSystem()
