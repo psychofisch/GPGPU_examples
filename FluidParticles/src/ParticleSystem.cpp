@@ -24,6 +24,8 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mComputeData.computeShader.linkProgram();
 
 	mSimData.smoothingWidth = 10.0f;
+
+	
 }
 
 ParticleSystem::~ParticleSystem()
@@ -277,7 +279,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		ofVec3f particlePosition = mPositions[i];
 		ofVec3f particleVelocity = mVelocity[i];
 		ofVec3f particlePressure = iCalculatePressureVector(i);
-		float r = 1.f;
+
 		//float r = m_randoms[i];
 		//m_rng.seed(i * 815, 1337, 420);
 
@@ -300,7 +302,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		{
 			if ((particlePosition[i] > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] < 0.f && particleVelocity[i] < 0.f))
 			{
-				particleVelocity[i] *= -(.1f + 0.2f * r);
+				particleVelocity[i] *= -.3f;
 			}
 		}
 		//*** sc

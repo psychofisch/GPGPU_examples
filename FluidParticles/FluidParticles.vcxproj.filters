@@ -58,6 +58,9 @@
     <ClCompile Include="src\ParticleSystem.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\oclManager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

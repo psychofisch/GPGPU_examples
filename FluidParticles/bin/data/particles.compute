@@ -49,7 +49,7 @@ void main(){
 	{
 		if ((particlePosition[i] > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] < 0.f && particleVelocity[i] < 0.f))
 		{
-			particleVelocity[i] *= -(.3f);
+			particleVelocity[i] *= -.3f;
 		}
 	}
 	// *** sc

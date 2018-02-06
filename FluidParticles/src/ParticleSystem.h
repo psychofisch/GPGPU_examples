@@ -1,5 +1,13 @@
 #pragma once
 
+// Standardized MAX, MIN and CLAMP
+#define MAX(a, b) ((a > b) ? a : b)
+#define MIN(a, b) ((a < b) ? a : b)
+#define CLAMP(a, b, c) MIN(MAX(a, b), c)    // double sided clip of input a
+#define TOPCLAMP(a, b) (a < b ? a:b)	    // single top side clip of input a
+
+#include <oclUtils.h>
+
 #include "ofVec3f.h"
 #include "ofRectangle.h"
 #include "ofMath.h"
