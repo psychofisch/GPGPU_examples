@@ -34,10 +34,11 @@ class ParticleSystem
 public:
 	enum class ComputeModes
 	{
-		CPU,
+		CPU = 0,
 		COMPUTE_SHADER,
 		CUDA,
-		OPENCL
+		OPENCL,
+		COMPUTEMODES_SIZE
 	};
 
 	ParticleSystem(uint mp);
@@ -65,6 +66,7 @@ private:
 	uint mNumberOfParticles,
 		mCapacity;
 	ComputeModes mMode;
+	std::unordered_map<ComputeModes, bool> mAvailableModes;
 	ofVec4f	*mPositions,
 		*mVelocity;
 		//*mPressure,

@@ -84,7 +84,7 @@ bool oclHelper::compileKernel(const char * file)
 	handle_clerror(mError);
 
 	//create kernels
-	cl::Kernel kernel(program, "cell", &mError);
+	cl::Kernel kernel(program, "particleUpdate", &mError);
 	handle_clerror(mError);
 
 	cl::CommandQueue queue(mContext, mDevices[mDeviceId], 0, &mError);
@@ -92,11 +92,15 @@ bool oclHelper::compileKernel(const char * file)
 	return false;
 }
 
+cl::CommandQueue & oclHelper::getCommandQueue()
+{
+	return mQueue;
+}
+
 void oclHelper::handle_clerror(cl_int err)
 {
 	if (err != CL_SUCCESS) {
 		std::cerr << "OpenCL Error: " << cl_errorstring(err) << std::string(".") << std::endl;
-		std::cin.ignore();
 		exit(EXIT_FAILURE);
 	}
 }

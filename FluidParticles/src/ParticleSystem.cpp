@@ -5,12 +5,15 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mCapacity(maxParticles),
 	mNumberOfParticles(0),
 	mMode(ComputeModes::CPU)
-	//,mShaderStorageSwap(false)
 {
+	//*** setup for CPU
 	mPositions = new ofVec4f[maxParticles];
 	mVelocity = new ofVec4f[maxParticles];
 	//mPressure = new ofVec3f[maxParticles];
+	mAvailableModes[ComputeModes::CPU] = true;
+	//***
 
+	//*** setup for Compute Shader
 	mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * maxParticles, mPositions, GL_DYNAMIC_DRAW);
 	mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * maxParticles, mPositions, GL_DYNAMIC_DRAW);
 	mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * maxParticles, mVelocity, GL_DYNAMIC_DRAW);
@@ -18,23 +21,33 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mParticlesVBO.setVertexBuffer(mComputeData.positionBuffer, 3, sizeof(ofVec4f));
 
 	if (!mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, "particles.compute"))
-		exit(1);
+		mAvailableModes[ComputeModes::COMPUTE_SHADER] = false;
+	else
+		mAvailableModes[ComputeModes::COMPUTE_SHADER] = true;
 	mComputeData.computeShader.linkProgram();
+	//***
 
-	mSimData.smoothingWidth = 10.0f;
-
+	//*** setup for OpenCL
 	const char* sourceFile = "data/particles.cl";
 	if (!mOCLHelper.setupOpenCLContext(1))
 	{
 		if (mOCLHelper.compileKernel(sourceFile))
 		{
 			std::cout << "ERROR: Unable to compile \"" << sourceFile << "\".\n";
-		}
+			mAvailableModes[ComputeModes::OPENCL] = false;
+		}else
+			mAvailableModes[ComputeModes::OPENCL] = true;
 	}
 	else
 	{
 		std::cout << "ERROR: Unable to create OpenCL context\n";
 	}
+	//***
+
+	//*** setup for CUDA
+	// !TODO!
+	mAvailableModes[ComputeModes::CUDA] = false;
+	//***
 }
 
 ParticleSystem::~ParticleSystem()

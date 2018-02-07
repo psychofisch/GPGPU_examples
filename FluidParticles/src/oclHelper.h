@@ -10,6 +10,7 @@ class oclHelper
 		bool setupOpenCLContext(cl_uint platformId = 0, cl_uint deviceId = 0);
 		cl::Context& getCLContext();
 		bool compileKernel(const char* file);
+		cl::CommandQueue& getCommandQueue();
 
 		static void handle_clerror(cl_int err);
 		static std::string cl_errorstring(cl_int err);
