@@ -75,6 +75,7 @@ private:
 	ofQuaternion mRotation;
 	ComputeShaderData mComputeData;
 	SimulationData mSimData;
+	oclHelper mOCLHelper;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);

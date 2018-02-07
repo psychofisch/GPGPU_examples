@@ -23,7 +23,18 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 	mSimData.smoothingWidth = 10.0f;
 
-	oclHelp::setupOpenCLContext(1);
+	const char* sourceFile = "data/particles.cl";
+	if (!mOCLHelper.setupOpenCLContext(1))
+	{
+		if (mOCLHelper.compileKernel(sourceFile))
+		{
+			std::cout << "ERROR: Unable to compile \"" << sourceFile << "\".\n";
+		}
+	}
+	else
+	{
+		std::cout << "ERROR: Unable to create OpenCL context\n";
+	}
 }
 
 ParticleSystem::~ParticleSystem()
