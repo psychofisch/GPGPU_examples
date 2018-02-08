@@ -13,9 +13,10 @@ class oclHelper
 		const cl::CommandQueue & getCommandQueue() const;
 		const cl::Kernel & getKernel() const;
 		size_t getGlobalSize(int numberOfParticles);
+		const cl::Device & getDevice() const;
 
 
-		static void handle_clerror(cl_int err);
+		inline static void handle_clerror(cl_int err, int line);
 		static std::string cl_errorstring(cl_int err);
 
 	private:

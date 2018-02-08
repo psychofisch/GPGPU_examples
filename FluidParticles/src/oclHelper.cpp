@@ -27,13 +27,13 @@ bool oclHelper::setupOpenCLContext(cl_uint platformId, cl_uint deviceId)
 	// create a context and get available devices
 	mPlatform = platforms[platformId];
 	std::cout << "Platform Name: " << mPlatform.getInfo<CL_PLATFORM_NAME>(&mError) << std::endl;
-	oclHelper::handle_clerror(mError);
+	oclHelper::handle_clerror(mError, __LINE__);
 	cl_context_properties properties[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)(mPlatform)(), 0};
 
 	// create context on desired platform and select device
 	context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
 	mDevices = context.getInfo<CL_CONTEXT_DEVICES>(&mError);
-	oclHelper::handle_clerror(mError);
+	oclHelper::handle_clerror(mError, __LINE__);
 
 	if (mDevices.size() == 0 || mDevices.size() < deviceId + 1)
 	{
@@ -82,14 +82,14 @@ bool oclHelper::compileKernel(const char * file)
 		std::cout << s << std::endl;
 		return true;
 	}
-	handle_clerror(mError);
+	handle_clerror(mError, __LINE__);
 
 	//create kernels
 	mKernel = cl::Kernel(program, "particleUpdate", &mError);
-	handle_clerror(mError);
+	handle_clerror(mError, __LINE__);
 
 	mQueue = cl::CommandQueue(mContext, mDevices[mDeviceId], 0, &mError);
-	handle_clerror(mError);
+	handle_clerror(mError, __LINE__);
 
 	return false;
 }
@@ -110,7 +110,7 @@ size_t oclHelper::getGlobalSize(int numberOfParticles)
 	{
 		if (pow(2, i) > numberOfParticles)
 		{
-			numberOfParticles = i*i;
+			mGlobalSize = pow(2, i);
 			break;
 		}
 	}
@@ -122,10 +122,16 @@ size_t oclHelper::getGlobalSize(int numberOfParticles)
 	return mGlobalSize;
 }
 
-void oclHelper::handle_clerror(cl_int err)
+const cl::Device & oclHelper::getDevice() const
+{
+	return mDevices[mDeviceId];
+}
+
+void oclHelper::handle_clerror(cl_int err, int line)
 {
 	if (err != CL_SUCCESS) {
-		std::cerr << "OpenCL Error: " << cl_errorstring(err) << std::string(".") << std::endl;
+		std::cerr << "OpenCL Error: " << cl_errorstring(err) << "\n on line " << line << std::endl;
+		std::cin.ignore();
 		exit(EXIT_FAILURE);
 	}
 }
@@ -180,7 +186,7 @@ std::string oclHelper::cl_errorstring(cl_int err) {
 	case CL_INVALID_GL_OBJECT:                return std::string("Invalid OpenGL object");
 	case CL_INVALID_BUFFER_SIZE:              return std::string("Invalid buffer size");
 	case CL_INVALID_MIP_LEVEL:                return std::string("Invalid mip-map level");
-	case CL_INVALID_GLOBAL_WORK_SIZE:         return std::string("Invalid gloal work size");
+	case CL_INVALID_GLOBAL_WORK_SIZE:         return std::string("Invalid global work size");
 		// case CL_INVALID_PROPERTY:                 return std::string("Invalid property");
 	default:                                  return std::string("Unknown error code");
 	}
