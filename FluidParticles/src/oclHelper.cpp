@@ -3,7 +3,8 @@
 
 
 oclHelper::oclHelper()
-	:mError(CL_SUCCESS)
+	:mError(CL_SUCCESS),
+	mGlobalSize(0)
 {
 
 }
@@ -49,7 +50,7 @@ bool oclHelper::setupOpenCLContext(cl_uint platformId, cl_uint deviceId)
 	return false;
 }
 
-cl::Context & oclHelper::getCLContext()
+const cl::Context & oclHelper::getCLContext() const
 {
 	return mContext;
 }
@@ -84,17 +85,41 @@ bool oclHelper::compileKernel(const char * file)
 	handle_clerror(mError);
 
 	//create kernels
-	cl::Kernel kernel(program, "particleUpdate", &mError);
+	mKernel = cl::Kernel(program, "particleUpdate", &mError);
 	handle_clerror(mError);
 
-	cl::CommandQueue queue(mContext, mDevices[mDeviceId], 0, &mError);
+	mQueue = cl::CommandQueue(mContext, mDevices[mDeviceId], 0, &mError);
 	handle_clerror(mError);
+
 	return false;
 }
 
-cl::CommandQueue & oclHelper::getCommandQueue()
+const cl::CommandQueue & oclHelper::getCommandQueue() const
 {
 	return mQueue;
+}
+
+const cl::Kernel & oclHelper::getKernel() const
+{
+	return mKernel;
+}
+
+size_t oclHelper::getGlobalSize(int numberOfParticles)
+{
+	for (int i = 1; i <= 20; ++i)//TODO: do not recalculate this everytime
+	{
+		if (pow(2, i) > numberOfParticles)
+		{
+			numberOfParticles = i*i;
+			break;
+		}
+	}
+
+	//TODO: add a debug mode
+	/*if (m_debug)
+		std::cout << "threads|real size -> " << globalSize.x << ":" << m_size.x << "|" << globalSize.y << ":" << m_size.y << std::endl;*/
+
+	return mGlobalSize;
 }
 
 void oclHelper::handle_clerror(cl_int err)

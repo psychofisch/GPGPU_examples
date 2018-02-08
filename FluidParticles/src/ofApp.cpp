@@ -25,7 +25,7 @@ void ofApp::setup(){
 	ofBoxPrimitive testRect;
 
 	mParticleSystem = new ParticleSystem(5000);
-	mParticleSystem->setMode(ParticleSystem::ComputeModes::CPU);
+	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 	mParticleSystem->setDimensions(ofVec3f(1.f));
 	//mParticleSystem->addDamBreak(200);
 	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);
@@ -58,7 +58,7 @@ void ofApp::setup(){
 	mHud.add(mHudSimulationGroup);
 	mHud.loadFromFile("settings.xml");
 
-	mHudMode = ofToString((mParticleSystem->getMode()==ParticleSystem::ComputeModes::CPU)?"CPU":"GPU");
+	mHudMode = ofToString((mParticleSystem->getMode()==ParticleSystem::ComputeMode::CPU)?"CPU":"GPU");
 }
 
 //--------------------------------------------------------------
@@ -168,11 +168,23 @@ void ofApp::keyReleased(int key){
 			mValve = false;
 			break;
 		case 'm':
-			if (mParticleSystem->getMode() == ParticleSystem::ComputeModes::CPU)
-				mParticleSystem->setMode(ParticleSystem::ComputeModes::COMPUTE_SHADER);
+		{
+			/*if (mParticleSystem->getMode() == ParticleSystem::ComputeMode::CPU)
+				mParticleSystem->setMode(ParticleSystem::ComputeMode::COMPUTE_SHADER);
 			else
-				mParticleSystem->setMode(ParticleSystem::ComputeModes::CPU);
-			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeModes::CPU) ? "CPU" : "GPU");
+				mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
+			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeMode::CPU) ? "CPU" : "GPU");*/
+			ParticleSystem::ComputeMode currentMode = mParticleSystem->nextMode(mParticleSystem->getMode());
+			mParticleSystem->setMode(currentMode);
+			if (currentMode == ParticleSystem::ComputeMode::CPU)
+				mHudMode = "CPU";
+			else if (currentMode == ParticleSystem::ComputeMode::COMPUTE_SHADER)
+				mHudMode = "Compute Shader";
+			else if (currentMode == ParticleSystem::ComputeMode::OPENCL)
+				mHudMode = "OpenCL";
+			else if (currentMode == ParticleSystem::ComputeMode::CUDA)
+				mHudMode = "CUDA";
+		}
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;
