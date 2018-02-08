@@ -257,3 +257,6 @@ paket-files/
 *.exp
 
 !myclinfo.exe
+!NvidiaOpenCL
+!NvidiaOpenCL\lib\x64\*.lib
+!NvidiaOpenCL\lib\x64\oclUtils64.lib
