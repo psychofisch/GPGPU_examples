@@ -73,7 +73,7 @@ bool oclHelper::compileKernel(const char * file)
 
 	//try {
 	mError = program.build(mDevices);
-	if (mError != ERROR_SUCCESS)
+	if (mError != CL_SUCCESS)
 	{
 		std::string s;
 		program.getBuildInfo(mDevices[0], CL_PROGRAM_BUILD_LOG, &s);

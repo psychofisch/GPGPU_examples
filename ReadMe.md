@@ -10,6 +10,10 @@ This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9
 └───GPGPU_examples
 │   │   ReadMe.md (this file)
 │   │
+|   └───NvidiaOpenCL
+|   |   |   inc
+|   |   |   lib
+|   |   |   src
 │   └───FluidParticles
 │       │   FluidParticles.sln
 │       │   bin
@@ -20,6 +24,8 @@ This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9
     │   apps
     |   ...
 ```
+
+It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda-downloads) to be installed.
 
 ### Controls
 | Key        | Function         

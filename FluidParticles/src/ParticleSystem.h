@@ -12,7 +12,11 @@
 #include <ofQuaternion.h>
 #include <ofShader.h>
 #include <ofVbo.h>
+
 #include "oclHelper.h"
+
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
 
 typedef unsigned int uint;
 
@@ -34,6 +38,11 @@ struct OCLData
 	cl::Buffer positionBuffer;
 	cl::Buffer positionOutBuffer;
 	cl::Buffer velocityBuffer;
+};
+
+struct CUDAta
+{
+
 };
 
 class ParticleSystem
