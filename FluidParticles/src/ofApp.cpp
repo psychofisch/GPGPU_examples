@@ -3,7 +3,18 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	std::cout << "setting up...\n";
-	mLastFrame = 0.1f;
+
+	if (mXmlSettings.loadFile("settings.xml")) {
+		std::cout << "settings.xml loaded\n";
+	}
+	else {
+		std::cout << "unable to load settings.xml check data/ folder\n";
+		std::cout << "creating default settings.xml\n";
+		mXmlSettings.setValue("MAXPARTICLES", 5000);
+		mXmlSettings.setValue("CONTROLS:MOUSESENS", 0.8f);
+		//mXmlSettings.setValue("SIM:SWIDTH", 0.1f);
+		mXmlSettings.saveFile("settings.xml");
+	}
 
 	ofBackground(69, 69, 69);
 
@@ -24,7 +35,8 @@ void ofApp::setup(){
 
 	ofBoxPrimitive testRect;
 
-	mParticleSystem = new ParticleSystem(5000);
+	uint maxParticles = mXmlSettings.getValue("MAXPARTICLES", 5000);
+	mParticleSystem = new ParticleSystem(maxParticles);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 	mParticleSystem->setDimensions(ofVec3f(1.f));
 	//mParticleSystem->addDamBreak(200);
@@ -39,7 +51,7 @@ void ofApp::setup(){
 	mRotationAxis = 0b000;
 
 	mMouse = ofVec2f(-1, -1);
-	mMouseSens = 0.8f;
+	mMouseSens = mXmlSettings.getValue("CONTROLS:MOUSESENS", 0.8f);
 
 	mHudDebugGroup.setName("Debug Information");
 	mHudDebugGroup.add(mHudFps.set("FPS", -1.f));
@@ -47,18 +59,19 @@ void ofApp::setup(){
 
 	mHudControlGroup.setName("Program Information");
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
+	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
 	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
 
 	mHudSimulationGroup.setName("Simulation Settings");
-	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", .1f, 0.0f, 1.f));
+	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", 0.1f, 0.0f, 1.f));
 
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
 	mHud.add(mHudControlGroup);
 	mHud.add(mHudSimulationGroup);
-	mHud.loadFromFile("settings.xml");
+	mHud.loadFromFile("hud.xml");
 
-	mHudMode = ofToString((mParticleSystem->getMode()==ParticleSystem::ComputeMode::CPU)?"CPU":"GPU");
+	mHudMode = iHudGetModeString(mParticleSystem->getMode());
 }
 
 //--------------------------------------------------------------
@@ -67,6 +80,7 @@ void ofApp::update(){
 	//std::cout << deltaTime << std::endl;
 
 	mHudFps = std::round(ofGetFrameRate());
+	mHudParticles = ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 	//mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
 	mParticleSystem->setSmoothingWidth(mHudSmoothingWidth);
@@ -126,6 +140,8 @@ void ofApp::draw(){
 void ofApp::keyPressed(int key){
 	switch (key)
 	{
+	case OF_KEY_ESC: quit();
+		break;
 	case 'v':
 		mValve = true;
 		break;
@@ -138,8 +154,6 @@ void ofApp::keyPressed(int key){
 void ofApp::keyReleased(int key){
 	switch (key)
 	{
-		case OF_KEY_ESC: //quit();
-			break;
 		case 'h':
 			std::cout << "Camera:" << mMainCamera.getPosition() << std::endl;
 			std::cout << "Box: " << mTestBox.getPosition() << std::endl;
@@ -176,14 +190,7 @@ void ofApp::keyReleased(int key){
 			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeMode::CPU) ? "CPU" : "GPU");*/
 			ParticleSystem::ComputeMode currentMode = mParticleSystem->nextMode(mParticleSystem->getMode());
 			mParticleSystem->setMode(currentMode);
-			if (currentMode == ParticleSystem::ComputeMode::CPU)
-				mHudMode = "CPU";
-			else if (currentMode == ParticleSystem::ComputeMode::COMPUTE_SHADER)
-				mHudMode = "Compute Shader";
-			else if (currentMode == ParticleSystem::ComputeMode::OPENCL)
-				mHudMode = "OpenCL";
-			else if (currentMode == ParticleSystem::ComputeMode::CUDA)
-				mHudMode = "CUDA";
+			mHudMode = iHudGetModeString(currentMode);
 		}
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
@@ -299,6 +306,29 @@ void ofApp::quit()
 {
 	delete mParticleSystem;
 
-	std::cout << "quitting...\n";
+	std::cout << "saving settings...";
+	mXmlSettings.setValue("MAXPARTICLES", int(mParticleSystem->getCapacity()));
+	mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
+	//mXmlSettings.setValue("SIM:SWIDTH", mHud);
+	mXmlSettings.saveFile("settings.xml");
+
+	mHud.saveToFile("hud.xml");
+	std::cout << "done\n";
+
+	std::cout << "quitting...bye =)\n";
 	this->exit();
+}
+
+std::string ofApp::iHudGetModeString(ParticleSystem::ComputeMode m)
+{
+	if (m == ParticleSystem::ComputeMode::CPU)
+		return "CPU";
+	else if (m == ParticleSystem::ComputeMode::COMPUTE_SHADER)
+		return "Compute Shader";
+	else if (m == ParticleSystem::ComputeMode::OPENCL)
+		return "OpenCL";
+	else if (m == ParticleSystem::ComputeMode::CUDA)
+		return "CUDA";
+	else
+		return "UNKNOWN";
 }

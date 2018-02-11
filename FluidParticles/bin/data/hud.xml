@@ -1,0 +1,14 @@
+<group>
+	<Debug_Information>
+		<FPS>144</FPS>
+	</Debug_Information>
+	<Program_Information>
+		<Mode>CPU</Mode>
+		<Particles>0/50000</Particles>
+		<Particle_Color>63, 151, 58, 255</Particle_Color>
+	</Program_Information>
+	<Simulation_Settings>
+		<Smoothing_Width>0.107143</Smoothing_Width>
+	</Simulation_Settings>
+<group/>
+</group>
