@@ -51,6 +51,7 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	}
 
 	cl_int err = mOCLHelper.getDevice().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &mCUData.maxWorkGroupSize);
+	mCUData.maxWorkGroupSize /= 2;
 	oclHelper::handle_clerror(err, __LINE__);
 	//***
 

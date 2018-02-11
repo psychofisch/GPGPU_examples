@@ -59,7 +59,7 @@ void ofApp::setup(){
 
 	mHudControlGroup.setName("Program Information");
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
-	mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
+	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
 	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
 	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
 
@@ -85,7 +85,7 @@ void ofApp::update(){
 	//mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
 	mParticleSystem->setSmoothingWidth(mHudSmoothingWidth);
-	mParticleSystem->getCudata().maxWorkGroupSize = mHudWorkGroup;
+	//mParticleSystem->getCudata().maxWorkGroupSize = mHudWorkGroup;
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
 	float spinY = cos(ofGetElapsedTimef()*.075f);
