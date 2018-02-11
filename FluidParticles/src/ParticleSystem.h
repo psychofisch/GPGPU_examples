@@ -1,11 +1,22 @@
 #pragma once
 
-#include "ofVec3f.h"
-#include "ofRectangle.h"
-#include "ofMath.h"
-#include "ofQuaternion.h"
-#include "ofShader.h"
-#include "ofVbo.h"
+// Standardized MAX, MIN and CLAMP
+//#define MAX(a, b) ((a > b) ? a : b)
+//#define MIN(a, b) ((a < b) ? a : b)
+//#define CLAMP(a, b, c) MIN(MAX(a, b), c)    // double sided clip of input a
+//#define TOPCLAMP(a, b) (a < b ? a:b)	    // single top side clip of input a
+
+#include <ofVec3f.h>
+#include <ofRectangle.h>
+#include <ofMath.h>
+#include <ofQuaternion.h>
+#include <ofShader.h>
+#include <ofVbo.h>
+
+#include "oclHelper.h"
+
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
 
 typedef unsigned int uint;
 
@@ -22,15 +33,28 @@ struct ComputeShaderData
 	ofBufferObject velocityBuffer;
 };
 
+struct OCLData
+{
+	cl::Buffer positionBuffer;
+	cl::Buffer positionOutBuffer;
+	cl::Buffer velocityBuffer;
+};
+
+struct CUDAta
+{
+
+};
+
 class ParticleSystem
 {
 public:
-	enum class ComputeModes
+	enum class ComputeMode
 	{
-		CPU,
+		CPU = 0,
 		COMPUTE_SHADER,
 		CUDA,
-		OPENCL
+		OPENCL,
+		COMPUTEMODES_SIZE
 	};
 
 	ParticleSystem(uint mp);
@@ -39,7 +63,8 @@ public:
 	void setDimensions(ofVec3f dimensions);
 	void setNumberOfParticles(uint nop);
 	void setRotation(ofQuaternion rotation);
-	void setMode(ComputeModes m);
+	void setMode(ComputeMode m);
+	ComputeMode nextMode(ParticleSystem::ComputeMode current);
 	void setSmoothingWidth(float sw);
 	void addDamBreak(uint particleAmount);
 	void addRandom(uint particleAmount);
@@ -50,14 +75,15 @@ public:
 	ofVec3f getDimensions();
 	uint getNumberOfParticles();
 	uint getCapacity();
-	ComputeModes getMode();
+	ComputeMode getMode();
 	void update(float dt);
 	uint debug_testIfParticlesOutside();
 
 private:
 	uint mNumberOfParticles,
 		mCapacity;
-	ComputeModes mMode;
+	ComputeMode mMode;
+	std::unordered_map<ComputeMode, bool> mAvailableModes;
 	ofVec4f	*mPositions,
 		*mVelocity;
 		//*mPressure,
@@ -68,9 +94,12 @@ private:
 	ofQuaternion mRotation;
 	ComputeShaderData mComputeData;
 	SimulationData mSimData;
+	oclHelper mOCLHelper;
+	OCLData mOCLData;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
+	void iUpdateOCL(float dt);
 	ofVec3f iCalculatePressureVector(size_t index);
 	//bool mShaderStorageSwap;
 };

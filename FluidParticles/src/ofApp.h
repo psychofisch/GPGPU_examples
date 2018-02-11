@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxGui.h"
+#include "ofxXmlSettings.h"
 
 #include "ParticleSystem.h"
 
@@ -27,7 +28,6 @@ class ofApp : public ofBaseApp{
 		void quit();
 
 	private:
-		float mLastFrame;
 		ofBoxPrimitive mTestBox;
 		//ofEasyCam mMainCamera;
 		ofCamera mMainCamera;
@@ -40,6 +40,8 @@ class ofApp : public ofBaseApp{
 		float mMouseSens;
 		bool mValve;
 
+		ofxXmlSettings mXmlSettings;
+
 		ofxPanel mHud;
 
 		ofParameterGroup mHudDebugGroup;
@@ -48,8 +50,11 @@ class ofApp : public ofBaseApp{
 
 		ofParameterGroup mHudControlGroup;
 		ofParameter<std::string> mHudMode;
+		ofParameter<std::string> mHudParticles;
 		ofParameter<ofColor> mHudColor;
 
 		ofParameterGroup mHudSimulationGroup;
 		ofParameter<float> mHudSmoothingWidth;
+
+		std::string iHudGetModeString(ParticleSystem::ComputeMode m);
 };

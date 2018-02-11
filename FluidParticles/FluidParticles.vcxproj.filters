@@ -58,6 +58,9 @@
     <ClCompile Include="src\ParticleSystem.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\oclHelper.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -264,6 +267,9 @@
       <Filter>addons\ofxXmlSettings\libs</Filter>
     </ClInclude>
     <ClInclude Include="src\ParticleSystem.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\oclHelper.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

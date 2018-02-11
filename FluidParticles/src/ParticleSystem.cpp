@@ -1,29 +1,60 @@
 #include "ParticleSystem.h"
 
-
-
 ParticleSystem::ParticleSystem(uint maxParticles)
 	:mGravity(0.f, -9.81f, 0.f),
 	mCapacity(maxParticles),
 	mNumberOfParticles(0),
-	mMode(ComputeModes::CPU)
-	//,mShaderStorageSwap(false)
+	mMode(ComputeMode::CPU)
 {
+	//*** setup for CPU
 	mPositions = new ofVec4f[maxParticles];
 	mVelocity = new ofVec4f[maxParticles];
 	//mPressure = new ofVec3f[maxParticles];
+	mAvailableModes[ComputeMode::CPU] = true;
+	//***
 
+	//*** setup for Compute Shader
 	mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * maxParticles, mPositions, GL_DYNAMIC_DRAW);
 	mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * maxParticles, mPositions, GL_DYNAMIC_DRAW);
 	mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * maxParticles, mVelocity, GL_DYNAMIC_DRAW);
 
-	mParticlesVBO.setVertexBuffer(mComputeData.positionBuffer, 3, sizeof(ofVec4f));
+	mParticlesVBO.setVertexBuffer(mComputeData.positionBuffer, 3, sizeof(ofVec4f));//use compute shader buffer to store the particle positions on the GPU
 
 	if (!mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, "particles.compute"))
-		exit(1);
+		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
+	else
+		mAvailableModes[ComputeMode::COMPUTE_SHADER] = true;
 	mComputeData.computeShader.linkProgram();
+	//***
 
-	mSimData.smoothingWidth = 10.0f;
+	//*** setup for OpenCL
+	const char* sourceFile = "data/particles.cl";
+	if (!mOCLHelper.setupOpenCLContext(1))
+	{
+		if (mOCLHelper.compileKernel(sourceFile))
+		{
+			std::cout << "ERROR: Unable to compile \"" << sourceFile << "\".\n";
+			mAvailableModes[ComputeMode::OPENCL] = false;
+		}
+		else
+		{
+			cl::Context context = mOCLHelper.getCLContext();
+			mOCLData.positionBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * maxParticles);
+			mOCLData.positionOutBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * maxParticles);
+			mOCLData.velocityBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * maxParticles);
+			mAvailableModes[ComputeMode::OPENCL] = true;
+		}
+	}
+	else
+	{
+		std::cout << "ERROR: Unable to create OpenCL context\n";
+	}
+	//***
+
+	//*** setup for CUDA
+	// !TODO!
+	mAvailableModes[ComputeMode::CUDA] = false;
+	//***
 }
 
 ParticleSystem::~ParticleSystem()
@@ -53,21 +84,61 @@ void ParticleSystem::setRotation(ofQuaternion rotation)
 	mRotation = rotation;
 }
 
-void ParticleSystem::setMode(ComputeModes m)
+void ParticleSystem::setMode(ComputeMode m)
 {
-	if (mMode == ComputeModes::COMPUTE_SHADER && m == ComputeModes::CPU)
+	//first sync all data back to RAM
+	if (mMode == ComputeMode::COMPUTE_SHADER)
 	{
 		ofVec4f* tmpPositionFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
 		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mPositions);
 		mComputeData.positionBuffer.unmap();
 	}
-	else if (mMode == ComputeModes::CPU && m == ComputeModes::COMPUTE_SHADER)
+	else if (mMode == ComputeMode::OPENCL)
+	{
+		mOCLHelper.getCommandQueue().enqueueReadBuffer(mOCLData.positionOutBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mPositions);
+		mOCLHelper.getCommandQueue().enqueueReadBuffer(mOCLData.velocityBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mVelocity);
+	}
+
+	//and then copy the data to the corresponding buffer for the new mode
+	if (m == ComputeMode::COMPUTE_SHADER)
 	{
 		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mPositions);
 		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity);
 	}
+	else if (m == ComputeMode::OPENCL)
+	{
+		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.positionBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mPositions);
+		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.velocityBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mVelocity);
+	}
+/*
+	if (mMode == ComputeMode::COMPUTE_SHADER && m == ComputeMode::CPU)
+	{
+		ofVec4f* tmpPositionFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
+		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mPositions);
+		mComputeData.positionBuffer.unmap();
+	}
+	else if (mMode == ComputeMode::CPU && m == ComputeMode::COMPUTE_SHADER)
+	{
+		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mPositions);
+		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity);
+	}*/
 
 	mMode = m;
+}
+
+ParticleSystem::ComputeMode ParticleSystem::nextMode(ParticleSystem::ComputeMode current)
+{
+	int mode = static_cast<int>(current);
+	mode++;
+	if (mode >= static_cast<int>(ParticleSystem::ComputeMode::COMPUTEMODES_SIZE))
+	{
+		mode = 0;
+	}
+
+	if (!mAvailableModes[static_cast<ParticleSystem::ComputeMode>(mode)])
+		mode = static_cast<int>(nextMode(static_cast<ParticleSystem::ComputeMode>(mode)));
+
+	return static_cast<ParticleSystem::ComputeMode>(mode);
 }
 
 void ParticleSystem::setSmoothingWidth(float sw)
@@ -109,7 +180,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 		return;
 	}*/
 
-	if (mMode != ComputeModes::CPU && mNumberOfParticles > 0)
+	/*if (mMode != ComputeMode::CPU && mNumberOfParticles > 0)
 	{
 		ofVec4f* tmpPositionFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
 		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mPositions);
@@ -118,7 +189,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 		tmpPositionFromGPU = mComputeData.velocityBuffer.map<ofVec4f>(GL_READ_ONLY);
 		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mVelocity);
 		mComputeData.velocityBuffer.unmap();
-	}
+	}*/
 
 	float volume = cubeSize.x * cubeSize.y * cubeSize.z;
 	//float spacePerParticle = volume / particleAmount;
@@ -131,7 +202,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	ofVec3f partPos(0.f);
 
 	int particleCap = -1;
-	for (int i = 0; i < particleAmount; i++)
+	for (uint i = 0; i < particleAmount; i++)
 	{
 		if (mNumberOfParticles + i >= mCapacity)
 		{
@@ -167,34 +238,19 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 
 	if (particleCap == -1)
 		particleCap = particleAmount;
-	
-	/*ofVec4f* tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mPositionBuffer.unmap();*/
 
-	//these update calls are the problem
-	std::cout << glGetError() << std::endl;
-	mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mPositions + mNumberOfParticles);
-	mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mVelocity + mNumberOfParticles);
-
-	/*mVelocityBuffer.updateData(mNumberOfParticles, sizeof(ofVec4f) * particleCap, mVelocity + particleCap);
-	std::cout << glGetError() << std::endl;*/
-	/*mPositionBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleCap), mPositions);
-	std::cout << glGetError() << std::endl;
-	mVelocityBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleCap), mVelocity);
-	std::cout << glGetError() << std::endl;*/
-
-
-	/*tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mPositionBuffer.unmap();*/
-
-	/*tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
-	mVelocityBuffer.unmap();//*/
-	//mPositionBuffer.updateData(sizeof(ofVec4f) * (mNumberOfParticles + particleAmount), mPositions);
+	if (mMode == ComputeMode::COMPUTE_SHADER)
+	{
+		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mPositions + mNumberOfParticles);
+		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mVelocity + mNumberOfParticles);
+	}
+	else if (mMode == ComputeMode::OPENCL)
+	{
+		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.positionBuffer, CL_TRUE, sizeof(ofVec4f) * mNumberOfParticles, particleCap * sizeof(ofVec4f), mPositions + mNumberOfParticles);
+		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.velocityBuffer, CL_TRUE, sizeof(ofVec4f) * mNumberOfParticles, particleCap * sizeof(ofVec4f), mVelocity + mNumberOfParticles);
+	}
 
 	mNumberOfParticles += particleCap;
-
-	/*mPositionBuffer.setData(sizeof(ofVec4f) * mNumberOfParticles, mPositions, GL_DYNAMIC_DRAW);
-	mVelocityBuffer.setData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity, GL_DYNAMIC_DRAW);*/
 }
 
 void ParticleSystem::addDrop()
@@ -234,7 +290,7 @@ uint ParticleSystem::getCapacity()
 	return mCapacity;
 }
 
-ParticleSystem::ComputeModes ParticleSystem::getMode()
+ParticleSystem::ComputeMode ParticleSystem::getMode()
 {
 	return mMode;
 }
@@ -255,11 +311,14 @@ void ParticleSystem::update(float dt)
 
 	switch (mMode)
 	{
-	case ComputeModes::CPU:
+	case ComputeMode::CPU:
 		iUpdateCPU(dt);
 		break;
-	case ComputeModes::COMPUTE_SHADER:
+	case ComputeMode::COMPUTE_SHADER:
 		iUpdateCompute(dt);
+		break;
+	case ComputeMode::OPENCL:
+		iUpdateOCL(dt);
 		break;
 	}
 }
@@ -272,12 +331,12 @@ void ParticleSystem::iUpdateCPU(float dt)
 	maxSpeed = 1.f / maxSpeed;
 
 //#pragma omp parallel for
-	for (int i = 0; i < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
+	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
 		ofVec3f particlePosition = mPositions[i];
 		ofVec3f particleVelocity = mVelocity[i];
 		ofVec3f particlePressure = iCalculatePressureVector(i);
-		float r = 1.f;
+
 		//float r = m_randoms[i];
 		//m_rng.seed(i * 815, 1337, 420);
 
@@ -296,24 +355,17 @@ void ParticleSystem::iUpdateCPU(float dt)
 		//***g
 
 		//static collision
-		if ((particlePosition.x > mDimension.x && particleVelocity.x > 0.f) || (particlePosition.x < 0.f && particleVelocity.x < 0.f))
+		for (int i = 0; i < 3; ++i)
 		{
-			particleVelocity.x *= -(.1f + 0.2f * r);
-		}
-
-		if ((particlePosition.z > mDimension.z && particleVelocity.z > 0.f) || (particlePosition.z < 0.f && particleVelocity.z < 0.f))
-		{
-			particleVelocity.z *= -(.1f + 0.2f * r);
-		}
-
-		if ((particlePosition.y > mDimension.y && particleVelocity.y > 0.f) || (particlePosition.y < 0.f && particleVelocity.y < 0.f))
-		{
-			particleVelocity.y *= -(.1f + 0.2f * r);
+			if ((particlePosition[i] > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] < 0.f && particleVelocity[i] < 0.f))
+			{
+				particleVelocity[i] *= -.3f;
+			}
 		}
 		//*** sc
 
 		//particleVelocity += dt * particleVelocity * -0.01f;//damping
-		particlePosition += particleVelocity * dt * 15.f;//timeScaling
+		particlePosition += particleVelocity * dt;
 
 		mVelocity[i] = particleVelocity;
 		mPositions[i] = particlePosition;
@@ -350,13 +402,62 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles)/512), 1, 1);
 	mComputeData.computeShader.end();
 
-	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);
+	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);//TODO: swap instead of copy buffers
 
 	/*tmpPositionFromGPU = mPositionOutBuffer.map<ofVec4f>(GL_READ_ONLY);
 	mPositionOutBuffer.unmap();//*/
 
 	/*tmpPositionFromGPU = mVelocityBuffer.map<ofVec4f>(GL_READ_ONLY);
 	mVelocityBuffer.unmap();//*/
+}
+
+void ParticleSystem::iUpdateOCL(float dt)
+{
+	cl_int err;
+	cl::CommandQueue queue = mOCLHelper.getCommandQueue();
+	cl::Kernel kernel = mOCLHelper.getKernel();
+
+	kernel.setArg(0, mOCLData.positionBuffer);
+	kernel.setArg(1, mOCLData.positionOutBuffer);
+	kernel.setArg(2, mOCLData.velocityBuffer);
+	kernel.setArg(3, dt);
+	kernel.setArg(4, mSimData.smoothingWidth);
+	kernel.setArg(5, ofVec4f(mGravity));
+	kernel.setArg(6, ofVec4f(mDimension));
+	kernel.setArg(7, mNumberOfParticles);
+
+	cl::NDRange local; //make sure local range is divisible by global range
+	cl::NDRange global;
+	cl::NDRange offset(0);
+	size_t maxWorkGroupSize;
+
+	err = mOCLHelper.getDevice().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &maxWorkGroupSize);
+	oclHelper::handle_clerror(err, __LINE__);
+
+	/*if (mNumberOfParticles < maxWorkGroupSize)
+	{
+		local = cl::NDRange(mNumberOfParticles);
+		global = cl::NDRange(1);
+	}
+	else
+	{*/
+		//size_t globalWorkGroupSize = std::ceilf(float(mNumberOfParticles) / maxWorkGroupSize);
+		//local = cl::NDRange(maxWorkGroupSize / globalWorkGroupSize);
+		//global = cl::NDRange(globalWorkGroupSize);
+		//local = NULL;
+		global = cl::NDRange(mNumberOfParticles);
+	//}
+	
+	err = queue.enqueueNDRangeKernel(kernel, offset, global, local);
+	oclHelper::handle_clerror(err, __LINE__);
+
+	err = queue.enqueueReadBuffer(mOCLData.positionOutBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mPositions);
+	oclHelper::handle_clerror(err, __LINE__);
+
+	err = queue.enqueueCopyBuffer(mOCLData.positionOutBuffer, mOCLData.positionBuffer, 0, 0, mNumberOfParticles * sizeof(ofVec4f));
+	oclHelper::handle_clerror(err, __LINE__);
+
+	mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mPositions);
 }
 
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
