@@ -50,6 +50,7 @@ class ofApp : public ofBaseApp{
 
 		ofParameterGroup mHudControlGroup;
 		ofParameter<std::string> mHudMode;
+		ofParameter<size_t> mHudWorkGroup;
 		ofParameter<std::string> mHudParticles;
 		ofParameter<ofColor> mHudColor;
 

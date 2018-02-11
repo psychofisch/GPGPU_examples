@@ -281,4 +281,9 @@
       <Filter>src</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\data\particles.cu">
+      <Filter>src</Filter>
+    </None>
+  </ItemGroup>
 </Project>

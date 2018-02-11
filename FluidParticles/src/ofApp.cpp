@@ -22,10 +22,7 @@ void ofApp::setup(){
 	mTestBox.setScale(1.f);
 	mTestBox.setPosition(ofVec3f(0.f));
 
-	//mMainCamera.setDistance(-100);
-	//mMainCamera.setPosition(0, 0, 0);
-	//mMainCamera.setupPerspective(true, 90, 0.0f, 100.f);
-	mMainCamera.setPosition(0, 0, -2);
+	mMainCamera.setPosition(0, 0, 2);
 	mMainCamera.lookAt(ofVec3f(0.f));
 	mMainCamera.setNearClip(0.01f);
 	mMainCamera.setFarClip(50.f);
@@ -35,16 +32,19 @@ void ofApp::setup(){
 
 	ofBoxPrimitive testRect;
 
-	uint maxParticles = mXmlSettings.getValue("MAXPARTICLES", 5000);
+	int maxParticles = mXmlSettings.getValue("MAXPARTICLES", 5000);
+	if (maxParticles <= 0)
+	{
+		std::cout << "WARNING: MAXPARTICLES was \"<= 0\" again.\n";
+		maxParticles = 5000;
+	}
 	mParticleSystem = new ParticleSystem(maxParticles);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 	mParticleSystem->setDimensions(ofVec3f(1.f));
+	CUDAta tmpCUDA = mParticleSystem->getCudata();
 	//mParticleSystem->addDamBreak(200);
 	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);
 	//mParticleSystem->addRandom();
-
-	//mParticlesVBO.setVertexData(mParticleSystem->getPositionPtr(), 3, 1000, GL_DYNAMIC_DRAW);
-	//mParticleMesh.addVertices(mParticleSystem->getPositionPtr(), mParticleSystem->getNumberOfParticles());
 
 	mValve = false;
 
@@ -59,6 +59,7 @@ void ofApp::setup(){
 
 	mHudControlGroup.setName("Program Information");
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
+	mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
 	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
 	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
 
@@ -84,6 +85,7 @@ void ofApp::update(){
 	//mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
 	mParticleSystem->setSmoothingWidth(mHudSmoothingWidth);
+	mParticleSystem->getCudata().maxWorkGroupSize = mHudWorkGroup;
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
 	float spinY = cos(ofGetElapsedTimef()*.075f);
@@ -189,6 +191,8 @@ void ofApp::keyReleased(int key){
 				mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeMode::CPU) ? "CPU" : "GPU");*/
 			ParticleSystem::ComputeMode currentMode = mParticleSystem->nextMode(mParticleSystem->getMode());
+			if(mParticleSystem->getNumberOfParticles() > 1000u && currentMode == ParticleSystem::ComputeMode::CPU)
+				currentMode = mParticleSystem->nextMode(currentMode);
 			mParticleSystem->setMode(currentMode);
 			mHudMode = iHudGetModeString(currentMode);
 		}
@@ -307,7 +311,7 @@ void ofApp::quit()
 	delete mParticleSystem;
 
 	std::cout << "saving settings...";
-	mXmlSettings.setValue("MAXPARTICLES", int(mParticleSystem->getCapacity()));
+	mXmlSettings.setValue("MAXPARTICLES", static_cast<int>(mParticleSystem->getCapacity()));
 	mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
 	//mXmlSettings.setValue("SIM:SWIDTH", mHud);
 	mXmlSettings.saveFile("settings.xml");

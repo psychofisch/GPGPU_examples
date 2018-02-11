@@ -49,6 +49,9 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	{
 		std::cout << "ERROR: Unable to create OpenCL context\n";
 	}
+
+	cl_int err = mOCLHelper.getDevice().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &mCUData.maxWorkGroupSize);
+	oclHelper::handle_clerror(err, __LINE__);
 	//***
 
 	//*** setup for CUDA
@@ -89,9 +92,13 @@ void ParticleSystem::setMode(ComputeMode m)
 	//first sync all data back to RAM
 	if (mMode == ComputeMode::COMPUTE_SHADER)
 	{
-		ofVec4f* tmpPositionFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
-		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mPositions);
+		ofVec4f* tmpPtrFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
+		std::copy(tmpPtrFromGPU, tmpPtrFromGPU + mNumberOfParticles, mPositions);
 		mComputeData.positionBuffer.unmap();
+
+		tmpPtrFromGPU = mComputeData.velocityBuffer.map<ofVec4f>(GL_READ_ONLY);
+		std::copy(tmpPtrFromGPU, tmpPtrFromGPU + mNumberOfParticles, mVelocity);
+		mComputeData.velocityBuffer.unmap();
 	}
 	else if (mMode == ComputeMode::OPENCL)
 	{
@@ -295,6 +302,11 @@ ParticleSystem::ComputeMode ParticleSystem::getMode()
 	return mMode;
 }
 
+CUDAta& ParticleSystem::getCudata()
+{
+	return mCUData;
+}
+
 void ParticleSystem::update(float dt)
 {
 	if (mNumberOfParticles == 0)
@@ -426,27 +438,22 @@ void ParticleSystem::iUpdateOCL(float dt)
 	kernel.setArg(6, ofVec4f(mDimension));
 	kernel.setArg(7, mNumberOfParticles);
 
-	cl::NDRange local; //make sure local range is divisible by global range
+	cl::NDRange local;
 	cl::NDRange global;
 	cl::NDRange offset(0);
-	size_t maxWorkGroupSize;
 
-	err = mOCLHelper.getDevice().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &maxWorkGroupSize);
-	oclHelper::handle_clerror(err, __LINE__);
-
-	/*if (mNumberOfParticles < maxWorkGroupSize)
+	if (mNumberOfParticles < mCUData.maxWorkGroupSize)
 	{
 		local = cl::NDRange(mNumberOfParticles);
-		global = cl::NDRange(1);
+		global = cl::NDRange(mNumberOfParticles);
 	}
 	else
-	{*/
-		//size_t globalWorkGroupSize = std::ceilf(float(mNumberOfParticles) / maxWorkGroupSize);
-		//local = cl::NDRange(maxWorkGroupSize / globalWorkGroupSize);
-		//global = cl::NDRange(globalWorkGroupSize);
-		//local = NULL;
-		global = cl::NDRange(mNumberOfParticles);
-	//}
+	{
+		size_t someDiff = std::ceilf(float(mNumberOfParticles) / mCUData.maxWorkGroupSize);
+		local = cl::NDRange(mCUData.maxWorkGroupSize);
+		global = cl::NDRange(mCUData.maxWorkGroupSize * someDiff);
+		//global = cl::NDRange(mNumberOfParticles);
+	}
 	
 	err = queue.enqueueNDRangeKernel(kernel, offset, global, local);
 	oclHelper::handle_clerror(err, __LINE__);

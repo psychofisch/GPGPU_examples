@@ -42,7 +42,7 @@ struct OCLData
 
 struct CUDAta
 {
-
+	size_t maxWorkGroupSize;
 };
 
 class ParticleSystem
@@ -76,6 +76,8 @@ public:
 	uint getNumberOfParticles();
 	uint getCapacity();
 	ComputeMode getMode();
+	CUDAta& getCudata();
+
 	void update(float dt);
 	uint debug_testIfParticlesOutside();
 
@@ -96,6 +98,7 @@ private:
 	SimulationData mSimData;
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
+	CUDAta mCUData;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
