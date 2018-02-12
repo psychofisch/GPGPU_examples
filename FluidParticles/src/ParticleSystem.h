@@ -14,9 +14,7 @@
 #include <ofVbo.h>
 
 #include "oclHelper.h"
-
-#include <cuda_runtime.h>
-#include <helper_cuda.h>
+#include "cudaHelper.h"
 
 typedef unsigned int uint;
 
@@ -43,6 +41,8 @@ struct OCLData
 struct CUDAta
 {
 	size_t maxWorkGroupSize;
+	float3 *positions;
+	float3 *velocity;
 };
 
 class ParticleSystem
@@ -88,7 +88,6 @@ private:
 	std::unordered_map<ComputeMode, bool> mAvailableModes;
 	ofVec4f	*mPositions,
 		*mVelocity;
-		//*mPressure,
 	ofVec3f	mDimension,
 		mGravity,
 		mGravityRotated;
@@ -104,6 +103,5 @@ private:
 	void iUpdateCompute(float dt);
 	void iUpdateOCL(float dt);
 	ofVec3f iCalculatePressureVector(size_t index);
-	//bool mShaderStorageSwap;
 };
 

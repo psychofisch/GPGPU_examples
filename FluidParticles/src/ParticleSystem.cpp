@@ -57,6 +57,8 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 	//*** setup for CUDA
 	// !TODO!
+	checkCudaErrors(cudaMallocManaged(&mCUData.positions, sizeof(float3) * maxParticles));
+	checkCudaErrors(cudaMallocManaged(&mCUData.velocity, sizeof(float3) * maxParticles));
 	mAvailableModes[ComputeMode::CUDA] = false;
 	//***
 }
@@ -343,7 +345,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 	//optimization
 	maxSpeed = 1.f / maxSpeed;
 
-//#pragma omp parallel for
+#pragma omp parallel for
 	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
 		ofVec3f particlePosition = mPositions[i];

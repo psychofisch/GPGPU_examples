@@ -54,7 +54,7 @@ void main(){
 	}
 	// *** sc
 
-	// particleVelocity += dt * particleVelocity * -0.01f;//damping
+	//particleVelocity -= dt * particleVelocity * 0.1f;//damping
 	particlePosition += particleVelocity * dt;
 
 	positionOutBuffer[index] = vec4(particlePosition, index);
@@ -65,7 +65,7 @@ void main(){
 vec4 calculatePressure(uint index, float smoothingWidth)
 {
 	//float smoothingWidth = 18.f;
-	float amplitude = 1.f;
+	float amplitude = 1.0f;
 	vec3 particlePosition = positionBuffer[index].xyz;
 	
 	vec4 pressureVec = vec4(0.f, 0.f, 0.f, 0.f);
@@ -86,13 +86,13 @@ vec4 calculatePressure(uint index, float smoothingWidth)
 		if (dist > smoothingWidth * 1.0f)
 			continue;
 
-		float pressure = 1.f - (dist/smoothingWidth);
-		//float pressure = amplitude * exp(-dist / smoothingWidth);
+		//float pressure = 1.f - (dist/smoothingWidth);
+		float pressure = amplitude * exp(-dist / smoothingWidth);
 		
 		pressureVec += vec4(pressure * normalize(dirVec), 0.f);
 		// pressureVec += vec4(dirVec, 0.f);
 		
-		pressureVec.w = dist;
+		pressureVec.w = pressure;
 		
 		//break;
 	}

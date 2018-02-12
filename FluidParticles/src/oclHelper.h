@@ -1,3 +1,5 @@
+#pragma once
+
 #include <CL/cl.hpp>
 #include <iostream>
 #include <fstream>
@@ -14,7 +16,6 @@ class oclHelper
 		const cl::Kernel & getKernel() const;
 		size_t getGlobalSize(int numberOfParticles);
 		const cl::Device & getDevice() const;
-
 
 		inline static void handle_clerror(cl_int err, int line);
 		static std::string cl_errorstring(cl_int err);
