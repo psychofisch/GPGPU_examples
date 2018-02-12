@@ -57,8 +57,8 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 	//*** setup for CUDA
 	// !TODO!
-	checkCudaErrors(cudaMallocManaged(&mCUData.positions, sizeof(float3) * maxParticles));
-	checkCudaErrors(cudaMallocManaged(&mCUData.velocity, sizeof(float3) * maxParticles));
+	checkCudaErrors(cudaMallocManaged(&mCUData.positions, sizeof(float4) * maxParticles));
+	checkCudaErrors(cudaMallocManaged(&mCUData.velocity, sizeof(float4) * maxParticles));
 	mAvailableModes[ComputeMode::CUDA] = false;
 	//***
 }

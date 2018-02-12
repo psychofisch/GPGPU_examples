@@ -3,8 +3,8 @@
 		<FPS>144</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
-		<Particles>3000/50000</Particles>
+		<Mode>OpenCL</Mode>
+		<Particles>2000/5000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	</Program_Information>

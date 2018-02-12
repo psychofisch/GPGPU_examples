@@ -14,11 +14,11 @@
  
 typedef unsigned int uint;
 
-float3 calculatePressure(float3* positions, uint1 index, uint numberOfParticles, float smoothingWidth);
+float4 calculatePressure(float4* positions, uint index, uint numberOfParticles, float smoothingWidth);
 
 __global__ void particleUpdate(
-	float3* positions, 
-	float3* velocity, 
+	float4* positions, 
+	float4* velocity, 
 	const float dt, 
 	const float smoothingWidth, 
 	const float3 gravity,
@@ -28,11 +28,11 @@ __global__ void particleUpdate(
 
 }
 
-float3 calculatePressure(float3* positions, uint index, uint numberOfParticles, float smoothingWidth)
+float4 calculatePressure(float4* positions, uint index, uint numberOfParticles, float smoothingWidth)
 {
-	float3 particlePosition = positions[index];
+	float4 particlePosition = positions[index];
 
-	float3 pressureVec = make_float3(0,0,0);
+	float4 pressureVec;
 	for (uint i = 0; i < numberOfParticles; i++)
 	{
 		if (index == i)

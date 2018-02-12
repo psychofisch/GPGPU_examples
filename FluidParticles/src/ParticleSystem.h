@@ -41,8 +41,8 @@ struct OCLData
 struct CUDAta
 {
 	size_t maxWorkGroupSize;
-	float3 *positions;
-	float3 *velocity;
+	float4 *positions;
+	float4 *velocity;
 };
 
 class ParticleSystem
