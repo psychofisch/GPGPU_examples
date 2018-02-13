@@ -61,9 +61,6 @@
     <ClCompile Include="src\oclHelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\cudaHelper.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -275,9 +272,6 @@
     <ClInclude Include="src\oclHelper.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\cudaHelper.h">
-      <Filter>src</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
@@ -288,11 +282,13 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\data\particles.cu">
-      <Filter>src</Filter>
-    </None>
     <None Include="bin\data\particles.cl">
       <Filter>src</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\particles.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

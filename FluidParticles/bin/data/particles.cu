@@ -11,7 +11,8 @@
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
 #include <helper_functions.h>
- 
+#include <helper_math.h> 
+
 typedef unsigned int uint;
 
 float4 calculatePressure(float4* positions, uint index, uint numberOfParticles, float smoothingWidth);
@@ -21,14 +22,16 @@ __global__ void particleUpdate(
 	float4* velocity, 
 	const float dt, 
 	const float smoothingWidth, 
-	const float3 gravity,
+	const float4 gravity,
 	const float4 dimension,
 	const uint numberOfParticles)
 {
+	const uint tid = threadIdx.x;
 
+	positions[tid] += gravity * dt;
 }
 
-float4 calculatePressure(float4* positions, uint index, uint numberOfParticles, float smoothingWidth)
+__global__ float4 calculatePressure(float4* positions, uint index, uint numberOfParticles, float smoothingWidth)
 {
 	float4 particlePosition = positions[index];
 
@@ -56,4 +59,18 @@ float4 calculatePressure(float4* positions, uint index, uint numberOfParticles, 
 	}
 
 	return pressureVec;
+}
+
+extern "C" void cudaUpdate(
+	float4* positions,
+	float4* velocity,
+	const float dt,
+	const float smoothingWidth,
+	const float4 gravity,
+	const float4 dimension,
+	const unsigned int numberOfParticles)
+{
+	dim3 grid(1, 0, 0);
+	dim3 threads(numberOfParticles, 0, 0);
+	particleUpdate<<< grid, threads >>>(positions, velocity, dt, smoothingWidth, gravity, dimension, numberOfParticles);
 }

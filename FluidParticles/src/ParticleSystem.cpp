@@ -57,9 +57,11 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 	//*** setup for CUDA
 	// !TODO!
+	const char* cmdArgs = "";//TODO: include CUDA cmdline arguments via settings file
+	findCudaDevice(0, &cmdArgs);
 	checkCudaErrors(cudaMallocManaged(&mCUData.positions, sizeof(float4) * maxParticles));
 	checkCudaErrors(cudaMallocManaged(&mCUData.velocity, sizeof(float4) * maxParticles));
-	mAvailableModes[ComputeMode::CUDA] = false;
+	mAvailableModes[ComputeMode::CUDA] = true;
 	//***
 }
 
@@ -68,6 +70,9 @@ ParticleSystem::~ParticleSystem()
 	delete[] mPositions;
 	delete[] mVelocity;
 	//delete[] mPressure;
+
+	cudaFree(mCUData.positions);
+	cudaFree(mCUData.velocity);
 }
 
 void ParticleSystem::setNumberOfParticles(uint nop)
@@ -108,6 +113,11 @@ void ParticleSystem::setMode(ComputeMode m)
 		mOCLHelper.getCommandQueue().enqueueReadBuffer(mOCLData.positionOutBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mPositions);
 		mOCLHelper.getCommandQueue().enqueueReadBuffer(mOCLData.velocityBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mVelocity);
 	}
+	else if (m == ComputeMode::CUDA)
+	{
+		cudaDeviceSynchronize();
+		memcpy(mPositions, mCUData.positions, sizeof(ofVec4f) * mNumberOfParticles);
+	}
 
 	//and then copy the data to the corresponding buffer for the new mode
 	if (m == ComputeMode::COMPUTE_SHADER)
@@ -119,6 +129,11 @@ void ParticleSystem::setMode(ComputeMode m)
 	{
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.positionBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mPositions);
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.velocityBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mVelocity);
+	}
+	else if (m == ComputeMode::CUDA)
+	{
+		memcpy(mCUData.positions, mPositions, sizeof(ofVec4f) * mNumberOfParticles);
+		cudaDeviceSynchronize();
 	}
 /*
 	if (mMode == ComputeMode::COMPUTE_SHADER && m == ComputeMode::CPU)
@@ -259,6 +274,11 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.positionBuffer, CL_TRUE, sizeof(ofVec4f) * mNumberOfParticles, particleCap * sizeof(ofVec4f), mPositions + mNumberOfParticles);
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.velocityBuffer, CL_TRUE, sizeof(ofVec4f) * mNumberOfParticles, particleCap * sizeof(ofVec4f), mVelocity + mNumberOfParticles);
 	}
+	else if (mMode == ComputeMode::CUDA)
+	{
+		memcpy(mCUData.positions + mNumberOfParticles, mPositions + mNumberOfParticles, sizeof(ofVec4f) * particleCap);
+		cudaDeviceSynchronize();
+	}
 
 	mNumberOfParticles += particleCap;
 }
@@ -335,6 +355,9 @@ void ParticleSystem::update(float dt)
 	case ComputeMode::OPENCL:
 		iUpdateOCL(dt);
 		break;
+	case ComputeMode::CUDA:
+		iUpdateCUDA(dt);
+		break;
 	}
 }
 
@@ -389,6 +412,33 @@ void ParticleSystem::iUpdateCPU(float dt)
 	}
 
 	mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mPositions);
+}
+
+
+ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
+{
+	float smoothingWidth = mSimData.smoothingWidth;
+	//float amplitude = 1.f;
+	ofVec3f particlePosition = mPositions[index];
+
+	ofVec3f pressureVec;
+	for (uint i = 0; i < mNumberOfParticles; ++i)
+	{
+		if (index == i)
+			continue;
+
+		ofVec3f dirVec = particlePosition - mPositions[i];
+		float dist = dirVec.length();
+
+		if (dist > smoothingWidth * 1.f)
+			continue;
+
+		float pressure = 1.f - (dist / smoothingWidth);
+		//float pressure = amplitude * expf(-dist / smoothingWidth);
+		//pressureVec += pressure * vectorMath::normalize(dirVec);
+		pressureVec += pressure * dirVec.getNormalized();
+	}
+	return pressureVec;
 }
 
 void ParticleSystem::iUpdateCompute(float dt)
@@ -470,30 +520,15 @@ void ParticleSystem::iUpdateOCL(float dt)
 	mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mPositions);
 }
 
-ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
+void ParticleSystem::iUpdateCUDA(float dt)
 {
-	float smoothingWidth =	mSimData.smoothingWidth;
-	//float amplitude = 1.f;
-	ofVec3f particlePosition = mPositions[index];
+	float4 cudaGravity = make_float4(mGravity.x, mGravity.y, mGravity.z, 0);
+	float4 cudaDimension = make_float4(mDimension.x, mDimension.y, mDimension.z, 0);
 
-	ofVec3f pressureVec;
-	for (uint i = 0; i < mNumberOfParticles; ++i)
-	{
-		if (index == i)
-			continue;
+	cudaUpdate(mCUData.positions, mCUData.velocity, dt, mSimData.smoothingWidth, cudaGravity, cudaDimension, mNumberOfParticles);
 
-		ofVec3f dirVec = particlePosition - mPositions[i];
-		float dist = dirVec.length();
-
-		if (dist > smoothingWidth * 1.f)
-			continue;
-
-		float pressure = 1.f - (dist/smoothingWidth);
-		//float pressure = amplitude * expf(-dist / smoothingWidth);
-		//pressureVec += pressure * vectorMath::normalize(dirVec);
-		pressureVec += pressure * dirVec.getNormalized();
-	}
-	return pressureVec;
+	cudaDeviceSynchronize();
+	mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mCUData.positions);
 }
 
 uint ParticleSystem::debug_testIfParticlesOutside()

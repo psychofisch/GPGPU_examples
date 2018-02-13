@@ -14,8 +14,12 @@
 #include <ofVbo.h>
 
 #include "oclHelper.h"
-#include "cudaHelper.h"
 
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
+#include <helper_math.h>
+
+//general definitions
 typedef unsigned int uint;
 
 struct SimulationData
@@ -23,6 +27,7 @@ struct SimulationData
 	float smoothingWidth;
 };
 
+//definitions for Compute Shader
 struct ComputeShaderData
 {
 	ofShader computeShader;
@@ -31,12 +36,23 @@ struct ComputeShaderData
 	ofBufferObject velocityBuffer;
 };
 
+//definitions for OpenCL
 struct OCLData
 {
 	cl::Buffer positionBuffer;
 	cl::Buffer positionOutBuffer;
 	cl::Buffer velocityBuffer;
 };
+
+//definitions for CUDA
+extern "C" void cudaUpdate(
+	float4* positions,
+	float4* velocity,
+	const float dt,
+	const float smoothingWidth,
+	const float4 gravity,
+	const float4 dimension,
+	const unsigned int numberOfParticles);
 
 struct CUDAta
 {
@@ -45,6 +61,7 @@ struct CUDAta
 	float4 *velocity;
 };
 
+//class definition
 class ParticleSystem
 {
 public:
@@ -102,6 +119,7 @@ private:
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
 	void iUpdateOCL(float dt);
+	void iUpdateCUDA(float dt);
 	ofVec3f iCalculatePressureVector(size_t index);
 };
 
