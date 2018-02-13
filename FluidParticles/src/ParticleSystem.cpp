@@ -58,7 +58,8 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	// !TODO!
 	const char* cmdArgs = "";//TODO: include CUDA cmdline arguments via settings file
 	findCudaDevice(0, &cmdArgs);
-	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuPos, mComputeData.positionBuffer.getId(), cudaGraphicsMapFlagsNone));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuPos, mComputeData.positionBuffer.getId(), cudaGraphicsMapFlagsReadOnly));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuPosOut, mComputeData.positionOutBuffer.getId(), cudaGraphicsMapFlagsWriteDiscard));
 	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuVel, mComputeData.velocityBuffer.getId(), cudaGraphicsMapFlagsNone));
 	//checkCudaErrors(cudaMallocManaged(&mCUData.position, sizeof(float4) * maxParticles));
 	//checkCudaErrors(cudaMallocManaged(&mCUData.velocity, sizeof(float4) * maxParticles));
@@ -529,23 +530,26 @@ void ParticleSystem::iUpdateCUDA(float dt)
 
 	//map the OpenGL buffers to CUDA device pointers
 	cudaGraphicsMapResources(1, &mCUData.cuPos);
+	cudaGraphicsMapResources(1, &mCUData.cuPosOut);
 	cudaGraphicsMapResources(1, &mCUData.cuVel);
 
 	size_t cudaPosSize, cudaVelSize;
 
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&mCUData.position, &cudaPosSize, mCUData.cuPos));
+	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&mCUData.positionOut, &cudaPosSize, mCUData.cuPosOut));
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&mCUData.velocity, &cudaVelSize, mCUData.cuVel));
 
 	//call the kernel
-	//cudaUpdate(mCUData.position, mCUData.velocity, dt, mSimData.smoothingWidth, cudaGravity, cudaDimension, mNumberOfParticles);
-	cudaUpdate(mCUData.position, mCUData.velocity, dt, mSimData.smoothingWidth, cudaGravity, cudaDimension, mNumberOfParticles);
+	cudaUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, dt, mSimData.smoothingWidth, cudaGravity, cudaDimension, mNumberOfParticles);
 
 	//sync the device data back to the host and write into the OpenGL buffer (for drawing)
 	//cudaDeviceSynchronize();
 	//mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mCUData.position);
+	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);
 
 	//unmap all resources
 	cudaGraphicsUnmapResources(1, &mCUData.cuPos);
+	cudaGraphicsUnmapResources(1, &mCUData.cuPosOut);
 	cudaGraphicsUnmapResources(1, &mCUData.cuVel);
 }
 

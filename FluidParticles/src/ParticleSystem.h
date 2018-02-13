@@ -49,20 +49,23 @@ struct OCLData
 //definitions for CUDA
 extern "C" void cudaUpdate(
 	float4* position,
+	float4* positionOut,
 	float4* velocity,
 	const float dt,
 	const float smoothingWidth,
 	const float4 gravity,
 	const float4 dimension,
-	const unsigned int numberOfParticles);
+	const uint numberOfParticles);
 
 struct CUDAta
 {
 	size_t maxWorkGroupSize;
 	float4 *position;
+	float4 *positionOut;
 	float4 *velocity;
 
 	struct cudaGraphicsResource *cuPos;
+	struct cudaGraphicsResource *cuPosOut;
 	struct cudaGraphicsResource *cuVel;
 };
 

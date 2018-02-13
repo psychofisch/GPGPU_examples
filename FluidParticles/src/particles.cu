@@ -19,6 +19,7 @@ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, f
 
 __global__ void particleUpdate(
 	float4* position, 
+	float4* positionOut,
 	float4* velocity, 
 	const float dt, 
 	const float smoothingWidth, 
@@ -26,7 +27,7 @@ __global__ void particleUpdate(
 	const float4 dimension,
 	const uint numberOfParticles)
 {
-	const uint index = threadIdx.x;
+	const uint index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (index >= numberOfParticles)
 		return;
@@ -61,11 +62,10 @@ __global__ void particleUpdate(
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
-	position[index] = particlePosition;
+	positionOut[index] = particlePosition;
 	velocity[index] = particleVelocity;
 }
 
-//__device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth)
 __device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth)
 {
 	float4 particlePosition = position[index];
@@ -76,7 +76,8 @@ __device__ float4 calculatePressure(float4* position, uint index, uint numberOfP
 		if (index == i)
 			continue;
 
-		float4 dirVec = particlePosition - position[i];
+		float4 dirVec4 = particlePosition - position[i];
+		float3 dirVec = make_float3(dirVec4.x, dirVec4.x, dirVec4.z);
 		float dist = length(dirVec);//TODO: maybe use half_length
 
 		if (dist > smoothingWidth * 1.0f)
@@ -85,7 +86,7 @@ __device__ float4 calculatePressure(float4* position, uint index, uint numberOfP
 		float pressure = 1.f - (dist / smoothingWidth);
 		////float pressure = amplitude * exp(-dist / smoothingWidth);
 
-		pressureVec += pressure * normalize(dirVec);
+		pressureVec += make_float4(pressure * normalize(dirVec), 0);
 		//// pressureVec += vec4(dirVec, 0.f);
 
 		pressureVec.w = dist;
@@ -98,12 +99,13 @@ __device__ float4 calculatePressure(float4* position, uint index, uint numberOfP
 
 extern "C" void cudaUpdate(
 	float4* position,
+	float4* positionOut,
 	float4* velocity,
 	const float dt,
 	const float smoothingWidth,
 	const float4 gravity,
 	const float4 dimension,
-	const unsigned int numberOfParticles)
+	const uint numberOfParticles)
 {
 	cudaDeviceProp devProp;
 	int device;
@@ -112,12 +114,13 @@ extern "C" void cudaUpdate(
 
 	int num = 1;
 	int threads = numberOfParticles;
+	int maxThreads = devProp.maxThreadsPerBlock;
 
-	if (numberOfParticles > devProp.maxThreadsPerBlock)
+	if (numberOfParticles > maxThreads)
 	{
-		num = ceilf(float(numberOfParticles) / devProp.maxThreadsPerBlock);
-		threads = devProp.maxThreadsPerBlock;
+		num = ceilf(float(numberOfParticles) / maxThreads);
+		threads = maxThreads;
 	}
 
-	particleUpdate<<< num, threads >>>(position, velocity, dt, smoothingWidth, gravity, dimension, numberOfParticles);
+	particleUpdate<<< num, threads >>>(position, positionOut, velocity, dt, smoothingWidth, gravity, dimension, numberOfParticles);
 }
