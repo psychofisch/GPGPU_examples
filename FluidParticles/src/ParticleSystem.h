@@ -16,6 +16,7 @@
 #include "oclHelper.h"
 
 #include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
 #include <helper_cuda.h>
 #include <helper_math.h>
 
@@ -39,6 +40,7 @@ struct ComputeShaderData
 //definitions for OpenCL
 struct OCLData
 {
+	size_t maxWorkGroupSize;
 	cl::Buffer positionBuffer;
 	cl::Buffer positionOutBuffer;
 	cl::Buffer velocityBuffer;
@@ -46,7 +48,7 @@ struct OCLData
 
 //definitions for CUDA
 extern "C" void cudaUpdate(
-	float4* positions,
+	float4* position,
 	float4* velocity,
 	const float dt,
 	const float smoothingWidth,
@@ -57,8 +59,11 @@ extern "C" void cudaUpdate(
 struct CUDAta
 {
 	size_t maxWorkGroupSize;
-	float4 *positions;
+	float4 *position;
 	float4 *velocity;
+
+	struct cudaGraphicsResource *cuPos;
+	struct cudaGraphicsResource *cuVel;
 };
 
 //class definition
@@ -103,7 +108,7 @@ private:
 		mCapacity;
 	ComputeMode mMode;
 	std::unordered_map<ComputeMode, bool> mAvailableModes;
-	ofVec4f	*mPositions,
+	ofVec4f	*mPosition,
 		*mVelocity;
 	ofVec3f	mDimension,
 		mGravity,

@@ -15,10 +15,10 @@
 
 typedef unsigned int uint;
 
-float4 calculatePressure(float4* positions, uint index, uint numberOfParticles, float smoothingWidth);
+float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth);
 
 __global__ void particleUpdate(
-	float4* positions, 
+	float4* position, 
 	float4* velocity, 
 	const float dt, 
 	const float smoothingWidth, 
@@ -31,9 +31,9 @@ __global__ void particleUpdate(
 	if (index >= numberOfParticles)
 		return;
 
-	float4 particlePosition = positions[index];
+	float4 particlePosition = position[index];
 	float4 particleVelocity = velocity[index];
-	float4 particlePressure = calculatePressure(positions, index, numberOfParticles, smoothingWidth);
+	float4 particlePressure = calculatePressure(position, index, numberOfParticles, smoothingWidth);
 
 	if (particlePosition.x <= dimension.x || particlePosition.x >= 0.f
 		|| particlePosition.y <= dimension.y || particlePosition.y >= 0.f
@@ -61,13 +61,14 @@ __global__ void particleUpdate(
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positions[index] = particlePosition;
+	position[index] = particlePosition;
 	velocity[index] = particleVelocity;
 }
 
-__device__ float4 calculatePressure(float4* positions, uint index, uint numberOfParticles, float smoothingWidth)
+//__device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth)
+__device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth)
 {
-	float4 particlePosition = positions[index];
+	float4 particlePosition = position[index];
 
 	float4 pressureVec;
 	for (uint i = 0; i < numberOfParticles; i++)
@@ -75,7 +76,7 @@ __device__ float4 calculatePressure(float4* positions, uint index, uint numberOf
 		if (index == i)
 			continue;
 
-		float4 dirVec = particlePosition - positions[i];
+		float4 dirVec = particlePosition - position[i];
 		float dist = length(dirVec);//TODO: maybe use half_length
 
 		if (dist > smoothingWidth * 1.0f)
@@ -96,7 +97,7 @@ __device__ float4 calculatePressure(float4* positions, uint index, uint numberOf
 }
 
 extern "C" void cudaUpdate(
-	float4* positions,
+	float4* position,
 	float4* velocity,
 	const float dt,
 	const float smoothingWidth,
@@ -118,5 +119,5 @@ extern "C" void cudaUpdate(
 		threads = devProp.maxThreadsPerBlock;
 	}
 
-	particleUpdate<<< num, threads >>>(positions, velocity, dt, smoothingWidth, gravity, dimension, numberOfParticles);
+	particleUpdate<<< num, threads >>>(position, velocity, dt, smoothingWidth, gravity, dimension, numberOfParticles);
 }
