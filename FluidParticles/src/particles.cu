@@ -34,7 +34,8 @@ __global__ void particleUpdate(
 
 	float4 particlePosition = position[index];
 	float4 particleVelocity = velocity[index];
-	float4 particlePressure = calculatePressure(position, index, numberOfParticles, smoothingWidth);
+	//float4 particlePressure = calculatePressure(position, index, numberOfParticles, smoothingWidth);
+	float4 particlePressure = make_float4(0.f);
 
 	if (particlePosition.x <= dimension.x || particlePosition.x >= 0.f
 		|| particlePosition.y <= dimension.y || particlePosition.y >= 0.f
@@ -70,7 +71,7 @@ __device__ float4 calculatePressure(float4* position, uint index, uint numberOfP
 {
 	float4 particlePosition = position[index];
 
-	float4 pressureVec;
+	float4 pressureVec = make_float4(0.f);
 	for (uint i = 0; i < numberOfParticles; i++)
 	{
 		if (index == i)
@@ -89,7 +90,7 @@ __device__ float4 calculatePressure(float4* position, uint index, uint numberOfP
 		pressureVec += make_float4(pressure * normalize(dirVec), 0);
 		//// pressureVec += vec4(dirVec, 0.f);
 
-		pressureVec.w = dist;
+		pressureVec.w += pressure;
 
 		//break;
 	}

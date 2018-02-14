@@ -92,7 +92,7 @@ vec4 calculatePressure(uint index, float smoothingWidth)
 		pressureVec += vec4(pressure * normalize(dirVec), 0.f);
 		// pressureVec += vec4(dirVec, 0.f);
 		
-		pressureVec.w = pressure;
+		pressureVec.w += pressure;
 		
 		//break;
 	}

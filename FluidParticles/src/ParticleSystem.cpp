@@ -100,7 +100,7 @@ void ParticleSystem::setRotation(ofQuaternion rotation)
 void ParticleSystem::setMode(ComputeMode m)
 {
 	//first sync all data back to RAM
-	if (mMode == ComputeMode::COMPUTE_SHADER || m == ComputeMode::CUDA)
+	if (mMode == ComputeMode::COMPUTE_SHADER || mMode == ComputeMode::CUDA)
 	{
 		ofVec4f* tmpPtrFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
 		std::copy(tmpPtrFromGPU, tmpPtrFromGPU + mNumberOfParticles, mPosition);
@@ -122,7 +122,7 @@ void ParticleSystem::setMode(ComputeMode m)
 	}*/
 
 	//and then copy the data to the corresponding buffer for the new mode
-	if (m == ComputeMode::COMPUTE_SHADER)
+	if (m == ComputeMode::COMPUTE_SHADER || m == ComputeMode::CUDA)
 	{
 		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mPosition);
 		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity);
@@ -266,7 +266,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	if (particleCap == -1)
 		particleCap = particleAmount;
 
-	if (mMode == ComputeMode::COMPUTE_SHADER)
+	if (mMode == ComputeMode::COMPUTE_SHADER || mMode == ComputeMode::CUDA)
 	{
 		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mPosition + mNumberOfParticles);
 		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mVelocity + mNumberOfParticles);
@@ -276,11 +276,11 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.positionBuffer, CL_TRUE, sizeof(ofVec4f) * mNumberOfParticles, particleCap * sizeof(ofVec4f), mPosition + mNumberOfParticles);
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.velocityBuffer, CL_TRUE, sizeof(ofVec4f) * mNumberOfParticles, particleCap * sizeof(ofVec4f), mVelocity + mNumberOfParticles);
 	}
-	else if (mMode == ComputeMode::CUDA)
+	/*else if (mMode == ComputeMode::CUDA)
 	{
 		memcpy(mCUData.position + mNumberOfParticles, mPosition + mNumberOfParticles, sizeof(ofVec4f) * particleCap);
 		cudaDeviceSynchronize();
-	}
+	}*/
 
 	mNumberOfParticles += particleCap;
 }
