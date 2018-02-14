@@ -53,8 +53,8 @@ extern "C" void cudaUpdate(
 	float4* velocity,
 	const float dt,
 	const float smoothingWidth,
-	const float4 gravity,
-	const float4 dimension,
+	const float3 gravity,
+	const float3 dimension,
 	const uint numberOfParticles);
 
 struct CUDAta

@@ -530,8 +530,8 @@ void ParticleSystem::iUpdateOCL(float dt)
 void ParticleSystem::iUpdateCUDA(float dt)
 {
 	//convert some host variables to device types
-	float4 cudaGravity = make_float4(mGravity.x, mGravity.y, mGravity.z, 0);
-	float4 cudaDimension = make_float4(mDimension.x, mDimension.y, mDimension.z, 0);
+	float3 cudaGravity = make_float3(mGravity.x, mGravity.y, mGravity.z);
+	float3 cudaDimension = make_float3(mDimension.x, mDimension.y, mDimension.z);
 
 	//map the OpenGL buffers to CUDA device pointers
 	cudaGraphicsMapResources(1, &mCUData.cuPos);

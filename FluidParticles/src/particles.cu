@@ -11,9 +11,17 @@
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
 #include <helper_functions.h>
-#include <helper_math.h> 
+#include <helper_math.h>
 
 typedef unsigned int uint;
+
+inline __device__ bool operator==(float3& lhs, float3& rhs)
+{
+	if (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z)
+		return true;
+	else
+		false;
+}
 
 float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth);
 
@@ -23,8 +31,8 @@ __global__ void particleUpdate(
 	float4* velocity, 
 	const float dt, 
 	const float smoothingWidth, 
-	const float4 gravity,
-	const float4 dimension,
+	const float3 gravity,
+	const float3 dimension,
 	const uint numberOfParticles)
 {
 	const uint index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -32,23 +40,14 @@ __global__ void particleUpdate(
 	if (index >= numberOfParticles)
 		return;
 
-	float4 particlePosition = position[index];
-	float4 particleVelocity = velocity[index];
-	//float4 particlePressure = calculatePressure(position, index, numberOfParticles, smoothingWidth);
-	float4 particlePressure = make_float4(0.f);
-	if (isnan(particlePosition.x))
-		printf("%u Pos = NAN\n", index);
-
-	if (isnan(particleVelocity.x))
-		printf("%u Vel = NAN\n", index);
-
-	if (isnan(particlePressure.x))
-		printf("%u Pressure = NAN\n", index);
+	float3 particlePosition = make_float3(position[index]);
+	float3 particleVelocity = make_float3(velocity[index]);
+	float4 particlePressure = calculatePressure(position, index, numberOfParticles, smoothingWidth);
 
 	if (particlePosition.x <= dimension.x || particlePosition.x >= 0.f
 		|| particlePosition.y <= dimension.y || particlePosition.y >= 0.f
 		|| particlePosition.z <= dimension.z || particlePosition.z >= 0.f)
-		particleVelocity += (gravity + particlePressure) * dt;
+		particleVelocity += (gravity + make_float3(particlePressure)) * dt;
 
 	// static collision
 	//TODO: write some kind of for-loop
@@ -71,13 +70,13 @@ __global__ void particleUpdate(
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionOut[index] = particlePosition;
-	velocity[index] = particleVelocity;
+	positionOut[index] = make_float4(particlePosition);
+	velocity[index] = make_float4(particleVelocity);
 }
 
 __device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth)
 {
-	float4 particlePosition = position[index];
+	float3 particlePosition = make_float3(position[index]);
 
 	float4 pressureVec = make_float4(0.f);
 	for (uint i = 0; i < numberOfParticles; i++)
@@ -85,8 +84,7 @@ __device__ float4 calculatePressure(float4* position, uint index, uint numberOfP
 		if (index == i)
 			continue;
 
-		float4 dirVec4 = particlePosition - position[i];
-		float3 dirVec = make_float3(dirVec4.x, dirVec4.x, dirVec4.z);
+		float3 dirVec = particlePosition - make_float3(position[i]);
 		float dist = length(dirVec);//TODO: maybe use half_length
 
 		if (dist > smoothingWidth * 1.0f)
@@ -95,7 +93,7 @@ __device__ float4 calculatePressure(float4* position, uint index, uint numberOfP
 		float pressure = 1.f - (dist / smoothingWidth);
 		////float pressure = amplitude * exp(-dist / smoothingWidth);
 
-		pressureVec += make_float4(pressure * normalize(dirVec), 0);
+		pressureVec += make_float4(pressure * normalize(dirVec));
 		//// pressureVec += vec4(dirVec, 0.f);
 
 		pressureVec.w += pressure;
@@ -112,8 +110,8 @@ extern "C" void cudaUpdate(
 	float4* velocity,
 	const float dt,
 	const float smoothingWidth,
-	const float4 gravity,
-	const float4 dimension,
+	const float3 gravity,
+	const float3 dimension,
 	const uint numberOfParticles)
 {
 	cudaDeviceProp devProp;
