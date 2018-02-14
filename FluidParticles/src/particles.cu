@@ -36,6 +36,14 @@ __global__ void particleUpdate(
 	float4 particleVelocity = velocity[index];
 	//float4 particlePressure = calculatePressure(position, index, numberOfParticles, smoothingWidth);
 	float4 particlePressure = make_float4(0.f);
+	if (isnan(particlePosition.x))
+		printf("%u Pos = NAN\n", index);
+
+	if (isnan(particleVelocity.x))
+		printf("%u Vel = NAN\n", index);
+
+	if (isnan(particlePressure.x))
+		printf("%u Pressure = NAN\n", index);
 
 	if (particlePosition.x <= dimension.x || particlePosition.x >= 0.f
 		|| particlePosition.y <= dimension.y || particlePosition.y >= 0.f
