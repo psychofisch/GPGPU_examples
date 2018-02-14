@@ -16,8 +16,11 @@
 #include "oclHelper.h"
 
 #include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
 #include <helper_cuda.h>
+#include <helper_math.h>
 
+//general definitions
 typedef unsigned int uint;
 
 struct SimulationData
@@ -25,6 +28,7 @@ struct SimulationData
 	float smoothingWidth;
 };
 
+//definitions for Compute Shader
 struct ComputeShaderData
 {
 	ofShader computeShader;
@@ -33,18 +37,39 @@ struct ComputeShaderData
 	ofBufferObject velocityBuffer;
 };
 
+//definitions for OpenCL
 struct OCLData
 {
+	size_t maxWorkGroupSize;
 	cl::Buffer positionBuffer;
 	cl::Buffer positionOutBuffer;
 	cl::Buffer velocityBuffer;
 };
 
+//definitions for CUDA
+extern "C" void cudaUpdate(
+	float4* position,
+	float4* positionOut,
+	float4* velocity,
+	const float dt,
+	const float smoothingWidth,
+	const float3 gravity,
+	const float3 dimension,
+	const uint numberOfParticles);
+
 struct CUDAta
 {
+	size_t maxWorkGroupSize;
+	float4 *position;
+	float4 *positionOut;
+	float4 *velocity;
 
+	struct cudaGraphicsResource *cuPos;
+	struct cudaGraphicsResource *cuPosOut;
+	struct cudaGraphicsResource *cuVel;
 };
 
+//class definition
 class ParticleSystem
 {
 public:
@@ -76,6 +101,8 @@ public:
 	uint getNumberOfParticles();
 	uint getCapacity();
 	ComputeMode getMode();
+	CUDAta& getCudata();
+
 	void update(float dt);
 	uint debug_testIfParticlesOutside();
 
@@ -84,9 +111,8 @@ private:
 		mCapacity;
 	ComputeMode mMode;
 	std::unordered_map<ComputeMode, bool> mAvailableModes;
-	ofVec4f	*mPositions,
+	ofVec4f	*mPosition,
 		*mVelocity;
-		//*mPressure,
 	ofVec3f	mDimension,
 		mGravity,
 		mGravityRotated;
@@ -96,11 +122,12 @@ private:
 	SimulationData mSimData;
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
+	CUDAta mCUData;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
 	void iUpdateOCL(float dt);
+	void iUpdateCUDA(float dt);
 	ofVec3f iCalculatePressureVector(size_t index);
-	//bool mShaderStorageSwap;
 };
 

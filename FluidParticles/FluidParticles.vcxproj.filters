@@ -281,4 +281,14 @@
       <Filter>src</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\data\particles.cl">
+      <Filter>src</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\particles.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+  </ItemGroup>
 </Project>

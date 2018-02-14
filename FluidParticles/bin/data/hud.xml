@@ -3,12 +3,13 @@
 		<FPS>144</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>CPU</Mode>
-		<Particles>0/50000</Particles>
+		<Mode>CUDA</Mode>
+		<Particles>1000/5000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
+	<Workgroup_Size>4095</Workgroup_Size>
 	</Program_Information>
 	<Simulation_Settings>
-		<Smoothing_Width>0.107143</Smoothing_Width>
+		<Smoothing_Width>0.151786</Smoothing_Width>
 	</Simulation_Settings>
 <group/>
 </group>

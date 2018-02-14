@@ -1,7 +1,5 @@
 #include "oclHelper.h"
 
-
-
 oclHelper::oclHelper()
 	:mError(CL_SUCCESS),
 	mGlobalSize(0)
