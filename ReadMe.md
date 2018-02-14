@@ -10,19 +10,24 @@ This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9
 └───GPGPU_examples
 │   │   ReadMe.md (this file)
 │   │
+│   └───FluidParticles
+│   |   │   FluidParticles.sln
+│   |   │   bin
+│   |   └   ...
+|   |
+|   └───NvidiaCUDA
+|   |   |   inc
+|   |   └   src
+|   |
 |   └───NvidiaOpenCL
 |   |   |   inc
 |   |   |   lib
-|   |   |   src
-│   └───FluidParticles
-│       │   FluidParticles.sln
-│       │   bin
-│       │   ...
+|   |   └   src
 │   
 └───of_v0.9.8_vs_release
     │   addons
     │   apps
-    |   ...
+    └   ...
 ```
 
 It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda-downloads) to be installed.
@@ -33,10 +38,20 @@ It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda
 | left mouse | rotate around y axis |
 | right mouse | move camera up and down |
 | D | add particles |
-| M | switch between CPU and GPU (currently OpenGL compute shaders) |
+| M | switch between CPU and GPU (if more than 1000 particles are present in the scene "CPU" mode becomes unavailable -> performance) |
 | R | set number of particles back to 0 |
 | V (hold) | add single particles |
 | Esc | close application |
+
+### Settings
+The file ```GPGPU_examples/FluidParticles/bin/data/settings.xml``` holds all available settings for the program that can not be changed via the HUD.  
+
+| Command   | Function
+| --------- | ------------ |
+| MAXPARTICLES | sets the maximum amount of particles in the scene |
+| CONTROLS/MOUSESENS | sets the mouse sensitivity |
+
+All settings in ```GPGPU_examples/FluidParticles/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
 
 # Author
 Thomas Fischer (psychofisch)
