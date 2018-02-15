@@ -12,6 +12,7 @@
 #include <ofQuaternion.h>
 #include <ofShader.h>
 #include <ofVbo.h>
+#include <ofxXmlSettings.h>
 
 #include "oclHelper.h"
 
@@ -85,6 +86,12 @@ public:
 	ParticleSystem(uint mp);
 	~ParticleSystem();
 
+	void setupAll(ofxXmlSettings& settings);
+	void setupCPU(ofxXmlSettings& settings);
+	void setupCompute(ofxXmlSettings& settings);
+	void setupCUDA(ofxXmlSettings& settings);
+	void setupOCL(ofxXmlSettings& settings);
+
 	void setDimensions(ofVec3f dimensions);
 	void setNumberOfParticles(uint nop);
 	void setRotation(ofQuaternion rotation);
@@ -108,7 +115,8 @@ public:
 
 private:
 	uint mNumberOfParticles,
-		mCapacity;
+		mCapacity,
+		mThreshold;
 	ComputeMode mMode;
 	std::unordered_map<ComputeMode, bool> mAvailableModes;
 	ofVec4f	*mPosition,

@@ -6,31 +6,81 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mNumberOfParticles(0),
 	mMode(ComputeMode::CPU)
 {
-	//*** setup for CPU
+	//*** general setup
+	// these buffers are mandatory, even when CPU mode is not enabled
+	// they are used as cache between different GPU modes
 	mPosition = new ofVec4f[maxParticles];
 	mVelocity = new ofVec4f[maxParticles];
-	mAvailableModes[ComputeMode::CPU] = true;
 	//***
 
-	//*** setup for Compute Shader
-	mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * maxParticles, mPosition, GL_DYNAMIC_DRAW);
-	mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * maxParticles, mPosition, GL_DYNAMIC_DRAW);
-	mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * maxParticles, mVelocity, GL_DYNAMIC_DRAW);
+	//*** general GL setup
+	mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+	mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+	mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mVelocity, GL_DYNAMIC_DRAW);
 
 	mParticlesVBO.setVertexBuffer(mComputeData.positionBuffer, 3, sizeof(ofVec4f));//use compute shader buffer to store the particle position on the GPU
 
-	if (!mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, "particles.compute"))
-		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
-	else
-		mAvailableModes[ComputeMode::COMPUTE_SHADER] = true;
-	mComputeData.computeShader.linkProgram();
-	//***
+}
 
-	//*** setup for OpenCL
-	const char* sourceFile = "data/particles.cl";
-	if (!mOCLHelper.setupOpenCLContext(1))
+ParticleSystem::~ParticleSystem()
+{
+	delete[] mPosition;
+	delete[] mVelocity;
+
+	cudaFree(mCUData.position);
+	cudaFree(mCUData.velocity);
+}
+
+void ParticleSystem::setupAll(ofxXmlSettings & settings)
+{
+	setupCPU(settings);
+	setupCompute(settings);
+	setupCUDA(settings);
+	setupOCL(settings);
+}
+
+void ParticleSystem::setupCPU(ofxXmlSettings & settings)
+{
+	mThreshold = settings.getValue("CPU:THRESHOLD", 1000);
+
+	mAvailableModes[ComputeMode::CPU] = settings.getValue("CPU:ENABLED", true);
+}
+
+void ParticleSystem::setupCompute(ofxXmlSettings & settings)
+{
+	// the Compute Shader uses the OpenGL buffers, so there's no need to allocate additional memory
+	if (mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, settings.getValue("COMPUTE:SOURCE", "particles.compute"))
+		&& mComputeData.computeShader.linkProgram())
+		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
+	else
+		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
+}
+
+void ParticleSystem::setupCUDA(ofxXmlSettings & settings)
+{
+	const int cmdArgc = settings.getValue("CUDA:ARGC", 0);
+	const char* cmdArgs = settings.getValue("CUDA:ARGV", "").c_str();
+	// find a CUDA device
+	findCudaDevice(0, &cmdArgs);
+
+	// register all the GL buffers to CUDA
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuPos, mComputeData.positionBuffer.getId(), cudaGraphicsMapFlagsReadOnly));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuPosOut, mComputeData.positionOutBuffer.getId(), cudaGraphicsMapFlagsWriteDiscard));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuVel, mComputeData.velocityBuffer.getId(), cudaGraphicsMapFlagsNone));
+	
+	// checkCudaErrors will quit the program in case of a problem, so it is safe to assume that if the program reached this point CUDA will work
+	mAvailableModes[ComputeMode::CUDA] = settings.getValue("CUDA:ENABLED", true);
+}
+
+void ParticleSystem::setupOCL(ofxXmlSettings & settings)
+{
+	int platformID = settings.getValue("OCL:PLATFORMID", 0);
+	int deviceID = settings.getValue("OCL:DEVICEID", 0);
+	std::string sourceFile = settings.getValue("OCL:SOURCE", "data/particles.cl");
+
+	if (!mOCLHelper.setupOpenCLContext(platformID, deviceID))
 	{
-		if (mOCLHelper.compileKernel(sourceFile))
+		if (mOCLHelper.compileKernel(sourceFile.c_str()))
 		{
 			std::cout << "ERROR: Unable to compile \"" << sourceFile << "\".\n";
 			mAvailableModes[ComputeMode::OPENCL] = false;
@@ -38,43 +88,22 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 		else
 		{
 			cl::Context context = mOCLHelper.getCLContext();
-			mOCLData.positionBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * maxParticles);
-			mOCLData.positionOutBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * maxParticles);
-			mOCLData.velocityBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * maxParticles);
-			mAvailableModes[ComputeMode::OPENCL] = true;
+			mOCLData.positionBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * mCapacity);
+			mOCLData.positionOutBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * mCapacity);
+			mOCLData.velocityBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * mCapacity);
+
+			cl_int err = mOCLHelper.getDevice().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &mOCLData.maxWorkGroupSize);
+			mOCLData.maxWorkGroupSize /= 2;//testing showed best performance at half the max ThreadCount
+			oclHelper::handle_clerror(err, __LINE__);
+
+			mAvailableModes[ComputeMode::OPENCL] = settings.getValue("OCL:ENABLED", true);
 		}
 	}
 	else
 	{
 		std::cout << "ERROR: Unable to create OpenCL context\n";
+		mAvailableModes[ComputeMode::OPENCL] = false;
 	}
-
-	cl_int err = mOCLHelper.getDevice().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &mOCLData.maxWorkGroupSize);
-	mOCLData.maxWorkGroupSize /= 2;
-	oclHelper::handle_clerror(err, __LINE__);
-	//***
-
-	//*** setup for CUDA
-	// !TODO!
-	const char* cmdArgs = "";//TODO: include CUDA cmdline arguments via settings file
-	findCudaDevice(0, &cmdArgs);
-	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuPos, mComputeData.positionBuffer.getId(), cudaGraphicsMapFlagsReadOnly));
-	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuPosOut, mComputeData.positionOutBuffer.getId(), cudaGraphicsMapFlagsWriteDiscard));
-	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&mCUData.cuVel, mComputeData.velocityBuffer.getId(), cudaGraphicsMapFlagsNone));
-	//checkCudaErrors(cudaMallocManaged(&mCUData.position, sizeof(float4) * maxParticles));
-	//checkCudaErrors(cudaMallocManaged(&mCUData.velocity, sizeof(float4) * maxParticles));
-	mAvailableModes[ComputeMode::CUDA] = true;
-	//***
-}
-
-ParticleSystem::~ParticleSystem()
-{
-	delete[] mPosition;
-	delete[] mVelocity;
-	//delete[] mPressure;
-
-	cudaFree(mCUData.position);
-	cudaFree(mCUData.velocity);
 }
 
 void ParticleSystem::setNumberOfParticles(uint nop)
@@ -115,7 +144,7 @@ void ParticleSystem::setMode(ComputeMode m)
 		mOCLHelper.getCommandQueue().enqueueReadBuffer(mOCLData.positionOutBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mPosition);
 		mOCLHelper.getCommandQueue().enqueueReadBuffer(mOCLData.velocityBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mVelocity);
 	}
-	/*else if (m == ComputeMode::CUDA)
+	/*else if (m == ComputeMode::CUDA)// keep this, just in case
 	{
 		cudaDeviceSynchronize();
 		memcpy(mPosition, mCUData.position, sizeof(ofVec4f) * mNumberOfParticles);
@@ -132,22 +161,10 @@ void ParticleSystem::setMode(ComputeMode m)
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.positionBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mPosition);
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.velocityBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mVelocity);
 	}
-	/*else if (m == ComputeMode::CUDA)
+	/*else if (m == ComputeMode::CUDA)// keep this, just in case
 	{
 		memcpy(mCUData.position, mPosition, sizeof(ofVec4f) * mNumberOfParticles);
 		cudaDeviceSynchronize();
-	}*/
-/*
-	if (mMode == ComputeMode::COMPUTE_SHADER && m == ComputeMode::CPU)
-	{
-		ofVec4f* tmpPositionFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
-		std::copy(tmpPositionFromGPU, tmpPositionFromGPU + mNumberOfParticles, mPosition);
-		mComputeData.positionBuffer.unmap();
-	}
-	else if (mMode == ComputeMode::CPU && m == ComputeMode::COMPUTE_SHADER)
-	{
-		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mPosition);
-		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity);
 	}*/
 
 	mMode = m;
@@ -155,17 +172,17 @@ void ParticleSystem::setMode(ComputeMode m)
 
 ParticleSystem::ComputeMode ParticleSystem::nextMode(ParticleSystem::ComputeMode current)
 {
-	int mode = static_cast<int>(current);
-	mode++;
-	if (mode >= static_cast<int>(ParticleSystem::ComputeMode::COMPUTEMODES_SIZE))
+	int enumSize = static_cast<int>(ComputeMode::COMPUTEMODES_SIZE);
+	int currenti = static_cast<int>(current);
+	for (int i = 0; i < enumSize; ++i)
 	{
-		mode = 0;
+		int next = (currenti + 1 + i) % enumSize;
+		if (mAvailableModes[static_cast<ComputeMode>(next)]
+			&& !(next == static_cast<int>(ComputeMode::CPU) && mNumberOfParticles > mThreshold))
+			return static_cast<ComputeMode>(next);
 	}
 
-	if (!mAvailableModes[static_cast<ParticleSystem::ComputeMode>(mode)])
-		mode = static_cast<int>(nextMode(static_cast<ParticleSystem::ComputeMode>(mode)));
-
-	return static_cast<ParticleSystem::ComputeMode>(mode);
+	return current;
 }
 
 void ParticleSystem::setSmoothingWidth(float sw)

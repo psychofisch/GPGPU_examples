@@ -10,10 +10,9 @@ void ofApp::setup(){
 	else {
 		std::cout << "unable to load settings.xml check data/ folder\n";
 		std::cout << "creating default settings.xml\n";
-		mXmlSettings.setValue("MAXPARTICLES", 5000);
-		mXmlSettings.setValue("CONTROLS:MOUSESENS", 0.8f);
-		//mXmlSettings.setValue("SIM:SWIDTH", 0.1f);
-		mXmlSettings.saveFile("settings.xml");
+		mXmlSettings.load("settings.xml.bk");
+		mXmlSettings.save("settings.xml");
+		mXmlSettings.loadFile("settings.xml");
 	}
 
 	ofBackground(69, 69, 69);
@@ -32,13 +31,14 @@ void ofApp::setup(){
 
 	ofBoxPrimitive testRect;
 
-	int maxParticles = mXmlSettings.getValue("MAXPARTICLES", 5000);
+	int maxParticles = mXmlSettings.getValue("GENERAL:MAXPARTICLES", 5000);
 	if (maxParticles <= 0)
 	{
-		std::cout << "WARNING: MAXPARTICLES was \"<= 0\" again.\n";
+		std::cout << "WARNING: GENERAL:MAXPARTICLES was \"<= 0\" again.\n";
 		maxParticles = 5000;
 	}
 	mParticleSystem = new ParticleSystem(maxParticles);
+	mParticleSystem->setupAll(mXmlSettings);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 	mParticleSystem->setDimensions(ofVec3f(1.f));
 	CUDAta tmpCUDA = mParticleSystem->getCudata();
@@ -185,14 +185,7 @@ void ofApp::keyReleased(int key){
 			break;
 		case 'm':
 		{
-			/*if (mParticleSystem->getMode() == ParticleSystem::ComputeMode::CPU)
-				mParticleSystem->setMode(ParticleSystem::ComputeMode::COMPUTE_SHADER);
-			else
-				mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
-			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeMode::CPU) ? "CPU" : "GPU");*/
 			ParticleSystem::ComputeMode currentMode = mParticleSystem->nextMode(mParticleSystem->getMode());
-			if(mParticleSystem->getNumberOfParticles() > 1000u && currentMode == ParticleSystem::ComputeMode::CPU)
-				currentMode = mParticleSystem->nextMode(currentMode);
 			mParticleSystem->setMode(currentMode);
 			mHudMode = iHudGetModeString(currentMode);
 		}
@@ -311,7 +304,7 @@ void ofApp::quit()
 	delete mParticleSystem;
 
 	std::cout << "saving settings...";
-	mXmlSettings.setValue("MAXPARTICLES", static_cast<int>(mParticleSystem->getCapacity()));//TODO: this doesn't work
+	mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(mParticleSystem->getCapacity()));//TODO: this doesn't work
 	mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
 	//mXmlSettings.setValue("SIM:SWIDTH", mHud);
 	mXmlSettings.saveFile("settings.xml");
