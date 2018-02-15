@@ -2,6 +2,7 @@
 
 ## Fluid Particles
 This is a proof of concept implementation of fluid particles on CPU and GPU.
+Currently implemented modes are CPU, OpenGL Compute Shader, CUDA and OpenCL.
 
 ### Build
 This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9.8/of_v0.9.8_vs_release.zip) and it is configured that the folder structure looks this:
@@ -38,7 +39,7 @@ It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda
 | left mouse | rotate around y axis |
 | right mouse | move camera up and down |
 | D | add particles |
-| M | switch between CPU and GPU (if more than 1000 particles are present in the scene "CPU" mode becomes unavailable -> performance) |
+| M | switch between CPU and the different GPU modes (if more than 1000 particles are present in the scene "CPU" mode becomes unavailable -> performance) |
 | R | set number of particles back to 0 |
 | V (hold) | add single particles |
 | Esc | close application |
