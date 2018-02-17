@@ -308,7 +308,7 @@ void ofApp::quit()
 	delete mParticleSystem;
 
 	std::cout << "saving settings...";
-	mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(mParticleSystem->getCapacity()));//TODO: this doesn't work
+	mXmlSettings.setValue("GENERAL:MAXPARTICLES",int(mParticleSystem->getCapacity()));//TODO: this doesn't work
 	mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
 	//mXmlSettings.setValue("SIM:SWIDTH", mHud);
 	mXmlSettings.saveFile("settings.xml");

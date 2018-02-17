@@ -17,12 +17,8 @@ uniform float smoothingWidth;
 uniform vec3 gravity;
 uniform int numberOfParticles;
 uniform vec3 mDimension;
-//uniform bool callAddCube;
-//uniform vec3 cubePos;
-//uniform vec3 cubeSize;
 
 vec4 calculatePressure(uint index, float smoothingWidth);
-//void addCube(vec3 cubePos, vec3 cubeSize, int particleAmount);
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
 void main(){
@@ -38,6 +34,7 @@ void main(){
 	vec4 particlePressure = calculatePressure(index, smoothingWidth);
 	// vec3 particlePressure = vec3(0,0,0);
 	
+	// gravity
 	if (   particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
 		|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
 		|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
@@ -99,29 +96,3 @@ vec4 calculatePressure(uint index, float smoothingWidth)
 	
 	return pressureVec;
 }
-
-// void addCube()
-// {
-	
-	// mPositions[mNumberOfParticles + i] = cubePos + partPos;
-	// mVelocity[mNumberOfParticles + i] = ofVec3f(0.f);
-
-	// partPos.x += gap;
-
-	// if (partPos.x > cubeSize.x)
-	// {
-		// partPos.x = 0.f;
-		// partPos.z += gap;
-
-		// if (partPos.z > cubeSize.z)
-		// {
-			// partPos.z = 0.f;
-			// partPos.y += gap;
-
-			// if (partPos.y > cubeSize.y)
-			// {
-				// break;
-			// }
-		// }
-	// }
-// }
