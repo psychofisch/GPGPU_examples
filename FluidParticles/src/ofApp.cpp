@@ -92,8 +92,8 @@ void ofApp::update(){
 
 	if (mValve)
 	{
-		ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-		mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 1);
+		ofVec3f tmpSize = mParticleSystem->getDimensions();
+		mParticleSystem->addCube(tmpSize * ofVec3f(0.5f, 1.0f, 0.5f), tmpSize * 0.1f, 2, true);
 	}
 
 	mParticleSystem->update(deltaTime);
@@ -182,6 +182,10 @@ void ofApp::keyReleased(int key){
 			break;
 		case 'v':
 			mValve = false;
+			/*{
+				ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
+				mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 500, true);
+			}*/
 			break;
 		case 'm':
 		{

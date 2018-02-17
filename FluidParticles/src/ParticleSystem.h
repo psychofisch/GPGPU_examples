@@ -74,13 +74,13 @@ struct CUDAta
 class ParticleSystem
 {
 public:
-	enum class ComputeMode
+	enum ComputeMode
 	{
 		CPU = 0,
 		COMPUTE_SHADER,
 		CUDA,
 		OPENCL,
-		COMPUTEMODES_SIZE
+		COMPUTEMODES_SIZE // these values are used as array indices, dont delete this!
 	};
 
 	ParticleSystem(uint mp);
@@ -96,14 +96,12 @@ public:
 	void setNumberOfParticles(uint nop);
 	void setRotation(ofQuaternion rotation);
 	void setMode(ComputeMode m);
-	ComputeMode nextMode(ParticleSystem::ComputeMode current);
+	ComputeMode nextMode(ParticleSystem::ComputeMode current) const;
 	void setSmoothingWidth(float sw);
 	void addDamBreak(uint particleAmount);
 	void addRandom(uint particleAmount);
-	void addCube(ofVec3f position, ofVec3f size, uint particleAmount);
-	void addDrop();
+	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	void draw();
-	ofVec4f* getPositionPtr();
 	ofVec3f getDimensions();
 	uint getNumberOfParticles();
 	uint getCapacity();
@@ -118,12 +116,12 @@ private:
 		mCapacity,
 		mThreshold;
 	ComputeMode mMode;
-	std::unordered_map<ComputeMode, bool> mAvailableModes;
+	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
+	//std::unordered_map<ComputeMode, bool> mAvailableModes;
 	ofVec4f	*mPosition,
 		*mVelocity;
 	ofVec3f	mDimension,
-		mGravity,
-		mGravityRotated;
+		mGravity;
 	ofVbo mParticlesVBO;
 	ofQuaternion mRotation;
 	ComputeShaderData mComputeData;
