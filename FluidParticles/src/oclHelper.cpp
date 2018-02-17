@@ -106,9 +106,10 @@ size_t oclHelper::getGlobalSize(int numberOfParticles)
 {
 	for (int i = 1; i <= 20; ++i)//TODO: do not recalculate this everytime
 	{
-		if (pow(2, i) > numberOfParticles)
+		int tmpSize = static_cast<int>(powf(2.f, static_cast<float>(i)));
+		if (tmpSize > numberOfParticles)
 		{
-			mGlobalSize = pow(2, i);
+			mGlobalSize = tmpSize;
 			break;
 		}
 	}
@@ -125,7 +126,7 @@ const cl::Device & oclHelper::getDevice() const
 	return mDevices[mDeviceId];
 }
 
-void oclHelper::handle_clerror(cl_int err, int line)
+inline void oclHelper::handle_clerror(cl_int err, int line)
 {
 	if (err != CL_SUCCESS) {
 		std::cerr << "OpenCL Error: " << cl_errorstring(err) << "\n on line " << line << std::endl;
