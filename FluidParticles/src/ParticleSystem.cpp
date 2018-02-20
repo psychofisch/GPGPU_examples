@@ -238,7 +238,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	gap = cubeSize.x / (cubedParticles * ratio);
 
 	ofVec3f partPos(0.f);
-	int particleCap = -1;
+	uint particleCap = -1;
 
 	for (uint i = 0; i < particleAmount; i++)
 	{
@@ -340,11 +340,20 @@ CUDAta& ParticleSystem::getCudata()
 	return mCUData;
 }
 
+void ParticleSystem::measureNextUpdate()
+{
+	std::cout << "Measuring next update!\n";
+	mMeasureTime = true;
+}
+
 void ParticleSystem::update(float dt)
 {
 	// don't do anything when there are no particles present
 	if (mNumberOfParticles == 0)
 		return;
+
+	if(mMeasureTime)
+		mClock.start();
 
 	switch (mMode)
 	{
@@ -360,6 +369,13 @@ void ParticleSystem::update(float dt)
 	case ComputeMode::CUDA:
 		iUpdateCUDA(dt);
 		break;
+	}
+
+	if (mMeasureTime)
+	{
+		double time = mClock.getDuration(mClock.stop());
+		std::cout << time << std::endl;
+		mMeasureTime = false;
 	}
 }
 

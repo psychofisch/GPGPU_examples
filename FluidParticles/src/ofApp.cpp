@@ -15,6 +15,8 @@ void ofApp::setup(){
 		mXmlSettings.loadFile("settings.xml");
 	}
 
+	ofSetVerticalSync(false);
+
 	ofBackground(69, 69, 69);
 
 	mTestBox.setResolution(1);
@@ -169,7 +171,8 @@ void ofApp::keyReleased(int key){
 			mHudRotation = mGlobalRotation;
 			break;
 		case 't':
-			std::cout << mParticleSystem->debug_testIfParticlesOutside() << "\n";
+			//std::cout << mParticleSystem->debug_testIfParticlesOutside() << "\n";
+			mParticleSystem->measureNextUpdate();
 			break; 
 		case 'u':
 			mParticleSystem->update(0.16f);
@@ -177,7 +180,7 @@ void ofApp::keyReleased(int key){
 		case 'd':
 		{
 			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-			mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 1000);
+			mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 		}
 			break;
 		case 'v':
@@ -308,7 +311,13 @@ void ofApp::quit()
 	delete mParticleSystem;
 
 	std::cout << "saving settings...";
-	mXmlSettings.setValue("GENERAL:MAXPARTICLES",int(mParticleSystem->getCapacity()));//TODO: this doesn't work
+	/*uint tmpCapacity = mParticleSystem->getCapacity();
+	if (tmpCapacity > INT_MAX)
+	{
+		tmpCapacity = INT_MAX;
+	}
+	mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(tmpCapacity));//BUG: this doesn't work
+	//mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(100000u));//^BUG: this does work?!?!*/
 	mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
 	//mXmlSettings.setValue("SIM:SWIDTH", mHud);
 	mXmlSettings.saveFile("settings.xml");

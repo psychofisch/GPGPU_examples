@@ -61,6 +61,9 @@
     <ClCompile Include="src\oclHelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Stopwatch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -270,6 +273,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\oclHelper.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Stopwatch.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,6 +6,7 @@
 //#define CLAMP(a, b, c) MIN(MAX(a, b), c)    // double sided clip of input a
 //#define TOPCLAMP(a, b) (a < b ? a:b)	    // single top side clip of input a
 
+// Openframeworks includes
 #include <ofVec3f.h>
 #include <ofRectangle.h>
 #include <ofMath.h>
@@ -14,12 +15,15 @@
 #include <ofVbo.h>
 #include <ofxXmlSettings.h>
 
-#include "oclHelper.h"
-
+// CUDA includes
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <helper_cuda.h>
 #include <helper_math.h>
+
+// own includes
+#include "oclHelper.h"
+#include "Stopwatch.h"
 
 //general definitions
 typedef unsigned int uint;
@@ -107,6 +111,7 @@ public:
 	uint getCapacity();
 	ComputeMode getMode();
 	CUDAta& getCudata();
+	void measureNextUpdate();
 
 	void update(float dt);
 	uint debug_testIfParticlesOutside();
@@ -129,6 +134,8 @@ private:
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
 	CUDAta mCUData;
+	Stopwatch mClock;
+	bool mMeasureTime;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
