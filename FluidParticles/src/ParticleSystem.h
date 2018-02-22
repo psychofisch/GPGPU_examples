@@ -6,26 +6,31 @@
 //#define CLAMP(a, b, c) MIN(MAX(a, b), c)    // double sided clip of input a
 //#define TOPCLAMP(a, b) (a < b ? a:b)	    // single top side clip of input a
 
+// Openframeworks includes
 #include <ofVec3f.h>
 #include <ofRectangle.h>
 #include <ofMath.h>
 #include <ofQuaternion.h>
 #include <ofShader.h>
 #include <ofVbo.h>
+#include <ofxXmlSettings.h>
 
-#include "oclHelper.h"
-
+// CUDA includes
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <helper_cuda.h>
 #include <helper_math.h>
+
+// own includes
+#include "oclHelper.h"
+#include "Stopwatch.h"
 
 //general definitions
 typedef unsigned int uint;
 
 struct SimulationData
 {
-	float smoothingWidth;
+	float interactionRadius;
 };
 
 //definitions for Compute Shader
@@ -52,7 +57,7 @@ extern "C" void cudaUpdate(
 	float4* positionOut,
 	float4* velocity,
 	const float dt,
-	const float smoothingWidth,
+	const float interactionRadius,
 	const float3 gravity,
 	const float3 dimension,
 	const uint numberOfParticles);
@@ -73,49 +78,54 @@ struct CUDAta
 class ParticleSystem
 {
 public:
-	enum class ComputeMode
+	enum ComputeMode
 	{
 		CPU = 0,
 		COMPUTE_SHADER,
 		CUDA,
 		OPENCL,
-		COMPUTEMODES_SIZE
+		COMPUTEMODES_SIZE // these values are used as array indices, dont delete this!
 	};
 
 	ParticleSystem(uint mp);
 	~ParticleSystem();
 
+	void setupAll(ofxXmlSettings& settings);
+	void setupCPU(ofxXmlSettings& settings);
+	void setupCompute(ofxXmlSettings& settings);
+	void setupCUDA(ofxXmlSettings& settings);
+	void setupOCL(ofxXmlSettings& settings);
+
 	void setDimensions(ofVec3f dimensions);
 	void setNumberOfParticles(uint nop);
 	void setRotation(ofQuaternion rotation);
 	void setMode(ComputeMode m);
-	ComputeMode nextMode(ParticleSystem::ComputeMode current);
+	ComputeMode nextMode(ParticleSystem::ComputeMode current) const;
 	void setSmoothingWidth(float sw);
 	void addDamBreak(uint particleAmount);
-	void addRandom(uint particleAmount);
-	void addCube(ofVec3f position, ofVec3f size, uint particleAmount);
-	void addDrop();
+	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	void draw();
-	ofVec4f* getPositionPtr();
 	ofVec3f getDimensions();
 	uint getNumberOfParticles();
 	uint getCapacity();
 	ComputeMode getMode();
 	CUDAta& getCudata();
+	void measureNextUpdate();
 
 	void update(float dt);
 	uint debug_testIfParticlesOutside();
 
 private:
 	uint mNumberOfParticles,
-		mCapacity;
+		mCapacity,
+		mThreshold;
 	ComputeMode mMode;
-	std::unordered_map<ComputeMode, bool> mAvailableModes;
+	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
+	//std::unordered_map<ComputeMode, bool> mAvailableModes;
 	ofVec4f	*mPosition,
 		*mVelocity;
 	ofVec3f	mDimension,
-		mGravity,
-		mGravityRotated;
+		mGravity;
 	ofVbo mParticlesVBO;
 	ofQuaternion mRotation;
 	ComputeShaderData mComputeData;
@@ -123,6 +133,8 @@ private:
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
 	CUDAta mCUData;
+	Stopwatch mClock;
+	bool mMeasureTime;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);

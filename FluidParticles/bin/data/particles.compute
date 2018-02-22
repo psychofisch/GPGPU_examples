@@ -13,16 +13,12 @@ layout (std140, binding = 2) buffer VelocityBuffer{
 };
 
 uniform float dt;
-uniform float smoothingWidth;
+uniform float interactionRadius;
 uniform vec3 gravity;
 uniform int numberOfParticles;
 uniform vec3 mDimension;
-//uniform bool callAddCube;
-//uniform vec3 cubePos;
-//uniform vec3 cubeSize;
 
-vec4 calculatePressure(uint index, float smoothingWidth);
-//void addCube(vec3 cubePos, vec3 cubeSize, int particleAmount);
+vec4 calculatePressure(uint index, float interactionRadius);
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
 void main(){
@@ -35,9 +31,10 @@ void main(){
 	// velocityBuffer[index] = calculatePressure(index);
 	vec3 particlePosition = positionBuffer[index].xyz;
 	vec3 particleVelocity = velocityBuffer[index].xyz;
-	vec4 particlePressure = calculatePressure(index, smoothingWidth);
+	vec4 particlePressure = calculatePressure(index, interactionRadius);
 	// vec3 particlePressure = vec3(0,0,0);
 	
+	// gravity
 	if (   particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
 		|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
 		|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
@@ -62,9 +59,9 @@ void main(){
 	//velocityBuffer[index] = particlePressure;
 }
 
-vec4 calculatePressure(uint index, float smoothingWidth)
+vec4 calculatePressure(uint index, float interactionRadius)
 {
-	//float smoothingWidth = 18.f;
+	//float interactionRadius = 18.f;
 	float amplitude = 1.0f;
 	vec3 particlePosition = positionBuffer[index].xyz;
 	
@@ -82,12 +79,12 @@ vec4 calculatePressure(uint index, float smoothingWidth)
 			// pressureVec = vec4(positionBuffer[i].xyz, i);
 			// break;
 		// }
-		//if (dist > smoothingWidth * 1.0f || dist < 0.01f)
-		if (dist > smoothingWidth * 1.0f)
+		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
+		if (dist > interactionRadius * 1.0f)
 			continue;
 
-		float pressure = 1.f - (dist/smoothingWidth);
-		//float pressure = amplitude * exp(-dist / smoothingWidth);
+		float pressure = 1.f - (dist/interactionRadius);
+		//float pressure = amplitude * exp(-dist / interactionRadius);
 		
 		pressureVec += vec4(pressure * normalize(dirVec), 0.f);
 		// pressureVec += vec4(dirVec, 0.f);
@@ -99,29 +96,3 @@ vec4 calculatePressure(uint index, float smoothingWidth)
 	
 	return pressureVec;
 }
-
-// void addCube()
-// {
-	
-	// mPositions[mNumberOfParticles + i] = cubePos + partPos;
-	// mVelocity[mNumberOfParticles + i] = ofVec3f(0.f);
-
-	// partPos.x += gap;
-
-	// if (partPos.x > cubeSize.x)
-	// {
-		// partPos.x = 0.f;
-		// partPos.z += gap;
-
-		// if (partPos.z > cubeSize.z)
-		// {
-			// partPos.z = 0.f;
-			// partPos.y += gap;
-
-			// if (partPos.y > cubeSize.y)
-			// {
-				// break;
-			// }
-		// }
-	// }
-// }

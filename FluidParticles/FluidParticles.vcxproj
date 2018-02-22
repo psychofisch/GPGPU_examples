@@ -198,6 +198,7 @@
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxmlerror.cpp" />
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxmlparser.cpp" />
     <ClCompile Include="src\ParticleSystem.cpp" />
+    <ClCompile Include="src\Stopwatch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\oclHelper.h" />
@@ -255,6 +256,7 @@
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src\ofxXmlSettings.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxml.h" />
     <ClInclude Include="src\ParticleSystem.h" />
+    <ClInclude Include="src\Stopwatch.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">

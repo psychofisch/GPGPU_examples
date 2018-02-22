@@ -10,11 +10,12 @@ void ofApp::setup(){
 	else {
 		std::cout << "unable to load settings.xml check data/ folder\n";
 		std::cout << "creating default settings.xml\n";
-		mXmlSettings.setValue("MAXPARTICLES", 5000);
-		mXmlSettings.setValue("CONTROLS:MOUSESENS", 0.8f);
-		//mXmlSettings.setValue("SIM:SWIDTH", 0.1f);
-		mXmlSettings.saveFile("settings.xml");
+		mXmlSettings.load("settings.xml.bk");
+		mXmlSettings.save("settings.xml");
+		mXmlSettings.loadFile("settings.xml");
 	}
+
+	ofSetVerticalSync(false);
 
 	ofBackground(69, 69, 69);
 
@@ -32,13 +33,14 @@ void ofApp::setup(){
 
 	ofBoxPrimitive testRect;
 
-	int maxParticles = mXmlSettings.getValue("MAXPARTICLES", 5000);
+	int maxParticles = mXmlSettings.getValue("GENERAL:MAXPARTICLES", 5000);
 	if (maxParticles <= 0)
 	{
-		std::cout << "WARNING: MAXPARTICLES was \"<= 0\" again.\n";
+		std::cout << "WARNING: GENERAL:MAXPARTICLES was \"<= 0\" again.\n";
 		maxParticles = 5000;
 	}
 	mParticleSystem = new ParticleSystem(maxParticles);
+	mParticleSystem->setupAll(mXmlSettings);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 	mParticleSystem->setDimensions(ofVec3f(1.f));
 	CUDAta tmpCUDA = mParticleSystem->getCudata();
@@ -92,8 +94,8 @@ void ofApp::update(){
 
 	if (mValve)
 	{
-		ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-		mParticleSystem->addCube(tmpSize, tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 1);
+		ofVec3f tmpSize = mParticleSystem->getDimensions();
+		mParticleSystem->addCube(tmpSize * ofVec3f(0.5f, 1.0f, 0.5f), tmpSize * 0.1f, 2, true);
 	}
 
 	mParticleSystem->update(deltaTime);
@@ -169,7 +171,8 @@ void ofApp::keyReleased(int key){
 			mHudRotation = mGlobalRotation;
 			break;
 		case 't':
-			std::cout << mParticleSystem->debug_testIfParticlesOutside() << "\n";
+			//std::cout << mParticleSystem->debug_testIfParticlesOutside() << "\n";
+			mParticleSystem->measureNextUpdate();
 			break; 
 		case 'u':
 			mParticleSystem->update(0.16f);
@@ -177,22 +180,19 @@ void ofApp::keyReleased(int key){
 		case 'd':
 		{
 			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-			mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 1000);
+			mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 		}
 			break;
 		case 'v':
 			mValve = false;
+			/*{
+				ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
+				mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 500, true);
+			}*/
 			break;
 		case 'm':
 		{
-			/*if (mParticleSystem->getMode() == ParticleSystem::ComputeMode::CPU)
-				mParticleSystem->setMode(ParticleSystem::ComputeMode::COMPUTE_SHADER);
-			else
-				mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
-			mHudMode = ofToString((mParticleSystem->getMode() == ParticleSystem::ComputeMode::CPU) ? "CPU" : "GPU");*/
 			ParticleSystem::ComputeMode currentMode = mParticleSystem->nextMode(mParticleSystem->getMode());
-			if(mParticleSystem->getNumberOfParticles() > 1000u && currentMode == ParticleSystem::ComputeMode::CPU)
-				currentMode = mParticleSystem->nextMode(currentMode);
 			mParticleSystem->setMode(currentMode);
 			mHudMode = iHudGetModeString(currentMode);
 		}
@@ -311,7 +311,13 @@ void ofApp::quit()
 	delete mParticleSystem;
 
 	std::cout << "saving settings...";
-	mXmlSettings.setValue("MAXPARTICLES", static_cast<int>(mParticleSystem->getCapacity()));//TODO: this doesn't work
+	/*uint tmpCapacity = mParticleSystem->getCapacity();
+	if (tmpCapacity > INT_MAX)
+	{
+		tmpCapacity = INT_MAX;
+	}
+	mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(tmpCapacity));//BUG: this doesn't work
+	//mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(100000u));//^BUG: this does work?!?!*/
 	mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
 	//mXmlSettings.setValue("SIM:SWIDTH", mHud);
 	mXmlSettings.saveFile("settings.xml");

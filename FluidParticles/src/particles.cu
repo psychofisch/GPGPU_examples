@@ -23,14 +23,14 @@ inline __device__ bool operator==(float3& lhs, float3& rhs)
 		false;
 }
 
-float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth);
+float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float interactionRadius);
 
 __global__ void particleUpdate(
 	float4* position, 
 	float4* positionOut,
 	float4* velocity, 
 	const float dt, 
-	const float smoothingWidth, 
+	const float interactionRadius, 
 	const float3 gravity,
 	const float3 dimension,
 	const uint numberOfParticles)
@@ -42,7 +42,7 @@ __global__ void particleUpdate(
 
 	float3 particlePosition = make_float3(position[index]);
 	float3 particleVelocity = make_float3(velocity[index]);
-	float4 particlePressure = calculatePressure(position, index, numberOfParticles, smoothingWidth);
+	float4 particlePressure = calculatePressure(position, index, numberOfParticles, interactionRadius);
 
 	if (particlePosition.x <= dimension.x || particlePosition.x >= 0.f
 		|| particlePosition.y <= dimension.y || particlePosition.y >= 0.f
@@ -74,7 +74,7 @@ __global__ void particleUpdate(
 	velocity[index] = make_float4(particleVelocity);
 }
 
-__device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float smoothingWidth)
+__device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float interactionRadius)
 {
 	float3 particlePosition = make_float3(position[index]);
 
@@ -87,11 +87,11 @@ __device__ float4 calculatePressure(float4* position, uint index, uint numberOfP
 		float3 dirVec = particlePosition - make_float3(position[i]);
 		float dist = length(dirVec);//TODO: maybe use half_length
 
-		if (dist > smoothingWidth * 1.0f)
+		if (dist > interactionRadius * 1.0f)
 			continue;
 
-		float pressure = 1.f - (dist / smoothingWidth);
-		////float pressure = amplitude * exp(-dist / smoothingWidth);
+		float pressure = 1.f - (dist / interactionRadius);
+		////float pressure = amplitude * exp(-dist / interactionRadius);
 
 		pressureVec += make_float4(pressure * normalize(dirVec));
 		//// pressureVec += vec4(dirVec, 0.f);
@@ -109,7 +109,7 @@ extern "C" void cudaUpdate(
 	float4* positionOut,
 	float4* velocity,
 	const float dt,
-	const float smoothingWidth,
+	const float interactionRadius,
 	const float3 gravity,
 	const float3 dimension,
 	const uint numberOfParticles)
@@ -129,5 +129,5 @@ extern "C" void cudaUpdate(
 		threads = maxThreads;
 	}
 
-	particleUpdate<<< num, threads >>>(position, positionOut, velocity, dt, smoothingWidth, gravity, dimension, numberOfParticles);
+	particleUpdate<<< num, threads >>>(position, positionOut, velocity, dt, interactionRadius, gravity, dimension, numberOfParticles);
 }
