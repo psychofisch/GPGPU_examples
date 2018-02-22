@@ -103,7 +103,6 @@ public:
 	ComputeMode nextMode(ParticleSystem::ComputeMode current) const;
 	void setSmoothingWidth(float sw);
 	void addDamBreak(uint particleAmount);
-	void addRandom(uint particleAmount);
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	void draw();
 	ofVec3f getDimensions();
