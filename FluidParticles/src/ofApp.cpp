@@ -180,7 +180,7 @@ void ofApp::keyReleased(int key){
 		case 'd':
 		{
 			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-			mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
+			mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 		}
 			break;
 		case 'v':

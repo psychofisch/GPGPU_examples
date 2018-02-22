@@ -270,7 +270,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 		particleCap = particleAmount;
 
 	// sync the particles to the corresponding buffers
-	if (mMode == ComputeMode::COMPUTE_SHADER /*|| mMode == ComputeMode::CUDA*/)
+	if (mMode == ComputeMode::COMPUTE_SHADER || mMode == ComputeMode::CUDA)
 	{
 		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mPosition + mNumberOfParticles);
 		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mVelocity + mNumberOfParticles);
@@ -281,29 +281,29 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.positionBuffer, CL_FALSE, sizeof(ofVec4f) * mNumberOfParticles, particleCap * sizeof(ofVec4f), mPosition + mNumberOfParticles);
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.velocityBuffer, CL_TRUE, sizeof(ofVec4f) * mNumberOfParticles, particleCap * sizeof(ofVec4f), mVelocity + mNumberOfParticles);
 	}
-	else if (mMode == ComputeMode::CUDA)
-	{
-		//memcpy(mCUData.position + mNumberOfParticles, mPosition + mNumberOfParticles, sizeof(ofVec4f) * particleCap);
-		//cudaDeviceSynchronize();
+	//else if (mMode == ComputeMode::CUDA)
+	//{
+	//	//memcpy(mCUData.position + mNumberOfParticles, mPosition + mNumberOfParticles, sizeof(ofVec4f) * particleCap);
+	//	//cudaDeviceSynchronize();
 
-		//map the OpenGL buffers to CUDA device pointers
-		cudaGraphicsMapResources(1, &mCUData.cuPos);
-		cudaGraphicsMapResources(1, &mCUData.cuVel);
+	//	//map the OpenGL buffers to CUDA device pointers
+	//	cudaGraphicsMapResources(1, &mCUData.cuPos);
+	//	cudaGraphicsMapResources(1, &mCUData.cuVel);
 
-		size_t cudaPosSize, cudaVelSize;
+	//	size_t cudaPosSize, cudaVelSize;
 
-		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&mCUData.position, &cudaPosSize, mCUData.cuPos));
-		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&mCUData.velocity, &cudaVelSize, mCUData.cuVel));
+	//	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&mCUData.position, &cudaPosSize, mCUData.cuPos));
+	//	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&mCUData.velocity, &cudaVelSize, mCUData.cuVel));
 
-		checkCudaErrors(cudaMemcpy(mCUData.position + mNumberOfParticles, mPosition + mNumberOfParticles, sizeof(ofVec4f) * (particleCap), cudaMemcpyHostToDevice));
-		checkCudaErrors(cudaMemcpy(mCUData.velocity + mNumberOfParticles, mVelocity + mNumberOfParticles, sizeof(ofVec4f) * (particleCap), cudaMemcpyHostToDevice));
-		//checkCudaErrors(cudaMemcpy(mCUData.position + mNumberOfParticles, mPosition + mNumberOfParticles, sizeof(ofVec4f) * particleCap, cudaMemcpyHostToDevice));
-		//mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);
+	//	checkCudaErrors(cudaMemcpy(mCUData.position + mNumberOfParticles, mPosition + mNumberOfParticles, sizeof(ofVec4f) * (particleCap), cudaMemcpyHostToDevice));
+	//	checkCudaErrors(cudaMemcpy(mCUData.velocity + mNumberOfParticles, mVelocity + mNumberOfParticles, sizeof(ofVec4f) * (particleCap), cudaMemcpyHostToDevice));
+	//	//checkCudaErrors(cudaMemcpy(mCUData.position + mNumberOfParticles, mPosition + mNumberOfParticles, sizeof(ofVec4f) * particleCap, cudaMemcpyHostToDevice));
+	//	//mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);
 
-		//unmap all resources
-		checkCudaErrors(cudaGraphicsUnmapResources(1, &mCUData.cuPos));
-		checkCudaErrors(cudaGraphicsUnmapResources(1, &mCUData.cuVel));
-	}
+	//	//unmap all resources
+	//	checkCudaErrors(cudaGraphicsUnmapResources(1, &mCUData.cuPos));
+	//	checkCudaErrors(cudaGraphicsUnmapResources(1, &mCUData.cuVel));
+	//}
 
 	mNumberOfParticles += particleCap;
 }
@@ -519,9 +519,9 @@ void ParticleSystem::iUpdateCUDA(float dt)
 	float3 cudaDimension = make_float3(mDimension.x, mDimension.y, mDimension.z);
 
 	//map the OpenGL buffers to CUDA device pointers
-	cudaGraphicsMapResources(1, &mCUData.cuPos);
-	cudaGraphicsMapResources(1, &mCUData.cuPosOut);
-	cudaGraphicsMapResources(1, &mCUData.cuVel);
+	checkCudaErrors(cudaGraphicsMapResources(1, &mCUData.cuPos));
+	checkCudaErrors(cudaGraphicsMapResources(1, &mCUData.cuPosOut));
+	checkCudaErrors(cudaGraphicsMapResources(1, &mCUData.cuVel));
 
 	size_t cudaPosSize, cudaPosOutSize, cudaVelSize;
 
@@ -532,13 +532,13 @@ void ParticleSystem::iUpdateCUDA(float dt)
 	//call the kernel
 	cudaUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, dt, mSimData.smoothingWidth, cudaGravity, cudaDimension, mNumberOfParticles);
 
-	//sync the device data back to the host and write into the OpenGL buffer (for drawing)
-	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);
-
 	//unmap all resources
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &mCUData.cuPos));
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &mCUData.cuPosOut));
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &mCUData.cuVel));
+
+	//sync the device data back to the host and write into the OpenGL buffer (for drawing)
+	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);
 }
 
 uint ParticleSystem::debug_testIfParticlesOutside()
