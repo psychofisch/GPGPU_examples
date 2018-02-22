@@ -1,7 +1,7 @@
 float4 calculatePressure(__global float4 *positions,
 	uint index,
 	uint numberOfParticles,
-	float smoothingWidth)
+	float interactionRadius)
 {
 	float3 particlePosition = positions[index].xyz;
 	
@@ -19,12 +19,12 @@ float4 calculatePressure(__global float4 *positions,
 			// pressureVec = vec4(positionBuffer[i].xyz, i);
 			// break;
 		// }
-		//if (dist > smoothingWidth * 1.0f || dist < 0.01f)
-		if (dist > smoothingWidth * 1.0f)
+		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
+		if (dist > interactionRadius * 1.0f)
 			continue;
 
-		float pressure = 1.f - (dist/smoothingWidth);
-		//float pressure = amplitude * exp(-dist / smoothingWidth);
+		float pressure = 1.f - (dist/interactionRadius);
+		//float pressure = amplitude * exp(-dist / interactionRadius);
 		
 		pressureVec += (float4)(pressure * normalize(dirVec), 0.f);
 		// pressureVec += vec4(dirVec, 0.f);
@@ -42,7 +42,7 @@ __kernel void particleUpdate(
 	__global float4 *positionsOut,
 	__global float4 *velocity,
 	const float dt,
-	const float smoothingWidth,
+	const float interactionRadius,
 	const float4 gravity,
 	const float4 dimension,
 	const uint numberOfParticles
@@ -55,7 +55,7 @@ __kernel void particleUpdate(
 	
 	float3 particlePosition = positions[index].xyz;
 	float3 particleVelocity = velocity[index].xyz;
-	float4 particlePressure = calculatePressure(positions, index, numberOfParticles, smoothingWidth);
+	float4 particlePressure = calculatePressure(positions, index, numberOfParticles, interactionRadius);
 	
 	if (   particlePosition.x <= dimension.x || particlePosition.x >= 0.f
 		|| particlePosition.y <= dimension.y || particlePosition.y >= 0.f

@@ -30,7 +30,7 @@ typedef unsigned int uint;
 
 struct SimulationData
 {
-	float smoothingWidth;
+	float interactionRadius;
 };
 
 //definitions for Compute Shader
@@ -57,7 +57,7 @@ extern "C" void cudaUpdate(
 	float4* positionOut,
 	float4* velocity,
 	const float dt,
-	const float smoothingWidth,
+	const float interactionRadius,
 	const float3 gravity,
 	const float3 dimension,
 	const uint numberOfParticles);

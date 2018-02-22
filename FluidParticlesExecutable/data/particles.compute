@@ -1,0 +1,98 @@
+#version 440
+
+layout (std140, binding = 0) buffer PositionBuffer{
+	vec4 positionBuffer[];
+};
+
+layout (std140, binding = 1) buffer PositionOutBuffer{
+	vec4 positionOutBuffer[];
+};
+
+layout (std140, binding = 2) buffer VelocityBuffer{
+	vec4 velocityBuffer[];
+};
+
+uniform float dt;
+uniform float interactionRadius;
+uniform vec3 gravity;
+uniform int numberOfParticles;
+uniform vec3 mDimension;
+
+vec4 calculatePressure(uint index, float interactionRadius);
+
+layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
+void main(){
+	uint index = gl_GlobalInvocationID.x;
+	
+	if(index >= numberOfParticles)
+		return;
+	
+	// positionOutBuffer[index] = positionBuffer[index];
+	// velocityBuffer[index] = calculatePressure(index);
+	vec3 particlePosition = positionBuffer[index].xyz;
+	vec3 particleVelocity = velocityBuffer[index].xyz;
+	vec4 particlePressure = calculatePressure(index, interactionRadius);
+	// vec3 particlePressure = vec3(0,0,0);
+	
+	// gravity
+	if (   particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
+		|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
+		|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
+		particleVelocity += (gravity + particlePressure.xyz) * dt;
+	// ***g
+
+	// static collision
+	for (int i = 0; i < 3; ++i)
+	{
+		if ((particlePosition[i] > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] < 0.f && particleVelocity[i] < 0.f))
+		{
+			particleVelocity[i] *= -.3f;
+		}
+	}
+	// *** sc
+
+	//particleVelocity -= dt * particleVelocity * 0.1f;//damping
+	particlePosition += particleVelocity * dt;
+
+	positionOutBuffer[index] = vec4(particlePosition, index);
+	velocityBuffer[index] = vec4(particleVelocity, numberOfParticles);
+	//velocityBuffer[index] = particlePressure;
+}
+
+vec4 calculatePressure(uint index, float interactionRadius)
+{
+	//float interactionRadius = 18.f;
+	float amplitude = 1.0f;
+	vec3 particlePosition = positionBuffer[index].xyz;
+	
+	vec4 pressureVec = vec4(0.f, 0.f, 0.f, 0.f);
+	for (int i = 0; i < numberOfParticles; i++)
+	{
+		if (index == i)
+			continue;
+
+		vec3 dirVec = particlePosition - positionBuffer[i].xyz;
+		float dist = length(dirVec);
+
+		// if(particlePosition == positionBuffer[i].xyz)
+		// {
+			// pressureVec = vec4(positionBuffer[i].xyz, i);
+			// break;
+		// }
+		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
+		if (dist > interactionRadius * 1.0f)
+			continue;
+
+		float pressure = 1.f - (dist/interactionRadius);
+		//float pressure = amplitude * exp(-dist / interactionRadius);
+		
+		pressureVec += vec4(pressure * normalize(dirVec), 0.f);
+		// pressureVec += vec4(dirVec, 0.f);
+		
+		pressureVec.w += pressure;
+		
+		//break;
+	}
+	
+	return pressureVec;
+}
