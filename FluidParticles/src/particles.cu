@@ -20,10 +20,10 @@ inline __device__ bool operator==(float3& lhs, float3& rhs)
 	if (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z)
 		return true;
 	else
-		false;
+		return false;
 }
 
-float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float interactionRadius);
+__device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float interactionRadius);
 
 __global__ void particleUpdate(
 	float4* position, 
@@ -123,9 +123,9 @@ extern "C" void cudaUpdate(
 	int threads = numberOfParticles;
 	int maxThreads = devProp.maxThreadsPerBlock;
 
-	if (numberOfParticles > maxThreads)
+	if (numberOfParticles > (uint)maxThreads)
 	{
-		num = ceilf(float(numberOfParticles) / maxThreads);
+		num = (int)ceilf(float(numberOfParticles) / maxThreads);
 		threads = maxThreads;
 	}
 
