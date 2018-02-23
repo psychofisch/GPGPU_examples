@@ -51,17 +51,17 @@ __global__ void particleUpdate(
 
 	// static collision
 	//TODO: write some kind of for-loop
-	if ((particlePosition.x > dimension.x && particleVelocity.x > 0.f) || (particlePosition.x < 0.f && particleVelocity.x < 0.f))
+	if ((particlePosition.x + particleVelocity.x * dt > dimension.x && particleVelocity.x > 0.f) || (particlePosition.x + particleVelocity.x * dt < 0.f && particleVelocity.x < 0.f))
 	{
 		particleVelocity.x *= -.3f;
 	}
 
-	if ((particlePosition.y > dimension.y && particleVelocity.y > 0.f) || (particlePosition.y < 0.f && particleVelocity.y < 0.f))
+	if ((particlePosition.y + particleVelocity.y * dt  > dimension.y && particleVelocity.y > 0.f) || (particlePosition.y + particleVelocity.y * dt < 0.f && particleVelocity.y < 0.f))
 	{
 		particleVelocity.y *= -.3f;
 	}
 
-	if ((particlePosition.z > dimension.z && particleVelocity.z > 0.f) || (particlePosition.z < 0.f && particleVelocity.z < 0.f))
+	if ((particlePosition.z + particleVelocity.z * dt > dimension.z && particleVelocity.z > 0.f) || (particlePosition.z + particleVelocity.z * dt < 0.f && particleVelocity.z < 0.f))
 	{
 		particleVelocity.z *= -.3f;
 	}

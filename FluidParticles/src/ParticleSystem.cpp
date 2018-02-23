@@ -401,7 +401,9 @@ void ParticleSystem::iUpdateCPU(float dt)
 		//static collision
 		for (int i = 0; i < 3; ++i)
 		{
-			if ((particlePosition[i] > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] < 0.f && particleVelocity[i] < 0.f))
+			if ((particlePosition[i] + particleVelocity[i] * dt > mDimension[i] && particleVelocity[i] > 0.f) // max boundary
+				|| (particlePosition[i] + particleVelocity[i] * dt < 0.f && particleVelocity[i] < 0.f) // min boundary
+				)
 			{
 				particleVelocity[i] *= -.3f;
 			}
