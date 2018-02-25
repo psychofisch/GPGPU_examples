@@ -194,9 +194,19 @@ ParticleSystem::ComputeMode ParticleSystem::nextMode(ParticleSystem::ComputeMode
 	return current;
 }
 
+void ParticleSystem::setSimulationData(SimulationData & sim)
+{
+	mSimData = sim;
+}
+
 void ParticleSystem::setSmoothingWidth(float sw)
 {
 	mSimData.interactionRadius = sw;
+}
+
+void ParticleSystem::setRestDensity(float rd)
+{
+	mSimData.rho0 = rd;
 }
 
 // helper function to create a dam break
@@ -355,18 +365,18 @@ void ParticleSystem::update(float dt)
 
 	switch (mMode)
 	{
-	case ComputeMode::CPU:
-		iUpdateCPU(dt);
-		break;
-	case ComputeMode::COMPUTE_SHADER:
-		iUpdateCompute(dt);
-		break;
-	case ComputeMode::OPENCL:
-		iUpdateOCL(dt);
-		break;
-	case ComputeMode::CUDA:
-		iUpdateCUDA(dt);
-		break;
+		case ComputeMode::CPU:
+			iUpdateCPU(dt);
+			break;
+		case ComputeMode::COMPUTE_SHADER:
+			iUpdateCompute(dt);
+			break;
+		case ComputeMode::OPENCL:
+			iUpdateOCL(dt);
+			break;
+		case ComputeMode::CUDA:
+			iUpdateCUDA(dt);
+			break;
 	}
 
 	if (mMeasureTime)
@@ -389,14 +399,17 @@ void ParticleSystem::iUpdateCPU(float dt)
 	{
 		ofVec3f particlePosition = mPosition[i];
 		ofVec3f particleVelocity = mVelocity[i];
-		ofVec3f particlePressure = iCalculatePressureVector(i);
+		//ofVec3f particlePressure = iCalculatePressureVector(i);
 
 		//gravity
 		if (particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
 			|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
 			|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
-			particleVelocity += (mGravity + particlePressure) * dt;
+			//particleVelocity += (mGravity + particlePressure) * dt;
+			particleVelocity += (mGravity) * dt;
 		//***g
+
+		iApplyViscosity(i, dt, particleVelocity, particlePosition);
 
 		//static collision
 		for (int i = 0; i < 3; ++i)
@@ -447,6 +460,83 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
 	return pressureVec;
 }
 
+void ParticleSystem::iApplyViscosity(size_t index, float dt, OUT ofVec3f& velocity, OUT ofVec3f& position)
+{
+	ofVec3f vel = velocity;
+	ofVec3f pos = mPosition[index];
+	float alpha = 1.f;
+	float beta = 1.f;
+	float rho = 0.0f;
+	float rhoNear = 0.0f;
+
+	for (int i = 0; i < mNumberOfParticles; i++)
+	{
+		if (index == i)
+			continue;
+
+		ofVec3f dirVec = pos - mPosition[i];
+		float dist = dirVec.length();
+		mPosition[i].w = dist;
+
+		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
+		if (dist > mSimData.interactionRadius)
+			continue;
+
+		ofVec3f dirVecN = dirVec.normalized();
+		float moveDir = (vel - mVelocity[i]).dot(dirVecN);
+		float distRel = dist / mSimData.interactionRadius;
+
+		// viscosity
+		if (moveDir > 0)
+		{
+			ofVec3f impulse = (1.f - distRel) * (alpha * moveDir + beta * moveDir * moveDir) * dirVecN * dt;
+			vel -= impulse * 0.5f;//goes back to the caller-particle
+			mVelocity[i] += impulse * 0.5f;//changes neighbour velocity directly
+		}
+		// *** v
+
+		// double realxation
+		float distRel2 = (1.f - distRel) * (1.f - distRel);
+		rho += distRel2; // density, uses quadratic kernel
+		rhoNear += distRel2 * (1.f - distRel);// near density, cubic kernel
+		// *** dr
+	}
+
+	float pressure = (rho - mSimData.rho0) * mSimData.spring;
+	float pressureNear = rhoNear * mSimData.springNear;
+
+	ofVec3f displace;
+	for (int i = 0; i < mNumberOfParticles; i++)
+	{
+		if (index == i)
+			continue;
+
+		float dist = mPosition[i].w;
+
+		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
+		if (dist > mSimData.interactionRadius)
+			continue;
+
+		float distRel = dist / mSimData.interactionRadius;
+		ofVec3f dirVecN = (pos - mPosition[i]).normalized();
+
+		float pressureEffect = pressure * (1.f - distRel);
+		float pressureNearEffect = pressureNear * (1.f - distRel) * (1.f - distRel);
+		float df = (pressureEffect + pressureNearEffect) * dt * dt;
+		ofVec3f d = dirVecN * df;
+		//mPosition[i] += (d * 0.5f);
+		displace -= d;
+	}
+
+	pos += displace;
+
+	position = pos;
+	velocity = vel;
+
+	//result[0].w = rho;
+	//position.w = displace.length();
+}
+
 void ParticleSystem::iUpdateCompute(float dt)
 {
 	/*ofVec4f* tmpPositionFromGPU;
@@ -460,6 +550,9 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.computeShader.begin();
 	mComputeData.computeShader.setUniform1f("dt", dt);
 	mComputeData.computeShader.setUniform1f("interactionRadius", mSimData.interactionRadius);
+	mComputeData.computeShader.setUniform1f("rho0", mSimData.rho0);
+	mComputeData.computeShader.setUniform1f("spring", mSimData.spring);
+	mComputeData.computeShader.setUniform1f("springNear", mSimData.springNear);
 	mComputeData.computeShader.setUniform3f("gravity", mGravity);
 	mComputeData.computeShader.setUniform1i("numberOfParticles", mNumberOfParticles);
 	mComputeData.computeShader.setUniform3f("mDimension", mDimension);
@@ -467,6 +560,16 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.computeShader.end();
 
 	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);//TODO: swap instead of copy buffers
+
+	//ofVec4f* tmpPositionFromGPU;
+	//tmpPositionFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
+	//float *rhos = new float[mNumberOfParticles];
+	//for (uint i = 0; i < mNumberOfParticles; i++)
+	//{
+	//	rhos[i] = (tmpPositionFromGPU[i].w);
+	//}
+	//delete[] rhos;
+	//mComputeData.positionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
 }
 
 void ParticleSystem::iUpdateOCL(float dt)

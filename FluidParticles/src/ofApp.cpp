@@ -66,7 +66,12 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
 
 	mHudSimulationGroup.setName("Simulation Settings");
+	mHudControlGroup.add(mHudPause.set("Pause", false));
+	mHudControlGroup.add(mHudStep.set("Step", false));
 	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", 0.1f, 0.0f, 1.f));
+	mHudSimulationGroup.add(mHudRestDensity.set("Rest Density", 3.5f, 0.0f, 10.f));
+	mHudSimulationGroup.add(mHudSpring.set("Spring", 1.0f, 0.0f, 100.f));
+	mHudSimulationGroup.add(mHudSpringNear.set("Spring Near", 1.0f, 0.0f, 100.f));
 
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
@@ -86,7 +91,14 @@ void ofApp::update(){
 	mHudParticles = ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 	//mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
-	mParticleSystem->setSmoothingWidth(mHudSmoothingWidth);
+	SimulationData simD;
+	simD.interactionRadius = mHudSmoothingWidth;
+	simD.rho0 = mHudRestDensity;
+	simD.spring = mHudSpring;
+	simD.springNear = mHudSpringNear;
+	mParticleSystem->setSimulationData(simD);
+	//mParticleSystem->setSmoothingWidth(mHudSmoothingWidth);
+	//mParticleSystem->setRestDensity(mHudRestDensity);
 	//mParticleSystem->getCudata().maxWorkGroupSize = mHudWorkGroup;
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
@@ -98,7 +110,11 @@ void ofApp::update(){
 		mParticleSystem->addCube(tmpSize * ofVec3f(0.5f, 1.0f, 0.5f), tmpSize * 0.1f, 2, true);
 	}
 
-	mParticleSystem->update(deltaTime);
+	if (!mHudPause || mHudStep)
+	{
+		mParticleSystem->update(deltaTime);
+		mHudStep = false;
+	}
 	//mParticleSystem->update(0.016f);
 	//mParticleMesh.haveVertsChanged();
 	//mTestBox.rotate(spinY, 0, 1, 0);

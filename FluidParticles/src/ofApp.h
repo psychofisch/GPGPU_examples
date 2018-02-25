@@ -52,10 +52,15 @@ class ofApp : public ofBaseApp{
 		ofParameter<std::string> mHudMode;
 		ofParameter<size_t> mHudWorkGroup;
 		ofParameter<std::string> mHudParticles;
+		ofParameter<bool> mHudPause;
+		ofParameter<bool> mHudStep;
 		ofParameter<ofColor> mHudColor;
 
 		ofParameterGroup mHudSimulationGroup;
 		ofParameter<float> mHudSmoothingWidth;
+		ofParameter<float> mHudRestDensity;
+		ofParameter<float> mHudSpring;
+		ofParameter<float> mHudSpringNear;
 
 		std::string iHudGetModeString(ParticleSystem::ComputeMode m);
 };

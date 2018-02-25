@@ -26,11 +26,15 @@
 #include "Stopwatch.h"
 
 //general definitions
+#define OUT 
 typedef unsigned int uint;
 
 struct SimulationData
 {
 	float interactionRadius;
+	float rho0;//restDensity
+	float spring;
+	float springNear;
 };
 
 //definitions for Compute Shader
@@ -101,7 +105,6 @@ public:
 	void setRotation(ofQuaternion rotation);
 	void setMode(ComputeMode m);
 	ComputeMode nextMode(ParticleSystem::ComputeMode current) const;
-	void setSmoothingWidth(float sw);
 	void addDamBreak(uint particleAmount);
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	void draw();
@@ -110,6 +113,12 @@ public:
 	uint getCapacity();
 	ComputeMode getMode();
 	CUDAta& getCudata();
+
+	//Simulation Data
+	void setSimulationData(SimulationData& sim);
+	void setSmoothingWidth(float sw);
+	void setRestDensity(float rd);
+
 	void measureNextUpdate();
 
 	void update(float dt);
@@ -141,5 +150,6 @@ private:
 	void iUpdateOCL(float dt);
 	void iUpdateCUDA(float dt);
 	ofVec3f iCalculatePressureVector(size_t index);
+	void iApplyViscosity(size_t index, float dt, OUT ofVec3f& velocity, OUT ofVec3f& position);
 };
 

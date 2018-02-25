@@ -19,13 +19,17 @@ layout (std140, binding = 2) buffer VelocityBuffer{
 };
 
 uniform float dt;
+//uniform SimulationData simData;
 uniform float interactionRadius;
+uniform float rho0;
+uniform float spring;
+uniform float springNear;
 uniform vec3 gravity;
 uniform int numberOfParticles;
 uniform vec3 mDimension;
 
 vec4 calculatePressure(uint index);
-mat2x3 applyViscosity(uint index, vec3 velocity);
+mat2x4 applyViscosity(uint index, vec3 velocity);
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
 void main(){
@@ -50,9 +54,9 @@ void main(){
 	// ***g
 
 	// fluid simulation
-	mat2x3 fl = applyViscosity(index, particleVelocity);
-	particlePosition = fl[0];
-	particleVelocity = fl[1];
+	mat2x4 fl = applyViscosity(index, particleVelocity);
+	particlePosition = fl[0].xyz;
+	particleVelocity = fl[1].xyz;
 	//particleVelocity += calculatePressure(index).xyz * dt;
 	// *** fs
 
@@ -61,7 +65,12 @@ void main(){
 	{
 		if ((particlePosition[i] + particleVelocity[i] * dt > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] + particleVelocity[i] * dt < 0.f && particleVelocity[i] < 0.f))
 		{
-			particleVelocity[i] *= -.3f;
+			if (particlePosition[i] + particleVelocity[i] * dt > mDimension[i])
+				particlePosition[i] = mDimension[i];
+			else
+				particlePosition[i] = 0.f;
+
+			particleVelocity[i] *= -.3f;	
 		}
 	}
 	// *** sc
@@ -69,7 +78,7 @@ void main(){
 	//particleVelocity -= dt * particleVelocity * 0.1f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionOutBuffer[index] = vec4(particlePosition, index);
+	positionOutBuffer[index] = vec4(particlePosition, fl[0].w);
 	velocityBuffer[index] = vec4(particleVelocity, numberOfParticles);
 	//velocityBuffer[index] = particlePressure;
 }
@@ -107,14 +116,16 @@ vec4 calculatePressure(uint index)
 	return pressureVec;
 }
 
-mat2x3 applyViscosity(uint index, vec3 velocity)
+mat2x4 applyViscosity(uint index, vec3 velocity)
 {
-	mat2x3 result;
+	mat2x4 result;
 
 	vec3 vel = velocity;
 	vec3 pos = positionBuffer[index].xyz;
 	float alpha = 1.f;
 	float beta = 1.f;
+	float rho = 0.0f;
+	float rhoNear = 0.0f;
 
 	for (int i = 0; i < numberOfParticles; i++)
 	{
@@ -123,24 +134,66 @@ mat2x3 applyViscosity(uint index, vec3 velocity)
 
 		vec3 dirVec = pos - positionBuffer[i].xyz;
 		float dist = length(dirVec);
+		positionBuffer[i].w = dist;
 
 		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
-		if (dist > interactionRadius * 1.0f)
+		if (dist > interactionRadius)
 			continue;
 
 		vec3 dirVecN = normalize(dirVec);
 		float moveDir = dot(vel - velocityBuffer[i].xyz, dirVecN);
+		float distRel = dist / interactionRadius;
 
+		// viscosity
 		if (moveDir > 0)
 		{
-			vec3 impulse = (1.f - (dist / interactionRadius)) * (alpha * moveDir + beta * moveDir * moveDir) * dirVecN * dt;
-			vel -= impulse * 0.5f;
-			velocityBuffer[i].xyz += impulse * 0.5f;
+			vec3 impulse = (1.f - distRel) * (alpha * moveDir + beta * moveDir * moveDir) * dirVecN * dt;
+			vel -= impulse * 0.5f;//goes back to the caller-particle
+			//velocityBuffer[i].xyz += impulse * 0.5f;//changes neighbour velocity directly
 		}
+		// *** v
+
+		// double realxation
+		float distRel2 = (1.f - distRel) * (1.f - distRel);
+		rho += distRel2; // density, uses quadratic kernel
+		rhoNear += distRel2 * (1.f - distRel);// near density, cubic kernel
+		// *** dr
+	}
+	
+	float pressure = (rho - rho0) * spring;
+	float pressureNear = rhoNear * springNear;
+
+	vec3 displace = vec3(0.f);
+	for (int i = 0; i < numberOfParticles; i++)
+	{
+		if (index == i)
+			continue;
+
+		float dist = positionBuffer[i].w;
+
+		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
+		if (dist > interactionRadius)
+			continue;
+
+		float distRel = dist / interactionRadius;
+		vec3 dirVecN = normalize(pos - positionBuffer[i].xyz);
+
+		float pressureEffect = pressure * (1.f - distRel);
+		float pressureNearEffect = pressureNear * (1.f - distRel) * (1.f - distRel);
+		float df = (pressureEffect + pressureNearEffect) * dt * dt;
+		vec3 d = dirVecN * df;
+		//positionOutBuffer[i].xyz += d * 0.5f;
+		//displace -= d;
 	}
 
-	result[0] = pos;
-	result[1] = vel;
+	//pos += displace;
+	vel += displace;
+
+	result[0].xyz = pos;
+	result[1].xyz = vel;
+
+	//result[0].w = rho;
+	result[0].w = positionBuffer[index].w;// length(displace);
 
 	return result;
 }
