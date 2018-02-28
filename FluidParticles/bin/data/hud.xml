@@ -1,17 +1,17 @@
 <group>
 	<Debug_Information>
-		<FPS>61</FPS>
+		<FPS>150</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
-		<Particles>20000/20000</Particles>
+		<Mode>OpenCL</Mode>
+		<Particles>9000/20000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
 		<Step>0</Step>
 	</Program_Information>
 	<Simulation_Settings>
-		<Smoothing_Width>0.183673</Smoothing_Width>
+		<Smoothing_Width>0.137755</Smoothing_Width>
 	<Rest_Density>0</Rest_Density>
 	<Spring>0</Spring>
 		<Spring_Near>0</Spring_Near>

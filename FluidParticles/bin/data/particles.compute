@@ -46,11 +46,7 @@ void main(){
 	// vec3 particlePressure = vec3(0,0,0);
 	
 	// gravity
-	if (   particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
-		|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
-		|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
-		//particleVelocity += (gravity + particlePressure.xyz) * dt;
-		particleVelocity += (gravity) * dt;
+	particleVelocity += (gravity) * dt;
 	// ***g
 
 	// fluid simulation
@@ -65,10 +61,10 @@ void main(){
 	{
 		if ((particlePosition[i] + particleVelocity[i] * dt > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] + particleVelocity[i] * dt < 0.f && particleVelocity[i] < 0.f))
 		{
-			if (particlePosition[i] + particleVelocity[i] * dt > mDimension[i])
-				particlePosition[i] = mDimension[i];
-			else
+			if (particlePosition[i] + particleVelocity[i] * dt < 0.f)
 				particlePosition[i] = 0.f;
+			else
+				particlePosition[i] = mDimension[i];
 
 			particleVelocity[i] *= -.3f;	
 		}
@@ -183,11 +179,11 @@ mat2x4 applyViscosity(uint index, vec3 velocity)
 		float df = (pressureEffect + pressureNearEffect) * dt * dt;
 		vec3 d = dirVecN * df;
 		//positionOutBuffer[i].xyz += d * 0.5f;
-		//displace -= d;
+		displace -= d;
 	}
 
 	//pos += displace;
-	vel += displace;
+	//vel += displace;
 
 	result[0].xyz = pos;
 	result[1].xyz = vel;

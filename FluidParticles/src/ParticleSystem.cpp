@@ -402,11 +402,8 @@ void ParticleSystem::iUpdateCPU(float dt)
 		//ofVec3f particlePressure = iCalculatePressureVector(i);
 
 		//gravity
-		if (particlePosition.x <= mDimension.x || particlePosition.x >= 0.f
-			|| particlePosition.y <= mDimension.y || particlePosition.y >= 0.f
-			|| particlePosition.z <= mDimension.z || particlePosition.z >= 0.f)
-			//particleVelocity += (mGravity + particlePressure) * dt;
-			particleVelocity += (mGravity) * dt;
+		//particleVelocity += (mGravity + particlePressure) * dt;
+		particleVelocity += (mGravity) * dt;
 		//***g
 
 		iApplyViscosity(i, dt, particleVelocity, particlePosition);
@@ -418,6 +415,11 @@ void ParticleSystem::iUpdateCPU(float dt)
 				|| (particlePosition[i] + particleVelocity[i] * dt < 0.f && particleVelocity[i] < 0.f) // min boundary
 				)
 			{
+				if (particlePosition[i] + particleVelocity[i] * dt < 0.f)
+					particlePosition[i] = 0.f;
+				else
+					particlePosition[i] = mDimension[i];
+
 				particleVelocity[i] *= -.3f;
 			}
 		}
@@ -528,7 +530,8 @@ void ParticleSystem::iApplyViscosity(size_t index, float dt, OUT ofVec3f& veloci
 		displace -= d;
 	}
 
-	pos += displace;
+	//pos += displace;
+	vel += displace;
 
 	position = pos;
 	velocity = vel;
