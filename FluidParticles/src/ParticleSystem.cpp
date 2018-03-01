@@ -350,7 +350,7 @@ CUDAta& ParticleSystem::getCudata()
 
 void ParticleSystem::measureNextUpdate()
 {
-	std::cout << "Measuring next update!\n";
+	//std::cout << "Measuring next update!\n";
 	mMeasureTime = true;
 }
 
@@ -360,8 +360,10 @@ void ParticleSystem::update(float dt)
 	if (mNumberOfParticles == 0)
 		return;
 
-	if(mMeasureTime)
-		mClock.start();
+	uint64_t cycle;
+	if (mMeasureTime)
+		//mClock.start();
+		cycle = __rdtsc();
 
 	switch (mMode)
 	{
@@ -381,8 +383,10 @@ void ParticleSystem::update(float dt)
 
 	if (mMeasureTime)
 	{
-		double time = mClock.getDuration(mClock.stop());
-		std::cout << time << std::endl;
+		//double time = mClock.getDuration(mClock.stop());
+		//std::cout << time << std::endl;
+		cycle = __rdtsc() - cycle;
+		std::cout << /*mNumberOfParticles << ";" <<*/ cycle << std::endl;
 		mMeasureTime = false;
 	}
 }

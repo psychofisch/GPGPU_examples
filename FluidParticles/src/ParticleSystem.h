@@ -26,6 +26,15 @@
 #include "Stopwatch.h"
 
 //general definitions
+//#ifdef _WIN32
+//
+//#include <intrin.h>
+//uint64_t rdtsc() {
+//	return __rdtsc();
+//}
+//
+//#endif
+
 #define OUT 
 typedef unsigned int uint;
 
