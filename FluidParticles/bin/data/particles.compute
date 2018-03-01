@@ -42,17 +42,17 @@ void main(){
 	// velocityBuffer[index] = calculatePressure(index);
 	vec3 particlePosition = positionBuffer[index].xyz;
 	vec3 particleVelocity = velocityBuffer[index].xyz;
-	//vec4 particlePressure = calculatePressure(index);
+	vec4 particlePressure = calculatePressure(index);
 	// vec3 particlePressure = vec3(0,0,0);
 	
 	// gravity
-	particleVelocity += (gravity) * dt;
+	particleVelocity += (gravity + particlePressure.xyz) * dt;
 	// ***g
 
 	// fluid simulation
-	mat2x4 fl = applyViscosity(index, particleVelocity);
+	/*mat2x4 fl = applyViscosity(index, particleVelocity);
 	particlePosition = fl[0].xyz;
-	particleVelocity = fl[1].xyz;
+	particleVelocity = fl[1].xyz;*/
 	//particleVelocity += calculatePressure(index).xyz * dt;
 	// *** fs
 
@@ -74,7 +74,7 @@ void main(){
 	//particleVelocity -= dt * particleVelocity * 0.1f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionOutBuffer[index] = vec4(particlePosition, fl[0].w);
+	positionOutBuffer[index] = vec4(particlePosition, 0.f);
 	velocityBuffer[index] = vec4(particleVelocity, numberOfParticles);
 	//velocityBuffer[index] = particlePressure;
 }
@@ -98,7 +98,10 @@ vec4 calculatePressure(uint index)
 		if (dist > interactionRadius * 1.0f)
 			continue;
 
-		float pressure = 1.f - (dist/interactionRadius);
+		float oneminusx = 1.f - (dist / interactionRadius);
+		float sqx = oneminusx * oneminusx;
+		float pressure = 1.f - rho0 * (sqx * oneminusx - sqx);
+		//float pressure = 1.f - (dist/interactionRadius);
 		//float pressure = amplitude * exp(-dist / interactionRadius);
 		
 		pressureVec += vec4(pressure * normalize(dirVec), 0.f);
@@ -144,12 +147,12 @@ mat2x4 applyViscosity(uint index, vec3 velocity)
 		if (moveDir > 0)
 		{
 			vec3 impulse = (1.f - distRel) * (alpha * moveDir + beta * moveDir * moveDir) * dirVecN * dt;
-			vel -= impulse * 0.5f;//goes back to the caller-particle
+			//vel -= impulse * 0.5f;//goes back to the caller-particle
 			//velocityBuffer[i].xyz += impulse * 0.5f;//changes neighbour velocity directly
 		}
 		// *** v
 
-		// double realxation
+		// double relaxation
 		float distRel2 = (1.f - distRel) * (1.f - distRel);
 		rho += distRel2; // density, uses quadratic kernel
 		rhoNear += distRel2 * (1.f - distRel);// near density, cubic kernel
@@ -176,14 +179,14 @@ mat2x4 applyViscosity(uint index, vec3 velocity)
 
 		float pressureEffect = pressure * (1.f - distRel);
 		float pressureNearEffect = pressureNear * (1.f - distRel) * (1.f - distRel);
-		float df = (pressureEffect + pressureNearEffect) * dt * dt;
+		float df = (pressureEffect + pressureNearEffect) * dt;
 		vec3 d = dirVecN * df;
 		//positionOutBuffer[i].xyz += d * 0.5f;
-		displace -= d;
+		displace += d;
 	}
 
 	//pos += displace;
-	//vel += displace;
+	vel += displace;
 
 	result[0].xyz = pos;
 	result[1].xyz = vel;

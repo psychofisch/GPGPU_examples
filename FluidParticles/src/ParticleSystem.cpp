@@ -496,12 +496,12 @@ void ParticleSystem::iApplyViscosity(size_t index, float dt, OUT ofVec3f& veloci
 		if (moveDir > 0)
 		{
 			ofVec3f impulse = (1.f - distRel) * (alpha * moveDir + beta * moveDir * moveDir) * dirVecN * dt;
-			vel -= impulse * 0.5f;//goes back to the caller-particle
-			mVelocity[i] += impulse * 0.5f;//changes neighbour velocity directly
+			//vel -= impulse * 0.5f;//goes back to the caller-particle
+			//mVelocity[i] += impulse * 0.5f;//changes neighbour velocity directly
 		}
 		// *** v
 
-		// double realxation
+		// double relaxation
 		float distRel2 = (1.f - distRel) * (1.f - distRel);
 		rho += distRel2; // density, uses quadratic kernel
 		rhoNear += distRel2 * (1.f - distRel);// near density, cubic kernel
@@ -570,12 +570,13 @@ void ParticleSystem::iUpdateCompute(float dt)
 
 	//ofVec4f* tmpPositionFromGPU;
 	//tmpPositionFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
-	//float *rhos = new float[mNumberOfParticles];
 	//for (uint i = 0; i < mNumberOfParticles; i++)
 	//{
-	//	rhos[i] = (tmpPositionFromGPU[i].w);
+	//	if (isnan(tmpPositionFromGPU[i].x))
+	//	{
+	//		__debugbreak();
+	//	}
 	//}
-	//delete[] rhos;
 	//mComputeData.positionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
 }
 
