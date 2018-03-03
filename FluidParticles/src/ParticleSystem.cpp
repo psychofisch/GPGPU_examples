@@ -569,15 +569,20 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);//TODO: swap instead of copy buffers
 
 	//ofVec4f* tmpPositionFromGPU;
-	//tmpPositionFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
+	//tmpPositionFromGPU = mComputeData.velocityBuffer.map<ofVec4f>(GL_READ_ONLY);
+	//int cnt = 0;
 	//for (uint i = 0; i < mNumberOfParticles; i++)
 	//{
-	//	if (isnan(tmpPositionFromGPU[i].x))
+	//	//if (isnan(tmpPositionFromGPU[i].x))
+	//	if (tmpPositionFromGPU[i].w == 666.0f)
 	//	{
-	//		__debugbreak();
+	//		//__debugbreak();
+	//		cnt++;
 	//	}
 	//}
-	//mComputeData.positionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
+	//if (cnt > 0)
+	//	__debugbreak();
+	//mComputeData.velocityBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
 }
 
 void ParticleSystem::iUpdateOCL(float dt)

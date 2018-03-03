@@ -69,9 +69,9 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudPause.set("Pause", false));
 	mHudControlGroup.add(mHudStep.set("Step", false));
 	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", 0.1f, 0.00000001f, 1.f));
-	mHudSimulationGroup.add(mHudRestDensity.set("Rest Density", 3.5f, 0.0f, 100.f));
-	mHudSimulationGroup.add(mHudSpring.set("Spring", 1.0f, 0.0f, 100.f));
-	mHudSimulationGroup.add(mHudSpringNear.set("Spring Near", 1.0f, 0.0f, 100.f));
+	mHudSimulationGroup.add(mHudRestDensity.set("Rest Density", 3.5f, 0.0f, 50.f));
+	mHudSimulationGroup.add(mHudSpring.set("Spring", 1.0f, 0.0f, 10.f));
+	mHudSimulationGroup.add(mHudSpringNear.set("Spring Near", 1.0f, 0.0f, 10.f));
 
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
