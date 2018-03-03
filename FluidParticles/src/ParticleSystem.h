@@ -158,7 +158,6 @@ private:
 	void iUpdateCompute(float dt);
 	void iUpdateOCL(float dt);
 	void iUpdateCUDA(float dt);
-	ofVec3f iCalculatePressureVector(size_t index);
-	void iApplyViscosity(size_t index, float dt, OUT ofVec3f& velocity, OUT ofVec3f& position);
+	ofVec3f iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel);
 };
 

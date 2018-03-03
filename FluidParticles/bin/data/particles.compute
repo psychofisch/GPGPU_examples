@@ -28,7 +28,7 @@ uniform vec3 gravity;
 uniform int numberOfParticles;
 uniform vec3 mDimension;
 
-vec4 calculatePressure(uint index);
+vec4 calculatePressure(uint index, vec3 pos, vec3 vel);
 mat2x4 applyViscosity(uint index, vec3 velocity);
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
@@ -42,19 +42,14 @@ void main(){
 	// velocityBuffer[index] = calculatePressure(index);
 	vec3 particlePosition = positionBuffer[index].xyz;
 	vec3 particleVelocity = velocityBuffer[index].xyz;
-	vec4 particlePressure = calculatePressure(index);
-	// vec3 particlePressure = vec3(0,0,0);
 	
+	// fluid simulation
+	vec4 particlePressure = calculatePressure(index, particlePosition, particleVelocity);
+	// *** fs
+
 	// gravity
 	particleVelocity += (gravity + particlePressure.xyz) * dt;
 	// ***g
-
-	// fluid simulation
-	/*mat2x4 fl = applyViscosity(index, particleVelocity);
-	particlePosition = fl[0].xyz;
-	particleVelocity = fl[1].xyz;*/
-	//particleVelocity += calculatePressure(index).xyz * dt;
-	// *** fs
 
 	// static collision
 	for (int i = 0; i < 3; ++i)
@@ -76,18 +71,10 @@ void main(){
 
 	positionOutBuffer[index] = vec4(particlePosition, 0.f);
 	velocityBuffer[index] = vec4(particleVelocity, particlePressure.w);
-	//velocityBuffer[index] = particlePressure;
 }
 
-vec4 calculatePressure(uint index)
+vec4 calculatePressure(uint index, vec3 pos, vec3 vel)
 {
-	//float interactionRadius = 18.f;
-	float amplitude = 1.0f;
-	vec3 particlePosition = positionBuffer[index].xyz;
-	vec3 vel = velocityBuffer[index].xyz;
-	float alpha = 0.1f;
-	float beta = 0.f;
-
 	vec4 pressureVec = vec4(0.f, 0.f, 0.f, 0.f);
 	vec4 viscosityVec = vec4(0.f, 0.f, 0.f, 0.f);
 	float pressure = 0.f;
@@ -96,7 +83,7 @@ vec4 calculatePressure(uint index)
 		if (index == i)
 			continue;
 
-		vec3 dirVec = particlePosition - positionBuffer[i].xyz;
+		vec3 dirVec = pos - positionBuffer[i].xyz;
 		float dist = length(dirVec);
 
 		if (dist > interactionRadius * 1.0f || dist < 0.00001f)
@@ -112,8 +99,7 @@ vec4 calculatePressure(uint index)
 		{
 			vec3 impulse = (1.f - distRel) * (spring * moveDir + springNear * moveDir * moveDir) * dirVecN;
 			viscosityVec.xyz -= impulse * 0.5f;//goes back to the caller-particle
-			viscosityVec.w = 666.0f;
-			//velocityBuffer[i].xyz += impulse * 0.5f;//changes neighbour velocity directly
+			//viscosityVec.w = 666.0f;
 		}
 		// *** v
 
@@ -124,94 +110,7 @@ vec4 calculatePressure(uint index)
 		//float pressure = amplitude * exp(-dist / interactionRadius);
 		
 		pressureVec += vec4(pressure * normalize(dirVec), 0.f);
-		// pressureVec += vec4(dirVec, 0.f);
-		
-		//pressureVec.w += pressure;
-		
-		//break;
 	}
 	
 	return pressureVec + viscosityVec;
-}
-
-mat2x4 applyViscosity(uint index, vec3 velocity)
-{
-	mat2x4 result;
-
-	vec3 vel = velocity;
-	vec3 pos = positionBuffer[index].xyz;
-	float alpha = 1.f;
-	float beta = 1.f;
-	float rho = 0.0f;
-	float rhoNear = 0.0f;
-
-	for (int i = 0; i < numberOfParticles; i++)
-	{
-		if (index == i)
-			continue;
-
-		vec3 dirVec = pos - positionBuffer[i].xyz;
-		float dist = length(dirVec);
-		positionBuffer[i].w = dist;
-
-		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
-		if (dist > interactionRadius)
-			continue;
-
-		vec3 dirVecN = normalize(dirVec);
-		float moveDir = dot(vel - velocityBuffer[i].xyz, dirVecN);
-		float distRel = dist / interactionRadius;
-
-		// viscosity
-		if (moveDir > 0)
-		{
-			vec3 impulse = (1.f - distRel) * (alpha * moveDir + beta * moveDir * moveDir) * dirVecN * dt;
-			//vel -= impulse * 0.5f;//goes back to the caller-particle
-			//velocityBuffer[i].xyz += impulse * 0.5f;//changes neighbour velocity directly
-		}
-		// *** v
-
-		// double relaxation
-		float distRel2 = (1.f - distRel) * (1.f - distRel);
-		rho += distRel2; // density, uses quadratic kernel
-		rhoNear += distRel2 * (1.f - distRel);// near density, cubic kernel
-		// *** dr
-	}
-	
-	float pressure = (rho - rho0) * spring;
-	float pressureNear = rhoNear * springNear;
-
-	vec3 displace = vec3(0.f);
-	for (int i = 0; i < numberOfParticles; i++)
-	{
-		if (index == i)
-			continue;
-
-		float dist = positionBuffer[i].w;
-
-		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
-		if (dist > interactionRadius)
-			continue;
-
-		float distRel = dist / interactionRadius;
-		vec3 dirVecN = normalize(pos - positionBuffer[i].xyz);
-
-		float pressureEffect = pressure * (1.f - distRel);
-		float pressureNearEffect = pressureNear * (1.f - distRel) * (1.f - distRel);
-		float df = (pressureEffect + pressureNearEffect) * dt;
-		vec3 d = dirVecN * df;
-		//positionOutBuffer[i].xyz += d * 0.5f;
-		displace += d;
-	}
-
-	//pos += displace;
-	vel += displace;
-
-	result[0].xyz = pos;
-	result[1].xyz = vel;
-
-	//result[0].w = rho;
-	result[0].w = positionBuffer[index].w;// length(displace);
-
-	return result;
 }

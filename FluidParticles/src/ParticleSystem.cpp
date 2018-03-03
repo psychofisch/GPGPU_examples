@@ -403,14 +403,15 @@ void ParticleSystem::iUpdateCPU(float dt)
 	{
 		ofVec3f particlePosition = mPosition[i];
 		ofVec3f particleVelocity = mVelocity[i];
-		//ofVec3f particlePressure = iCalculatePressureVector(i);
+		
+		// fluid simulation
+		ofVec3f particlePressure = iCalculatePressureVector(i, particlePosition, particleVelocity);
+		// *** fs
 
 		//gravity
-		//particleVelocity += (mGravity + particlePressure) * dt;
-		particleVelocity += (mGravity) * dt;
+		particleVelocity += (mGravity + particlePressure) * dt;
+		//particleVelocity += (mGravity) * dt;
 		//***g
-
-		iApplyViscosity(i, dt, particleVelocity, particlePosition);
 
 		//static collision
 		for (int i = 0; i < 3; ++i)
@@ -440,13 +441,13 @@ void ParticleSystem::iUpdateCPU(float dt)
 }
 
 
-ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
+ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel)
 {
 	float interactionRadius = mSimData.interactionRadius;
 	//float amplitude = 1.f;
 	ofVec3f particlePosition = mPosition[index];
 
-	ofVec3f pressureVec;
+	ofVec3f pressureVec, viscosityVec;
 	for (uint i = 0; i < mNumberOfParticles; ++i)
 	{
 		if (index == i)
@@ -455,93 +456,33 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index)
 		ofVec3f dirVec = particlePosition - mPosition[i];
 		float dist = dirVec.length();
 
-		if (dist > interactionRadius * 1.f)
+		//if (dist > interactionRadius * 1.f)
+		if (dist > interactionRadius * 1.0f || dist < 0.00001f)
 			continue;
 
-		float pressure = 1.f - (dist / interactionRadius);
-		//float pressure = amplitude * expf(-dist / interactionRadius);
-		//pressureVec += pressure * vectorMath::normalize(dirVec);
-		pressureVec += pressure * dirVec.getNormalized();
-	}
-	return pressureVec;
-}
-
-void ParticleSystem::iApplyViscosity(size_t index, float dt, OUT ofVec3f& velocity, OUT ofVec3f& position)
-{
-	ofVec3f vel = velocity;
-	ofVec3f pos = mPosition[index];
-	float alpha = 1.f;
-	float beta = 1.f;
-	float rho = 0.0f;
-	float rhoNear = 0.0f;
-
-	for (int i = 0; i < mNumberOfParticles; i++)
-	{
-		if (index == i)
-			continue;
-
-		ofVec3f dirVec = pos - mPosition[i];
-		float dist = dirVec.length();
-		mPosition[i].w = dist;
-
-		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
-		if (dist > mSimData.interactionRadius)
-			continue;
-
-		ofVec3f dirVecN = dirVec.normalized();
+		ofVec3f dirVecN = dirVec.getNormalized();
 		float moveDir = (vel - mVelocity[i]).dot(dirVecN);
-		float distRel = dist / mSimData.interactionRadius;
+		float distRel = dist / interactionRadius;
 
 		// viscosity
 		if (moveDir > 0)
 		{
-			ofVec3f impulse = (1.f - distRel) * (alpha * moveDir + beta * moveDir * moveDir) * dirVecN * dt;
-			//vel -= impulse * 0.5f;//goes back to the caller-particle
-			//mVelocity[i] += impulse * 0.5f;//changes neighbour velocity directly
+			ofVec3f impulse = (1.f - distRel) * (mSimData.spring * moveDir + mSimData.springNear * moveDir * moveDir) * dirVecN;
+			viscosityVec -= impulse * 0.5f;//goes back to the caller-particle
+			//viscosityVec.w = 666.0f;
 		}
 		// *** v
 
-		// double relaxation
-		float distRel2 = (1.f - distRel) * (1.f - distRel);
-		rho += distRel2; // density, uses quadratic kernel
-		rhoNear += distRel2 * (1.f - distRel);// near density, cubic kernel
-		// *** dr
+		float oneminusx = 1.f - distRel;
+		float sqx = oneminusx * oneminusx;
+		float pressure = 1.f - mSimData.rho0 * (sqx * oneminusx - sqx);
+
+		//float pressure = 1.f - (dist / interactionRadius);
+		//float pressure = amplitude * expf(-dist / interactionRadius);
+		//pressureVec += pressure * vectorMath::normalize(dirVec);
+		pressureVec += pressure * dirVec.getNormalized();
 	}
-
-	float pressure = (rho - mSimData.rho0) * mSimData.spring;
-	float pressureNear = rhoNear * mSimData.springNear;
-
-	ofVec3f displace;
-	for (int i = 0; i < mNumberOfParticles; i++)
-	{
-		if (index == i)
-			continue;
-
-		float dist = mPosition[i].w;
-
-		//if (dist > interactionRadius * 1.0f || dist < 0.01f)
-		if (dist > mSimData.interactionRadius)
-			continue;
-
-		float distRel = dist / mSimData.interactionRadius;
-		ofVec3f dirVecN = (pos - mPosition[i]).normalized();
-
-		float pressureEffect = pressure * (1.f - distRel);
-		float pressureNearEffect = pressureNear * (1.f - distRel) * (1.f - distRel);
-		float df = (pressureEffect + pressureNearEffect) * dt * dt;
-		ofVec3f d = dirVecN * df;
-		//mPosition[i] += (d * 0.5f);
-		displace -= d;
-	}
-
-	//pos += displace;
-	vel += displace;
-
-	position = pos;
-	velocity = vel;
-
-	//result[0].w = rho;
-	//position.w = displace.length();
+	return pressureVec + viscosityVec;
 }
 
 void ParticleSystem::iUpdateCompute(float dt)
