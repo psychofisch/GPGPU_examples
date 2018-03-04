@@ -537,10 +537,10 @@ void ParticleSystem::iUpdateOCL(float dt)
 	kernel.setArg(1, mOCLData.positionOutBuffer);
 	kernel.setArg(2, mOCLData.velocityBuffer);
 	kernel.setArg(3, dt);
-	kernel.setArg(4, mSimData.interactionRadius);
-	kernel.setArg(5, ofVec4f(mGravity));
-	kernel.setArg(6, ofVec4f(mDimension));
-	kernel.setArg(7, mNumberOfParticles);
+	kernel.setArg(4, ofVec4f(mGravity));
+	kernel.setArg(5, ofVec4f(mDimension));
+	kernel.setArg(6, mNumberOfParticles);
+	kernel.setArg(7, mSimData);
 
 	cl::NDRange local;
 	cl::NDRange global;
