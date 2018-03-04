@@ -13,7 +13,7 @@
 #include <helper_functions.h>
 #include <helper_math.h>
 
-typedef unsigned int uint;
+#include "ParticleDefinitions.h"
 
 inline __device__ bool operator==(float3& lhs, float3& rhs)
 {
@@ -23,17 +23,17 @@ inline __device__ bool operator==(float3& lhs, float3& rhs)
 		return false;
 }
 
-__device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float interactionRadius);
+__device__ float4 calculatePressure(float4* position, float4* velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
 
 __global__ void particleUpdate(
 	float4* position, 
 	float4* positionOut,
 	float4* velocity, 
 	const float dt, 
-	const float interactionRadius, 
 	const float3 gravity,
 	const float3 dimension,
-	const uint numberOfParticles)
+	const uint numberOfParticles,
+	SimulationData simData)
 {
 	const uint index = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -42,7 +42,7 @@ __global__ void particleUpdate(
 
 	float3 particlePosition = make_float3(position[index]);
 	float3 particleVelocity = make_float3(velocity[index]);
-	float4 particlePressure = calculatePressure(position, index, numberOfParticles, interactionRadius);
+	float4 particlePressure = calculatePressure(position, velocity, index, particlePosition, particleVelocity, numberOfParticles, simData);
 
 	particleVelocity += (gravity + make_float3(particlePressure)) * dt;
 
@@ -86,34 +86,49 @@ __global__ void particleUpdate(
 	velocity[index] = make_float4(particleVelocity);
 }
 
-__device__ float4 calculatePressure(float4* position, uint index, uint numberOfParticles, float interactionRadius)
+__device__ float4 calculatePressure(float4* position, float4* velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData)
 {
-	float3 particlePosition = make_float3(position[index]);
-
 	float4 pressureVec = make_float4(0.f);
+	float4 viscosityVec = pressureVec;
 	for (uint i = 0; i < numberOfParticles; i++)
 	{
 		if (index == i)
 			continue;
 
-		float3 dirVec = particlePosition - make_float3(position[i]);
+		float3 dirVec = pos - make_float3(position[i]);
 		float dist = length(dirVec);//TODO: maybe use half_length
 
-		if (dist > interactionRadius * 1.0f)
+		if (dist > simData.interactionRadius * 1.0f || dist < 0.00001f)
 			continue;
 
-		float pressure = 1.f - (dist / interactionRadius);
+		float3 dirVecN = normalize(dirVec);
+		float moveDir = dot(vel - make_float3(velocity[i]), dirVecN);
+		float distRel = dist / simData.interactionRadius;
+
+		// viscosity
+		if (moveDir > 0)
+		{
+			float3 impulse = (1.f - distRel) * (simData.spring * moveDir + simData.springNear * moveDir * moveDir) * dirVecN;
+			viscosityVec -= make_float4(impulse * 0.5f);//goes back to the caller-particle
+											   //viscosityVec.w = 666.0f;
+		}
+		// *** v
+
+		float oneminusx = 1.f - distRel;
+		float sqx = oneminusx * oneminusx;
+		float pressure = 1.f - simData.rho0 * (sqx * oneminusx - sqx);
+		//float pressure = 1.f - (dist / simData.interactionRadius);
 		////float pressure = amplitude * exp(-dist / interactionRadius);
 
-		pressureVec += make_float4(pressure * normalize(dirVec));
+		pressureVec += make_float4(pressure * dirVecN);
 		//// pressureVec += vec4(dirVec, 0.f);
 
-		pressureVec.w += pressure;
+		//pressureVec.w += pressure;
 
 		//break;
 	}
 
-	return pressureVec;
+	return pressureVec + viscosityVec;
 }
 
 extern "C" void cudaUpdate(
@@ -121,10 +136,10 @@ extern "C" void cudaUpdate(
 	float4* positionOut,
 	float4* velocity,
 	const float dt,
-	const float interactionRadius,
 	const float3 gravity,
 	const float3 dimension,
-	const uint numberOfParticles)
+	const uint numberOfParticles,
+	SimulationData simData)
 {
 	cudaDeviceProp devProp;
 	int device;
@@ -141,5 +156,5 @@ extern "C" void cudaUpdate(
 		threads = maxThreads;
 	}
 
-	particleUpdate<<< num, threads >>>(position, positionOut, velocity, dt, interactionRadius, gravity, dimension, numberOfParticles);
+	particleUpdate<<< num, threads >>>(position, positionOut, velocity, dt, gravity, dimension, numberOfParticles, simData);
 }

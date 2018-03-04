@@ -24,6 +24,7 @@
 // own includes
 #include "oclHelper.h"
 #include "Stopwatch.h"
+#include "ParticleDefinitions.h"
 
 //general definitions
 //#ifdef _WIN32
@@ -34,17 +35,6 @@
 //}
 //
 //#endif
-
-#define OUT 
-typedef unsigned int uint;
-
-struct SimulationData
-{
-	float interactionRadius;
-	float rho0;//restDensity
-	float spring;
-	float springNear;
-};
 
 //definitions for Compute Shader
 struct ComputeShaderData
@@ -70,10 +60,10 @@ extern "C" void cudaUpdate(
 	float4* positionOut,
 	float4* velocity,
 	const float dt,
-	const float interactionRadius,
 	const float3 gravity,
 	const float3 dimension,
-	const uint numberOfParticles);
+	const uint numberOfParticles,
+	SimulationData simData);
 
 struct CUDAta
 {

@@ -109,7 +109,7 @@ vec4 calculatePressure(uint index, vec3 pos, vec3 vel)
 		//float pressure = 1.f - (dist/interactionRadius);
 		//float pressure = amplitude * exp(-dist / interactionRadius);
 		
-		pressureVec += vec4(pressure * normalize(dirVec), 0.f);
+		pressureVec += vec4(pressure * dirVecN, 0.f);
 	}
 	
 	return pressureVec + viscosityVec;

@@ -255,6 +255,7 @@
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxToggle.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src\ofxXmlSettings.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxml.h" />
+    <ClInclude Include="src\ParticleDefinitions.h" />
     <ClInclude Include="src\ParticleSystem.h" />
     <ClInclude Include="src\Stopwatch.h" />
   </ItemGroup>

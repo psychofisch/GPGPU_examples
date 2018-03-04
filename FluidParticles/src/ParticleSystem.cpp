@@ -589,7 +589,7 @@ void ParticleSystem::iUpdateCUDA(float dt)
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&mCUData.velocity, &cudaVelSize, mCUData.cuVel));
 
 	//call the kernel
-	cudaUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, dt, mSimData.interactionRadius, cudaGravity, cudaDimension, mNumberOfParticles);
+	cudaUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
 
 	//unmap all resources
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &mCUData.cuPos));
