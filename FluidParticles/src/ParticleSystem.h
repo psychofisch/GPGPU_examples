@@ -71,10 +71,6 @@ struct CUDAta
 	float4 *position;
 	float4 *positionOut;
 	float4 *velocity;
-
-	struct cudaGraphicsResource *cuPos;
-	struct cudaGraphicsResource *cuPosOut;
-	struct cudaGraphicsResource *cuVel;
 };
 
 //class definition
