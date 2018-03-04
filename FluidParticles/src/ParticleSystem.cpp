@@ -7,19 +7,15 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mMode(ComputeMode::CPU)
 {
 	//*** general setup
-	// these buffers are mandatory, even when CPU mode is not enabled
+	// these buffers are required, even when CPU mode is not enabled
 	// they are used as cache between different GPU modes
 	mPosition = new ofVec4f[maxParticles];
 	mVelocity = new ofVec4f[maxParticles];
 	//***
 
 	//*** general GL setup
-	// use compute shader buffer to store the particle position on the GPU
-	mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
-	mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
-	mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mVelocity, GL_DYNAMIC_DRAW);
-
-	mParticlesVBO.setVertexBuffer(mComputeData.positionBuffer, 3, sizeof(ofVec4f));
+	mParticlesBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+	mParticlesVBO.setVertexBuffer(mParticlesBuffer, 3, sizeof(ofVec4f));
 }
 
 ParticleSystem::~ParticleSystem()
@@ -32,8 +28,8 @@ void ParticleSystem::setupAll(ofxXmlSettings & settings)
 {
 	setupCPU(settings);
 	setupCompute(settings);
-	setupCUDA(settings);
-	setupOCL(settings);
+	//setupCUDA(settings);
+	//setupOCL(settings);
 }
 
 void ParticleSystem::setupCPU(ofxXmlSettings & settings)
@@ -45,12 +41,26 @@ void ParticleSystem::setupCPU(ofxXmlSettings & settings)
 
 void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 {
-	// the Compute Shader uses the OpenGL buffers, so there's no need to allocate additional memory
+	// compile the compute code
 	if (mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, settings.getValue("COMPUTE:SOURCE", "particles.compute"))
 		&& mComputeData.computeShader.linkProgram())
-		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
+	{
+		std::cout << "COMPUTE SHADER WORKS!\n";
+	}
 	else
+	{
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
+		return;
+	}
+
+	//allocate buffer memory
+	mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+	mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+	mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mVelocity, GL_DYNAMIC_DRAW);
+
+	std::cout << glGetError() << std::endl;
+
+	mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
 }
 
 void ParticleSystem::setupCUDA(ofxXmlSettings & settings)
@@ -137,11 +147,11 @@ void ParticleSystem::setMode(ComputeMode m)
 	// sync all data back to RAM
 	if (mMode == ComputeMode::COMPUTE_SHADER || mMode == ComputeMode::CUDA)
 	{
-		ofVec4f* tmpPtrFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
+		/*ofVec4f* tmpPtrFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
 		std::copy(tmpPtrFromGPU, tmpPtrFromGPU + mNumberOfParticles, mPosition);
-		mComputeData.positionBuffer.unmap();
+		mComputeData.positionBuffer.unmap();*/
 
-		tmpPtrFromGPU = mComputeData.velocityBuffer.map<ofVec4f>(GL_READ_ONLY);
+		ofVec4f* tmpPtrFromGPU = mComputeData.velocityBuffer.map<ofVec4f>(GL_READ_ONLY);
 		std::copy(tmpPtrFromGPU, tmpPtrFromGPU + mNumberOfParticles, mVelocity);
 		mComputeData.velocityBuffer.unmap();
 	}
@@ -161,6 +171,9 @@ void ParticleSystem::setMode(ComputeMode m)
 	{
 		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mPosition);
 		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mVelocity);
+
+		ofVec4f* positionsFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);//TODO: use mapRange
+		mComputeData.positionBuffer.unmap();
 	}
 	else if (m == ComputeMode::OPENCL)
 	{
@@ -365,6 +378,7 @@ void ParticleSystem::update(float dt)
 		//mClock.start();
 		cycle = __rdtsc();
 
+	// each update computes the new particle positions and stores them into mPosition (on the CPU)
 	switch (mMode)
 	{
 		case ComputeMode::CPU:
@@ -380,6 +394,9 @@ void ParticleSystem::update(float dt)
 			iUpdateCUDA(dt);
 			break;
 	}
+
+	// copy CPU data to the GL buffer for drawing
+	mParticlesBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mPosition);
 
 	if (mMeasureTime)
 	{
@@ -437,7 +454,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		mPosition[i] = particlePosition;
 	}
 
-	mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mPosition);
+	//mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mPosition);
 }
 
 
@@ -508,6 +525,10 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.computeShader.end();
 
 	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);//TODO: swap instead of copy buffers
+
+	ofVec4f* positionsFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);//TODO: use mapRange
+	std::copy(positionsFromGPU, positionsFromGPU + mNumberOfParticles, mPosition);
+	mComputeData.positionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
 
 	//ofVec4f* tmpPositionFromGPU;
 	//tmpPositionFromGPU = mComputeData.velocityBuffer.map<ofVec4f>(GL_READ_ONLY);

@@ -37,9 +37,7 @@ void main(){
 	
 	if(index >= numberOfParticles)
 		return;
-	
-	// positionOutBuffer[index] = positionBuffer[index];
-	// velocityBuffer[index] = calculatePressure(index);
+
 	vec3 particlePosition = positionBuffer[index].xyz;
 	vec3 particleVelocity = velocityBuffer[index].xyz;
 	
@@ -69,7 +67,7 @@ void main(){
 	//particleVelocity -= dt * particleVelocity * 0.1f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionOutBuffer[index] = vec4(particlePosition, 0.f);
+	positionOutBuffer[index] = vec4(particlePosition, 666.f);
 	velocityBuffer[index] = vec4(particleVelocity, particlePressure.w);
 }
 

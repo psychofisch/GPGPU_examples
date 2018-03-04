@@ -135,6 +135,7 @@ private:
 	ofVec3f	mDimension,
 		mGravity;
 	ofVbo mParticlesVBO;
+	ofBufferObject mParticlesBuffer;
 	ofQuaternion mRotation;
 	ComputeShaderData mComputeData;
 	SimulationData mSimData;
