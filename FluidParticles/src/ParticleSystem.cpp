@@ -495,6 +495,7 @@ void ParticleSystem::iUpdateCompute(float dt)
 	tmpPositionFromGPU = mPositionBuffer.map<ofVec4f>(GL_READ_ONLY);
 	mPositionBuffer.unmap();*///keep this snippet here for copy-pasta if something fails
 
+	// bind all required buffers and set uniforms
 	mComputeData.positionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
 	mComputeData.positionOutBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 	mComputeData.velocityBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 2);
@@ -508,11 +509,16 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.computeShader.setUniform3f("gravity", mGravity);
 	mComputeData.computeShader.setUniform1i("numberOfParticles", mNumberOfParticles);
 	mComputeData.computeShader.setUniform3f("mDimension", mDimension);
-	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles)/512), 1, 1);
-	mComputeData.computeShader.end();
 
+	// call the kernel
+	// local size: hard-coded "512", because it is also hard-coded in the kernel source code
+	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles)/512), 1, 1);
+	mComputeData.computeShader.end();//forces the program to wait until the calculation is finished 
+
+	// copy the new positions to the position Buffer
 	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);//TODO: swap instead of copy buffers
 
+	// sync the result back to the CPU
 	ofVec4f* positionsFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);//TODO: use mapRange
 	std::copy(positionsFromGPU, positionsFromGPU + mNumberOfParticles, mPosition);
 	mComputeData.positionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
@@ -581,14 +587,19 @@ void ParticleSystem::iUpdateOCL(float dt)
 
 void ParticleSystem::iUpdateCUDA(float dt)
 {
-	//convert some host variables to device types
+	// convert some host variables to device types
 	float3 cudaGravity = make_float3(mGravity.x, mGravity.y, mGravity.z);
 	float3 cudaDimension = make_float3(mDimension.x, mDimension.y, mDimension.z);
 
-	//call the kernel
+	// call the kernel
 	cudaUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
 
-	checkCudaErrors(cudaMemcpy(mCUData.position, mCUData.positionOut, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyDeviceToDevice));
+	// sync the result back to the CPU
+	// note: swapping pointers instead of copying only boosted the performance by 2fps@20,000 particles on a GTX1060
+	float4* tmp = mCUData.position;
+	mCUData.position = mCUData.positionOut;
+	mCUData.positionOut = tmp;
+	//checkCudaErrors(cudaMemcpy(mCUData.position, mCUData.positionOut, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyDeviceToDevice));
 	checkCudaErrors(cudaMemcpy(mPosition, mCUData.position, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyDeviceToHost));
 }
 
