@@ -129,7 +129,6 @@ private:
 		mThreshold;
 	ComputeMode mMode;
 	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
-	//std::unordered_map<ComputeMode, bool> mAvailableModes;
 	ofVec4f	*mPosition,
 		*mVelocity;
 	ofVec3f	mDimension,

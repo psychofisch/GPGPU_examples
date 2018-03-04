@@ -11,6 +11,9 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	// they are used as cache between different GPU modes
 	mPosition = new ofVec4f[maxParticles];
 	mVelocity = new ofVec4f[maxParticles];
+
+	for (int i = 0; i < ComputeMode::COMPUTEMODES_SIZE; ++i)
+		mAvailableModes[i] = false;
 	//***
 
 	//*** general GL setup
@@ -45,22 +48,18 @@ void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 	if (mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, settings.getValue("COMPUTE:SOURCE", "particles.compute"))
 		&& mComputeData.computeShader.linkProgram())
 	{
-		std::cout << "COMPUTE SHADER WORKS!\n";
+		//allocate buffer memory
+		mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+		mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+		mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mVelocity, GL_DYNAMIC_DRAW);
+
+		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
 	}
 	else
 	{
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
 		return;
 	}
-
-	//allocate buffer memory
-	mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
-	mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
-	mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mVelocity, GL_DYNAMIC_DRAW);
-
-	std::cout << glGetError() << std::endl;
-
-	mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
 }
 
 void ParticleSystem::setupCUDA(ofxXmlSettings & settings)
