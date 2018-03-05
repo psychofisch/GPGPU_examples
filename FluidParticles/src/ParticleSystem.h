@@ -27,6 +27,11 @@
 #include "ParticleDefinitions.h"
 
 //general definitions
+#ifdef _DEBUG
+	#define CUDAERRORS(x) checkCudaErrors(x)
+#else
+	#define CUDAERRORS(x) x
+#endif
 //#ifdef _WIN32
 //
 //#include <intrin.h>
@@ -89,34 +94,55 @@ public:
 	ParticleSystem(uint mp);
 	~ParticleSystem();
 
+	// setup methods
 	void setupAll(ofxXmlSettings& settings);
 	void setupCPU(ofxXmlSettings& settings);
 	void setupCompute(ofxXmlSettings& settings);
 	void setupCUDA(ofxXmlSettings& settings);
 	void setupOCL(ofxXmlSettings& settings);
 
-	void setDimensions(ofVec3f dimensions);
-	void setNumberOfParticles(uint nop);
-	void setRotation(ofQuaternion rotation);
-	void setMode(ComputeMode m);
-	ComputeMode nextMode(ParticleSystem::ComputeMode current) const;
-	void addDamBreak(uint particleAmount);
-	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
-	void draw();
-	ofVec3f getDimensions();
-	uint getNumberOfParticles();
-	uint getCapacity();
-	ComputeMode getMode();
+	// simple getters
+
+	ofVec3f getDimensions() const;
+	uint getNumberOfParticles() const;
+	uint getCapacity() const;
+	ComputeMode getMode() const;
 	CUDAta& getCudata();
 
-	//Simulation Data
+	// simple setters
+
+	// sets the dimension of the bounding volume
+	void setDimensions(ofVec3f dimensions);
+	// manually set the number of particles; mainly used to clear the particle system
+	void setNumberOfParticles(uint nop);
+	// *WIP* rotates the gravity vector
+	void setRotation(ofQuaternion rotation);
+	// sets a new computation mode; usually used in combination with "nextMode"
+	void setMode(ComputeMode m);
+
+	// other methods
+
+	//only returns the next available mode but does not set it
+	ComputeMode nextMode(ParticleSystem::ComputeMode current) const;
+	// adds a traditional dam (just a convience function, addCube can achieve the same)
+	void addDamBreak(uint particleAmount);
+	// adds the given number of particles in a cube form 
+	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
+	// draws the particle VBO
+	void draw();
+
+	//Simulation
+
+	// sets the all parameters that are needed for the simulation
 	void setSimulationData(SimulationData& sim);
-	void setSmoothingWidth(float sw);
-	void setRestDensity(float rd);
-
-	void measureNextUpdate();
-
+	// calculates the next step in the simulation
 	void update(float dt);
+
+	// DEBUG
+
+	//sets a flag that will trigger a clock to measure the duration of the next update
+	void measureNextUpdate();
+	// returns the number of particles that are outside of the bounding volume
 	uint debug_testIfParticlesOutside();
 
 private:
