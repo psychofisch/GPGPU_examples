@@ -142,7 +142,7 @@ void ofApp::draw(){
 	ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
 	ofPushStyle();
 	ofSetColor(mHudColor);
-	glPointSize(5.f);
+	glPointSize(2.f);
 	mTestBox.drawAxes(1.f);
 	//mParticleMesh.drawVertices();
 	//mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());

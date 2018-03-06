@@ -258,6 +258,7 @@
     <ClInclude Include="src\ParticleDefinitions.h" />
     <ClInclude Include="src\ParticleSystem.h" />
     <ClInclude Include="src\Stopwatch.h" />
+    <ClInclude Include="src\ThrustHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
@@ -285,6 +286,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\particles.cu" />
+    <CudaCompile Include="src\ThrustHelper.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -41,9 +41,10 @@ ParticleSystem::~ParticleSystem()
 void ParticleSystem::setupAll(ofxXmlSettings & settings)
 {
 	setupCPU(settings);
-	setupCompute(settings);
+	/*setupCompute(settings);
 	setupCUDA(settings);
-	setupOCL(settings);
+	setupOCL(settings);*/
+	setupThrust(settings);
 }
 
 void ParticleSystem::setupCPU(ofxXmlSettings & settings)
@@ -129,6 +130,15 @@ void ParticleSystem::setupOCL(ofxXmlSettings & settings)
 		std::cout << "ERROR: Unable to create OpenCL context\n";
 		mAvailableModes[ComputeMode::OPENCL] = false;
 	}
+}
+
+void ParticleSystem::setupThrust(ofxXmlSettings & settings)
+{
+	mThrustData.position = thrust::device_malloc<float4>(mCapacity);
+	mThrustData.positionOut = thrust::device_malloc<float4>(mCapacity);
+	mThrustData.velocity = thrust::device_malloc<float4>(mCapacity);
+
+	mAvailableModes[ComputeMode::THRUST] = true;
 }
 
 void ParticleSystem::setNumberOfParticles(uint nop)
@@ -593,6 +603,12 @@ void ParticleSystem::iUpdateCUDA(float dt)
 	mCUData.positionOut = tmp;
 	//CUDAERRORS(cudaMemcpy(mCUData.position, mCUData.positionOut, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyDeviceToDevice));
 	CUDAERRORS(cudaMemcpy(mPosition, mCUData.position, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyDeviceToHost));
+}
+
+void ParticleSystem::iUpdateThrust(float dt)
+{
+	
+	thrust::copy(mPosition, mPosition + mNumberOfParticles, mThrustData.position);
 }
 
 // debug function to count how many particles are outside the boundary

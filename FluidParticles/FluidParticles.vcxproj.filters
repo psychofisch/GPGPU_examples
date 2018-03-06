@@ -281,6 +281,9 @@
     <ClInclude Include="src\ParticleDefinitions.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\ThrustHelper.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
@@ -297,6 +300,9 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\particles.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\ThrustHelper.cu">
       <Filter>src</Filter>
     </CudaCompile>
   </ItemGroup>

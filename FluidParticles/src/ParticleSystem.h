@@ -21,10 +21,17 @@
 #include <helper_cuda.h>
 #include <helper_math.h>
 
+//Thrust includes
+#include <thrust\device_vector.h>
+#include <thrust\host_vector.h>
+#include <thrust\device_malloc.h>
+#include <thrust\copy.h>
+
 // own includes
 #include "oclHelper.h"
 #include "Stopwatch.h"
 #include "ParticleDefinitions.h"
+#include "ThrustHelper.h"
 
 //general definitions
 #ifdef _DEBUG
@@ -78,6 +85,14 @@ struct CUDAta
 	float4 *velocity;
 };
 
+//definitions for Thrust
+struct ThrustData
+{
+	thrust::device_ptr<float4> position;
+	thrust::device_ptr<float4> positionOut;
+	thrust::device_ptr<float4> velocity;
+};
+
 //class definition
 class ParticleSystem
 {
@@ -88,6 +103,7 @@ public:
 		COMPUTE_SHADER,
 		CUDA,
 		OPENCL,
+		THRUST,
 		COMPUTEMODES_SIZE // these values are used as array indices, dont delete this!
 	};
 
@@ -100,6 +116,7 @@ public:
 	void setupCompute(ofxXmlSettings& settings);
 	void setupCUDA(ofxXmlSettings& settings);
 	void setupOCL(ofxXmlSettings& settings);
+	void setupThrust(ofxXmlSettings& settings);
 
 	// simple getters
 
@@ -163,6 +180,7 @@ private:
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
 	CUDAta mCUData;
+	ThrustData mThrustData;
 	Stopwatch mClock;
 	bool mMeasureTime;
 
@@ -170,6 +188,7 @@ private:
 	void iUpdateCompute(float dt);
 	void iUpdateOCL(float dt);
 	void iUpdateCUDA(float dt);
+	void iUpdateThrust(float dt);
 	ofVec3f iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel);
 };
 
