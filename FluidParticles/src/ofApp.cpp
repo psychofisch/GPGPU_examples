@@ -358,6 +358,8 @@ std::string ofApp::iHudGetModeString(ParticleSystem::ComputeMode m)
 		return "OpenCL";
 	else if (m == ParticleSystem::ComputeMode::CUDA)
 		return "CUDA";
+	else if (m == ParticleSystem::ComputeMode::THRUST)
+		return "Thrust";
 	else
 		return "UNKNOWN";
 }

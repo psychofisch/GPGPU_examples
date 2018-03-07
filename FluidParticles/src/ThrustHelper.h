@@ -8,3 +8,8 @@
 #include <thrust\copy.h>
 
 #include <helper_math.h>
+
+namespace ThrustHelper
+{
+	struct InvertFunctor : thrust::binary_function < float3, float3, float3>;
+}

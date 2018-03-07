@@ -134,9 +134,9 @@ void ParticleSystem::setupOCL(ofxXmlSettings & settings)
 
 void ParticleSystem::setupThrust(ofxXmlSettings & settings)
 {
-	mThrustData.position = thrust::device_malloc<float4>(mCapacity);
+	/*mThrustData.position = thrust::device_malloc<float4>(mCapacity);
 	mThrustData.positionOut = thrust::device_malloc<float4>(mCapacity);
-	mThrustData.velocity = thrust::device_malloc<float4>(mCapacity);
+	mThrustData.velocity = thrust::device_malloc<float4>(mCapacity);*/
 
 	mAvailableModes[ComputeMode::THRUST] = true;
 }
@@ -607,8 +607,9 @@ void ParticleSystem::iUpdateCUDA(float dt)
 
 void ParticleSystem::iUpdateThrust(float dt)
 {
-	
-	thrust::copy(mPosition, mPosition + mNumberOfParticles, mThrustData.position);
+	thrust::host_vector<float4> test(mPosition, mPosition + mNumberOfParticles);
+	thrust::copy(test.begin(), test.end(), mThrustData.position);
+	//thrust::transform(test.begin(), test.end(), mThrustData.positionOut, ThrustHelper::)
 }
 
 // debug function to count how many particles are outside the boundary
