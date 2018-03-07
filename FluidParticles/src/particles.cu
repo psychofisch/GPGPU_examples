@@ -15,13 +15,13 @@
 
 #include "ParticleDefinitions.h"
 
-inline __device__ bool operator==(float3& lhs, float3& rhs)
-{
-	if (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z)
-		return true;
-	else
-		return false;
-}
+//inline __device__ bool operator==(float3& lhs, float3& rhs)
+//{
+//	if (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z)
+//		return true;
+//	else
+//		return false;
+//}
 
 __device__ float4 calculatePressure(float4* position, float4* velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
 

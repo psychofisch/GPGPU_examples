@@ -88,9 +88,9 @@ struct CUDAta
 //definitions for Thrust
 struct ThrustData
 {
-	thrust::device_ptr<float4> position;
-	thrust::device_ptr<float4> positionOut;
-	thrust::device_ptr<float4> velocity;
+	thrust::device_vector<float4> position;
+	thrust::device_vector<float4> positionOut;
+	thrust::device_vector<float4> velocity;
 };
 
 //class definition

@@ -607,9 +607,33 @@ void ParticleSystem::iUpdateCUDA(float dt)
 
 void ParticleSystem::iUpdateThrust(float dt)
 {
-	thrust::host_vector<float4> test(mPosition, mPosition + mNumberOfParticles);
-	thrust::copy(test.begin(), test.end(), mThrustData.position);
-	//thrust::transform(test.begin(), test.end(), mThrustData.positionOut, ThrustHelper::)
+	// convert some host variables to device types
+	float3 cudaGravity = make_float3(mGravity.x, mGravity.y, mGravity.z);
+	float3 cudaDimension = make_float3(mDimension.x, mDimension.y, mDimension.z);
+
+	float3 pos, vel;
+	pos.x = mPosition[0].x;
+	pos.y = mPosition[0].y;
+	pos.z = mPosition[0].z;
+
+	vel.x = mVelocity[0].x;
+	vel.y = mVelocity[0].y;
+	vel.z = mVelocity[0].z;
+
+	float4* positionF4 = reinterpret_cast<float4*>(mPosition);
+	thrust::host_vector<float4> test(positionF4, positionF4 + mNumberOfParticles);
+	//thrust::copy(test.begin(), test.end(), mThrustData.position.begin());
+
+	float4* velocityF4 = reinterpret_cast<float4*>(mVelocity);
+	thrust::host_vector<float4> host_vel(velocityF4, velocityF4 + mNumberOfParticles);
+	
+	thrust::host_vector<float4> host_posOut;
+	host_posOut.resize(mNumberOfParticles);
+
+	ThrustHelper::thrustUpdate(test, host_posOut, host_vel, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
+	//thrust::transform(test.begin(), test.end(), mThrustData.positionOut.begin(), ThrustHelper::InvertFunctor(pos, vel, mSimData));
+	
+	thrust::copy(mThrustData.position.begin(), mThrustData.position.end(), test.begin());
 }
 
 // debug function to count how many particles are outside the boundary
