@@ -624,25 +624,35 @@ void ParticleSystem::iUpdateThrust(float dt)
 	vel.z = mVelocity[0].z;
 
 	float4* positionF4 = reinterpret_cast<float4*>(mPosition);
-	//thrust::host_vector<float4> test(positionF4, positionF4 + mNumberOfParticles);
-	thrust::device_vector<float4> test(positionF4, positionF4 + mNumberOfParticles);
+	thrust::host_vector<float4> hostPos(positionF4, positionF4 + mNumberOfParticles);
 
 	float4* velocityF4 = reinterpret_cast<float4*>(mVelocity);
-	thrust::device_vector<float4> device_vel(velocityF4, velocityF4 + mNumberOfParticles);
+	thrust::host_vector<float4> hostVel(velocityF4, velocityF4 + mNumberOfParticles);
 	
+	thrust::host_vector<float4> hostOut(mNumberOfParticles);
+
+	ThrustHelper::thrustUpdate(hostPos, hostOut, hostVel, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
+
+	thrust::copy(hostOut.begin(), hostOut.end(), positionF4);
+	/* 
+	// this works...finally
+	thrust::fill(hostPos.begin(), hostPos.end(), make_float4(0.5f));
+	thrust::copy(hostPos.begin(), hostPos.end(), positionF4);
+	*/
+
 	//thrust::host_vector<float4> host_posOut;
 	//host_posOut.resize(mNumberOfParticles);
 	
 	//thrust::copy(positionF4, positionF4 + mNumberOfParticles, mThrustData.position);
 	//thrust::copy(velocityF4, velocityF4 + mNumberOfParticles, mThrustData.velocity);
 	
-	mThrustData.positionOut.reserve(1000);//This line breaks the code...what?
+	//mThrustData.positionOut.reserve(1000);//This line breaks the code...what?
 
-	ThrustHelper::thrustUpdate(test, mThrustData.positionOut, device_vel, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
+	//ThrustHelper::thrustUpdate(test, mThrustData.positionOut, device_vel, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
 	//ThrustHelper::thrustUpdate(mThrustData.position, mThrustData.positionOut, mThrustData.velocity, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
-	//thrust::transform(test.begin(), test.end(), mThrustData.positionOut.begin(), ThrustHelper::InvertFunctor(pos, vel, mSimData));
+	//thrust::transform(test.begin(), test.end(), mThrustData.positionOut.begin(), ThrustHelper::PressureFunctor(pos, vel, mSimData));
 	
-	thrust::copy(mThrustData.positionOut.begin(), mThrustData.positionOut.end(), positionF4);
+	//thrust::copy(mThrustData.positionOut.begin(), mThrustData.positionOut.end(), positionF4);
 }
 
 // debug function to count how many particles are outside the boundary

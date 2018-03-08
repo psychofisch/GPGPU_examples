@@ -16,19 +16,27 @@ __host__ __device__ bool operator==(float3& lhs, float3& rhs);
 
 namespace ThrustHelper
 {
-	struct InvertFunctor : public thrust::binary_function < float4, float4, float4 > {
-		float4 pos;
-		float4 vel;
+	struct PressureFunctor : public thrust::binary_function < float4, float4, float4 > {
+		float3 pos;
+		float3 vel;
 		SimulationData simData;
 
-		InvertFunctor(float4 pos_, float4 vel_, SimulationData simData_);
+		PressureFunctor(float4 pos_, float4 vel_, SimulationData simData_);
 		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel);
 	};
 
+	struct SimulationFunctor : public thrust::binary_function < float4, float4, float4 > {
+		float dt;
+		SimulationData simData;
+
+		SimulationFunctor(float dt_, SimulationData simData_);
+		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel, float4 pressure);
+	};
+
 	void thrustUpdate(
-		thrust::device_vector<float4>& position,
-		thrust::device_vector<float4>& positionOut,
-		thrust::device_vector<float4>& velocity,
+		thrust::host_vector<float4>& position,
+		thrust::host_vector<float4>& positionOut,
+		thrust::host_vector<float4>& velocity,
 		const float dt,
 		const float3 gravity,
 		const float3 dimension,
