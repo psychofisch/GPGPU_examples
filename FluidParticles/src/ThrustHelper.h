@@ -26,9 +26,9 @@ namespace ThrustHelper
 	};
 
 	void thrustUpdate(
-		thrust::host_vector<float4>& position,
-		thrust::host_vector<float4>& positionOut,
-		thrust::host_vector<float4>& velocity,
+		thrust::device_vector<float4>& position,
+		thrust::device_vector<float4>& positionOut,
+		thrust::device_vector<float4>& velocity,
 		const float dt,
 		const float3 gravity,
 		const float3 dimension,

@@ -49,27 +49,30 @@ __host__ __device__ float4 ThrustHelper::InvertFunctor::operator()(float4 outerP
 
 	//break;
 
-	return make_float4(pressureVec + viscosityVec);
+	//return make_float4(pressureVec + viscosityVec);
+	return make_float4(0.5f);
 }
 
 void ThrustHelper::thrustUpdate(
-	thrust::host_vector<float4>& position,
-	thrust::host_vector<float4>& positionOut,
-	thrust::host_vector<float4>& velocity,
+	thrust::device_vector<float4>& position,
+	thrust::device_vector<float4>& positionOut,
+	thrust::device_vector<float4>& velocity,
 	const float dt,
 	const float3 gravity,
 	const float3 dimension,
 	const uint numberOfParticles,
 	SimulationData simData)
 {
-	thrust::device_vector<float4> devicePos = position;
+	/*thrust::device_vector<float4> devicePos = position;
 	thrust::device_vector<float4> deviceVel = velocity;
-	thrust::device_vector<float4> deviceOut = positionOut;
+	thrust::device_vector<float4> deviceOut = positionOut;*/
 
 	float4 tmpPos = position[0];
 	float4 tmpVel = velocity[0];
 
-	thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), InvertFunctor(tmpPos, tmpVel, simData));
+	//thrust::transform(position.begin(), position.end(), velocity.begin(), positionOut.begin(), InvertFunctor(tmpPos, tmpVel, simData));
 
-	thrust::copy(deviceOut.begin(), deviceOut.end(), positionOut.begin());
+	thrust::fill(positionOut.begin(), positionOut.end(), make_float4(0.5f));
+
+	//thrust::copy(deviceOut.begin(), deviceOut.end(), positionOut.begin());
 }
