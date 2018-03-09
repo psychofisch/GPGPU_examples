@@ -85,14 +85,6 @@ struct CUDAta
 	float4 *velocity;
 };
 
-//definitions for Thrust
-struct ThrustData
-{
-	thrust::host_vector<float4> position;
-	thrust::host_vector<float4> positionOut;
-	thrust::host_vector<float4> velocity;
-};
-
 //class definition
 class ParticleSystem
 {
@@ -180,7 +172,7 @@ private:
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
 	CUDAta mCUData;
-	ThrustData mThrustData;
+	ThrustHelper::ThrustData* mThrustData;
 	Stopwatch mClock;
 	bool mMeasureTime;
 

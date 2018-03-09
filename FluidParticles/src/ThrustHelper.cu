@@ -110,9 +110,19 @@ __host__ __device__ float4 ThrustHelper::SimulationFunctor::operator()(float4 ou
 	return make_float4(particlePosition);
 }
 
+ThrustHelper::ThrustData* ThrustHelper::setup(uint numberOfParticles)
+{
+	ThrustData* r = new ThrustData;
+	r->position.reserve(numberOfParticles);
+	r->velocity.reserve(numberOfParticles);
+	r->positionOut.reserve(numberOfParticles);
+	return r;
+}
+
 void ThrustHelper::thrustUpdate(
+	ThrustData& tdata,
 	float4* position,
-	thrust::host_vector<float4>& positionOut,
+	float4* positionOut,
 	float4* velocity,
 	const float dt,
 	const float3 gravity,
@@ -120,18 +130,22 @@ void ThrustHelper::thrustUpdate(
 	const uint numberOfParticles,
 	SimulationData simData)
 {
-	thrust::device_vector<float4> devicePos(position, position + numberOfParticles);
+	/*thrust::device_vector<float4> devicePos(position, position + numberOfParticles);
 	thrust::device_vector<float4> deviceVel(velocity, velocity + numberOfParticles);
-	thrust::device_vector<float4> deviceOut(numberOfParticles);
+	thrust::device_vector<float4> deviceOut(numberOfParticles);*/
+	tdata.position.assign(position, position + numberOfParticles);
+	tdata.velocity.assign(velocity, velocity + numberOfParticles);
+	tdata.positionOut.resize(numberOfParticles);
 
 	for (uint i = 0; i < numberOfParticles; ++i)
 	{
 		float3 particlePosition = make_float3(position[i]);
 		float3 particleVelocity = make_float3(velocity[i]);
+		float4 test = make_float4(0.f);
 
 		// calculate pressure
-		thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), PressureFunctor(particlePosition, particleVelocity, simData));
-		float4 pressure4 = thrust::reduce(deviceOut.begin(), deviceOut.end(), make_float4(0.f));
+		thrust::transform(tdata.position.begin(), tdata.position.end(), tdata.velocity.begin(), tdata.positionOut.begin(), PressureFunctor(particlePosition, particleVelocity, simData));
+		float4 pressure4 = thrust::reduce(tdata.positionOut.begin(), tdata.positionOut.end(), test);
 
 		particleVelocity += (gravity + make_float3(pressure4)) * dt;
 
@@ -169,10 +183,10 @@ void ThrustHelper::thrustUpdate(
 		// *** sc
 
 		// particleVelocity += dt * particleVelocity * -0.01f;//damping
-		positionOut[i] += make_float4(particleVelocity * dt);
+		tdata.positionOut[i] = make_float4(particlePosition + particleVelocity * dt);
 	}
 	// calculate simulation
 	//thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), SimulationFunctor(dt, dimension, gravity, simData));
 	
-	//thrust::copy(deviceOut.begin(), deviceOut.end(), positionOut.begin());
+	thrust::copy(tdata.positionOut.begin(), tdata.positionOut.end(), positionOut);
 }
