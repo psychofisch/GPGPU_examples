@@ -451,6 +451,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel)
 {
 	float interactionRadius = mSimData.interactionRadius;
+	interactionRadius *= interactionRadius;
 	//float amplitude = 1.f;
 	ofVec3f particlePosition = mPosition[index];
 
@@ -461,7 +462,8 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 			continue;
 
 		ofVec3f dirVec = particlePosition - mPosition[i];
-		float dist = dirVec.length();
+		//float dist = dirVec.length();
+		float dist = dirVec.lengthSquared();
 
 		//if (dist > interactionRadius * 1.f)
 		if (dist > interactionRadius * 1.0f || dist < 0.00001f)
@@ -469,7 +471,7 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 
 		ofVec3f dirVecN = dirVec.getNormalized();
 		float moveDir = (vel - mVelocity[i]).dot(dirVecN);
-		float distRel = dist / interactionRadius;
+		float distRel = sqrtf(dist / interactionRadius);
 
 		// viscosity
 		if (moveDir > 0)
