@@ -53,9 +53,10 @@ __host__ __device__ float4 ThrustHelper::PressureFunctor::operator()(float4 oute
 	return make_float4(pressureVec + viscosityVec);
 }
 
-ThrustHelper::SimulationFunctor::SimulationFunctor(float dt_, float3 dim_, SimulationData simData_)
+ThrustHelper::SimulationFunctor::SimulationFunctor(float dt_, float3 dim_, float3 g_, SimulationData simData_)
 	:dt(dt_),
 	dimension(dim_),
+	gravity(g_),
 	simData(simData_)
 {}
 
@@ -65,6 +66,8 @@ __host__ __device__ float4 ThrustHelper::SimulationFunctor::operator()(float4 ou
 	float3 particleVelocity = make_float3(outerVel);
 
 	float3 result = make_float3(0.f);
+
+	particleVelocity += gravity * dt;
 
 	// static collision
 	//TODO: write some kind of for-loop
@@ -134,7 +137,7 @@ void ThrustHelper::thrustUpdate(
 		(thrust::placeholders::_1 + thrust::placeholders::_2));
 
 	// calculate simulation
-	thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), SimulationFunctor(dt, dimension, simData));
+	thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), SimulationFunctor(dt, dimension, gravity, simData));
 	
 	thrust::copy(deviceOut.begin(), deviceOut.end(), positionOut.begin());
 }

@@ -28,9 +28,10 @@ namespace ThrustHelper
 	struct SimulationFunctor : public thrust::binary_function < float4, float4, float4 > {
 		float dt;
 		float3 dimension;
+		float3 gravity;
 		SimulationData simData;
 
-		SimulationFunctor(float dt_, float3 dim_, SimulationData simData_);
+		SimulationFunctor(float dt_, float3 dim_, float3 g_, SimulationData simData_);
 		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel);
 	};
 
