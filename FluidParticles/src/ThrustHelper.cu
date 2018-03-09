@@ -53,21 +53,58 @@ __host__ __device__ float4 ThrustHelper::PressureFunctor::operator()(float4 oute
 	return make_float4(pressureVec + viscosityVec);
 }
 
-ThrustHelper::SimulationFunctor::SimulationFunctor(float dt_, SimulationData simData_)
+ThrustHelper::SimulationFunctor::SimulationFunctor(float dt_, float3 dim_, SimulationData simData_)
 	:dt(dt_),
+	dimension(dim_),
 	simData(simData_)
 {}
 
-__host__ __device__ float4 ThrustHelper::SimulationFunctor::operator()(float4 outerPos, float4 outerVel, float4 pressure)
+__host__ __device__ float4 ThrustHelper::SimulationFunctor::operator()(float4 outerPos, float4 outerVel)
 {
-	float3 oPos = make_float3(outerPos);
-	float3 oVel = make_float3(outerVel);
+	float3 particlePosition = make_float3(outerPos);
+	float3 particleVelocity = make_float3(outerVel);
 
 	float3 result = make_float3(0.f);
 
-	
+	// static collision
+	//TODO: write some kind of for-loop
+	if ((particlePosition.x + particleVelocity.x * dt > dimension.x && particleVelocity.x > 0.f) || (particlePosition.x + particleVelocity.x * dt < 0.f && particleVelocity.x < 0.f))
+	{
+		if (particlePosition.x + particleVelocity.x * dt < 0.f)
+			particlePosition.x = 0.f;
+		else
+			particlePosition.x = dimension.x;
 
-	return make_float4(result);
+		particleVelocity.x *= -.3f;
+	}
+
+	if ((particlePosition.y + particleVelocity.y * dt  > dimension.y && particleVelocity.y > 0.f) || (particlePosition.y + particleVelocity.y * dt < 0.f && particleVelocity.y < 0.f))
+	{
+		if (particlePosition.y + particleVelocity.y * dt < 0.f)
+			particlePosition.y = 0.f;
+		else
+			particlePosition.y = dimension.y;
+
+		particleVelocity.y *= -.3f;
+	}
+
+	if ((particlePosition.z + particleVelocity.z * dt > dimension.z && particleVelocity.z > 0.f) || (particlePosition.z + particleVelocity.z * dt < 0.f && particleVelocity.z < 0.f))
+	{
+		if (particlePosition.z + particleVelocity.z * dt < 0.f)
+			particlePosition.z = 0.f;
+		else
+			particlePosition.z = dimension.z;
+
+		particleVelocity.z *= -.3f;
+	}
+	// *** sc
+
+	// particleVelocity += dt * particleVelocity * -0.01f;//damping
+	particlePosition += particleVelocity * dt;
+
+	//positionOut[index] = make_float4(particlePosition);
+
+	return make_float4(particlePosition);
 }
 
 void ThrustHelper::thrustUpdate(
@@ -97,7 +134,7 @@ void ThrustHelper::thrustUpdate(
 		(thrust::placeholders::_1 + thrust::placeholders::_2));
 
 	// calculate simulation
-	//thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), SimulationFunctor(tmpPos, tmpVel, simData));
-
+	thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), SimulationFunctor(dt, dimension, simData));
+	
 	thrust::copy(deviceOut.begin(), deviceOut.end(), positionOut.begin());
 }
