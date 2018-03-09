@@ -616,24 +616,16 @@ void ParticleSystem::iUpdateThrust(float dt)
 	float3 cudaGravity = make_float3(mGravity.x, mGravity.y, mGravity.z);
 	float3 cudaDimension = make_float3(mDimension.x, mDimension.y, mDimension.z);
 
-	float3 pos, vel;
-	pos.x = mPosition[0].x;
-	pos.y = mPosition[0].y;
-	pos.z = mPosition[0].z;
-
-	vel.x = mVelocity[0].x;
-	vel.y = mVelocity[0].y;
-	vel.z = mVelocity[0].z;
-
 	float4* positionF4 = reinterpret_cast<float4*>(mPosition);
-	thrust::host_vector<float4> hostPos(positionF4, positionF4 + mNumberOfParticles);
+	//thrust::host_vector<float4> hostPos(positionF4, positionF4 + mNumberOfParticles);
 
 	float4* velocityF4 = reinterpret_cast<float4*>(mVelocity);
-	thrust::host_vector<float4> hostVel(velocityF4, velocityF4 + mNumberOfParticles);
+	//thrust::host_vector<float4> hostVel(velocityF4, velocityF4 + mNumberOfParticles);
 	
 	thrust::host_vector<float4> hostOut(mNumberOfParticles);
 
-	ThrustHelper::thrustUpdate(hostPos, hostOut, hostVel, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
+	//ThrustHelper::thrustUpdate(hostPos, hostOut, hostVel, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
+	ThrustHelper::thrustUpdate(positionF4, hostOut, velocityF4, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
 
 	thrust::copy(hostOut.begin(), hostOut.end(), positionF4);
 	/* 

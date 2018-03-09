@@ -21,7 +21,7 @@ namespace ThrustHelper
 		float3 vel;
 		SimulationData simData;
 
-		PressureFunctor(float4 pos_, float4 vel_, SimulationData simData_);
+		PressureFunctor(float3 pos_, float3 vel_, SimulationData simData_);
 		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel);
 	};
 
@@ -36,9 +36,9 @@ namespace ThrustHelper
 	};
 
 	void thrustUpdate(
-		thrust::host_vector<float4>& position,
+		float4* position,
 		thrust::host_vector<float4>& positionOut,
-		thrust::host_vector<float4>& velocity,
+		float4* velocity,
 		const float dt,
 		const float3 gravity,
 		const float3 dimension,

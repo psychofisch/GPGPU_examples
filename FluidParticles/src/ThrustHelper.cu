@@ -8,9 +8,9 @@ inline __host__ __device__ bool operator==(float3& lhs, float3& rhs)
 		return false;
 }
 
-ThrustHelper::PressureFunctor::PressureFunctor(float4 pos_, float4 vel_, SimulationData simData_)
-	:pos(make_float3(pos_)),
-	vel(make_float3(vel_)),
+ThrustHelper::PressureFunctor::PressureFunctor(float3 pos_, float3 vel_, SimulationData simData_)
+	:pos(pos_),
+	vel(vel_),
 	simData(simData_)
 {}
 
@@ -111,33 +111,68 @@ __host__ __device__ float4 ThrustHelper::SimulationFunctor::operator()(float4 ou
 }
 
 void ThrustHelper::thrustUpdate(
-	thrust::host_vector<float4>& position,
+	float4* position,
 	thrust::host_vector<float4>& positionOut,
-	thrust::host_vector<float4>& velocity,
+	float4* velocity,
 	const float dt,
 	const float3 gravity,
 	const float3 dimension,
 	const uint numberOfParticles,
 	SimulationData simData)
 {
-	thrust::device_vector<float4> devicePos = position;
-	thrust::device_vector<float4> deviceVel = velocity;
+	thrust::device_vector<float4> devicePos(position, position + numberOfParticles);
+	thrust::device_vector<float4> deviceVel(velocity, velocity + numberOfParticles);
 	thrust::device_vector<float4> deviceOut(numberOfParticles);
 
-	float4 tmpPos = position[0];
-	float4 tmpVel = velocity[0];
+	for (uint i = 0; i < numberOfParticles; ++i)
+	{
+		float3 particlePosition = make_float3(position[i]);
+		float3 particleVelocity = make_float3(velocity[i]);
 
-	// calculate pressure
-	thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), PressureFunctor(tmpPos, tmpVel, simData));
+		// calculate pressure
+		thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), PressureFunctor(particlePosition, particleVelocity, simData));
+		float4 pressure4 = thrust::reduce(deviceOut.begin(), deviceOut.end(), make_float4(0.f));
 
-	// add pressure to velocity
-	thrust::transform(deviceVel.begin(), deviceVel.end(),//input 1
-		deviceOut.begin(),//input 2
-		deviceVel.begin(),
-		(thrust::placeholders::_1 + thrust::placeholders::_2));
+		particleVelocity += (gravity + make_float3(pressure4)) * dt;
 
+		// static collision
+		//TODO: write some kind of for-loop
+		if ((particlePosition.x + particleVelocity.x * dt > dimension.x && particleVelocity.x > 0.f) || (particlePosition.x + particleVelocity.x * dt < 0.f && particleVelocity.x < 0.f))
+		{
+			if (particlePosition.x + particleVelocity.x * dt < 0.f)
+				particlePosition.x = 0.f;
+			else
+				particlePosition.x = dimension.x;
+
+			particleVelocity.x *= -.3f;
+		}
+
+		if ((particlePosition.y + particleVelocity.y * dt > dimension.y && particleVelocity.y > 0.f) || (particlePosition.y + particleVelocity.y * dt < 0.f && particleVelocity.y < 0.f))
+		{
+			if (particlePosition.y + particleVelocity.y * dt < 0.f)
+				particlePosition.y = 0.f;
+			else
+				particlePosition.y = dimension.y;
+
+			particleVelocity.y *= -.3f;
+		}
+
+		if ((particlePosition.z + particleVelocity.z * dt > dimension.z && particleVelocity.z > 0.f) || (particlePosition.z + particleVelocity.z * dt < 0.f && particleVelocity.z < 0.f))
+		{
+			if (particlePosition.z + particleVelocity.z * dt < 0.f)
+				particlePosition.z = 0.f;
+			else
+				particlePosition.z = dimension.z;
+
+			particleVelocity.z *= -.3f;
+		}
+		// *** sc
+
+		// particleVelocity += dt * particleVelocity * -0.01f;//damping
+		positionOut[i] += make_float4(particleVelocity * dt);
+	}
 	// calculate simulation
-	thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), SimulationFunctor(dt, dimension, gravity, simData));
+	//thrust::transform(devicePos.begin(), devicePos.end(), deviceVel.begin(), deviceOut.begin(), SimulationFunctor(dt, dimension, gravity, simData));
 	
-	thrust::copy(deviceOut.begin(), deviceOut.end(), positionOut.begin());
+	//thrust::copy(deviceOut.begin(), deviceOut.end(), positionOut.begin());
 }
