@@ -1,0 +1,301 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7FD42DF7-442E-479A-BA76-D0022F99702A}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>CollisionDetection</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="../../of_v0.9.8_vs_release/libs\openFrameworksCompiled\project\vs\openFrameworksRelease.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="../../of_v0.9.8_vs_release/libs\openFrameworksCompiled\project\vs\openFrameworksRelease.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="../../of_v0.9.8_vs_release/libs\openFrameworksCompiled\project\vs\openFrameworksDebug.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="../../of_v0.9.8_vs_release/libs\openFrameworksCompiled\project\vs\openFrameworksDebug.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>bin\</OutDir>
+    <IntDir>obj\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_debug</TargetName>
+    <LinkIncremental>true</LinkIncremental>
+    <GenerateManifest>true</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>bin\</OutDir>
+    <IntDir>obj\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_debug</TargetName>
+    <LinkIncremental>true</LinkIncremental>
+    <GenerateManifest>true</GenerateManifest>
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>bin\</OutDir>
+    <IntDir>obj\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>bin\</OutDir>
+    <IntDir>obj\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\emscripten;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\Win32;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\license;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src;..\..\of_v0.9.8_vs_release\addons\ofxGui\src;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src;$(CudaToolkitDir)/include</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <AdditionalDependencies>%(AdditionalDependencies);assimp.lib;cudart_static.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\Win32;$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\emscripten;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\Win32;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\license;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src;..\..\of_v0.9.8_vs_release\addons\ofxGui\src;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src;$(CUDA_PATH_V9_1)/include;..\NvidiaCUDA\inc;..\NvidiaOpenCL\inc</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <AdditionalDependencies>%(AdditionalDependencies);assimp.lib;OpenCL.lib;cudart_static.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;$(CUDA_PATH_V9_1)/lib/x64;..\NvidiaOpenCL\lib\x64</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\emscripten;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\Win32;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\license;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src;..\..\of_v0.9.8_vs_release\addons\ofxGui\src;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <AdditionalDependencies>%(AdditionalDependencies);assimp.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\Win32</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\emscripten;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\Win32;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\license;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src;..\..\of_v0.9.8_vs_release\addons\ofxGui\src;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src;$(CUDA_PATH_V9_1)/include;..\NvidiaCUDA\inc;..\NvidiaOpenCL\inc</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <AdditionalDependencies>%(AdditionalDependencies);assimp.lib;OpenCL.lib;cudart_static.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;$(CUDA_PATH_V9_1)/lib/x64;..\NvidiaOpenCL\lib\x64</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\oclHelper.cpp" />
+    <ClCompile Include="src\ofApp.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpMeshHelper.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpModelLoader.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpTexture.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxBaseGui.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxButton.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGuiGroup.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxLabel.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxPanel.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSlider.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSliderGroup.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxToggle.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src\ofxXmlSettings.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxml.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxmlerror.cpp" />
+    <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxmlparser.cpp" />
+    <ClCompile Include="src\ParticleSystem.cpp" />
+    <ClCompile Include="src\Stopwatch.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\oclHelper.h" />
+    <ClInclude Include="src\ofApp.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpMeshHelper.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpModelLoader.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpTexture.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpUtils.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\ai_assert.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\anim.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\camera.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\cexport.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\cfileio.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\cimport.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\color4.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler\poppack1.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler\pstdint.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler\pushpack1.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\config.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\DefaultLogger.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\defs.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Exporter.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Importer.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\importerdesc.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\IOStream.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\IOSystem.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\light.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Logger.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\LogStream.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\material.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\matrix3x3.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\matrix4x4.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\mesh.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\metadata.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\NullLogger.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\postprocess.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\ProgressHandler.hpp" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\quaternion.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\scene.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\texture.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\types.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\vector2.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\vector3.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\version.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxBaseGui.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxButton.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGui.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGuiGroup.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxLabel.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxPanel.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSlider.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSliderGroup.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxToggle.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src\ofxXmlSettings.h" />
+    <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxml.h" />
+    <ClInclude Include="src\ParticleDefinitions.h" />
+    <ClInclude Include="src\ParticleSystem.h" />
+    <ClInclude Include="src\Stopwatch.h" />
+    <ClInclude Include="src\ThrustHelper.h" />
+    <ClInclude Include="src\vec2i.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
+      <Project>{5837595d-aca9-485c-8e76-729040ce4b0b}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icon.rc">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/D_DEBUG %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/D_DEBUG %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(OF_ROOT)\libs\openFrameworksCompiled\project\vs</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="bin\data\particles.compute">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\data\particles.cl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\particles.cu" />
+    <CudaCompile Include="src\ThrustHelper.cu" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.targets" />
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="icon.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
