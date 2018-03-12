@@ -36,7 +36,7 @@ class ofApp : public ofBaseApp{
 		vec2i mMoveVec;
 		ofVec3f mCameraRotation;
 		float mMouseSens;
-		bool mValve;
+		bool mLockMouse;
 
 		Cube mTestCube;
 		std::vector<Cube> mBoxes;
@@ -58,4 +58,6 @@ class ofApp : public ofBaseApp{
 		ofParameter<ofColor> mHudColor;
 
 		std::string iHudGetModeString(ParticleSystem::ComputeMode m);
+
+		std::vector<bool> mCollisions;
 };

@@ -24,18 +24,25 @@ void ofApp::setup(){
 	mTestCube.set(10.f);
 	mTestCube.setPosition(ofVec3f(0.f));
 
-	ofVec3f boxPos;
-	float gap = 2.f;
-	mBoxes.resize(1000, mTestCube);
-	int sqrtBox = sqrtf(mBoxes.size());
-	for (int i = 0; i < mBoxes.size(); ++i)
+	int boxNumber = 1000;
+	int sqrtBox = sqrtf(boxNumber);
+	float gap = 10.f;
+	float side = mTestCube.getWidth();
+	float offset = -(side + gap) * sqrtBox * 0.5f;
+	ofVec3f boxPos(0.f);
+	boxPos.x = boxPos.z = offset;
+	mBoxes.resize(boxNumber, mTestCube);
+	mCollisions.resize(boxNumber, false);
+	for (int i = 0; i < boxNumber; ++i)
 	{
-		boxPos.x += gap + mTestCube.getWidth();
+		boxPos.x += gap + side;
 		if (i % sqrtBox == 0)
 		{
-			boxPos.x = 0.f;
-			boxPos.z += gap + mTestCube.getWidth();
+			boxPos.x = offset;
+			boxPos.z += gap + side;
 		}
+
+		mBoxes[i].set(side * ofRandom(0.7f, 1.3f), side * ofRandom(0.7f, 1.3f), side * ofRandom(0.7f, 1.3f));
 
 		mBoxes[i].setPosition(boxPos);
 		if (i % 2 == 0)
@@ -51,7 +58,7 @@ void ofApp::setup(){
 	mMainCamera.setPosition(0, 10.f, 10.f);
 
 	mLight.setPointLight();
-	mLight.setPosition(ofVec3f(10.f, 20.f, 0.f));
+	mLight.setPosition(ofVec3f(0.f, 30.f, 0.f));
 
 	ofBoxPrimitive testRect;
 
@@ -62,7 +69,7 @@ void ofApp::setup(){
 		maxParticles = 5000;
 	}
 
-	mValve = false;
+	mLockMouse = false;
 
 	mMouse = vec2i(-1, -1);
 	mMouseSens = mXmlSettings.getValue("CONTROLS:MOUSESENS", 0.8f);
@@ -85,37 +92,95 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	float deltaTime =  std::min(0.1, ofGetLastFrameTime());
-	//std::cout << deltaTime << std::endl;
+	float dt =  std::min(0.1, ofGetLastFrameTime());
 
 	mHudFps = std::round(ofGetFrameRate());
-//mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
-	//mMainCamera.move((0.1f * mMoveVec.x), 0.f, cosf(ofDegToRad(mCameraRotation.y)) * 0.1f * mMoveVec.y);
 	ofVec3f moveVec;
 	moveVec.x = mMoveVec.x * 0.1f;
 	moveVec.z = mMoveVec.y * 0.1f;
 	moveVec.y = 0.f;
 
-	moveVec *= 2.f;
+	moveVec *= 500.f * dt;
 
 	mMainCamera.dolly(-moveVec.z);
 	mMainCamera.truck(moveVec.x);
 
-	float spinX = sin(ofGetElapsedTimef()*.35f);
-	float spinY = cos(ofGetElapsedTimef()*.075f);
+	ofSeedRandom(1337);
+	for (int i = 0; i < mBoxes.size(); ++i)
+	{
+		float r = ofRandom(0.5f, 1.5f);
+		float sign = 1.f;
+		if (i % 2 == 0)
+			sign *= -1.f;
+		ofNode pos;
+		pos.setPosition(mBoxes[i].getPosition());
+		pos.rotateAround(sign * 30.f * r * dt, ofVec3f(0.f, 1.f, 0.f), ofVec3f(0.f));
+		mBoxes[i].setPosition(pos.getPosition());
+	}
+
+	// Collision detection
+	std::vector<ofVec3f[2]> minMax(mBoxes.size());
+	for (size_t i = 0; i < mBoxes.size(); ++i) // calculate bounding boxes
+	{
+		const std::vector<ofVec3f>& vertices = mBoxes[i].getMesh().getVertices();
+		ofVec3f min, max, pos;
+		min = ofVec3f(INFINITY);
+		max = ofVec3f(-INFINITY);
+		pos = mBoxes[i].getPosition();
+		for (size_t o = 0; o < vertices.size(); o++)
+		{
+			ofVec3f current = vertices[o] + pos;
+			for (size_t p = 0; p < 3; p++)
+			{
+				if (current[p] < min[p])
+					min[p] = current[p];
+				else if (current[p] > max[p])
+					max[p] = current[p];
+			}
+		}
+		minMax[i][0] = min;
+		minMax[i][1] = max;
+	}
+
+	for (size_t i = 0; i < minMax.size(); i++)
+	{
+		ofVec3f currentMin = minMax[i][0];
+		ofVec3f currentMax = minMax[i][1];
+		mCollisions[i] = false;
+		for (size_t j = 0; j < minMax.size(); j++)
+		{
+			if (i == j)
+				continue;
+			int cnt = 0;
+			for (size_t p = 0; p < 3; p++)
+			{
+				ofVec3f otherMin = minMax[j][0];
+				ofVec3f otherMax = minMax[j][1];
+				if (	(otherMin[p] < currentMax[p] && otherMin[p] > currentMin[p])
+					||	(otherMax[p] < currentMax[p] && otherMax[p] > currentMin[p])
+					||	(otherMax[p] > currentMax[p] && otherMin[p] < currentMin[p])
+					||	(otherMax[p] < currentMax[p] && otherMin[p] > currentMin[p]))
+					cnt++;
+			}
+
+			if (cnt >= 3)
+			{
+				mCollisions[i] = true;
+				break;
+			}
+		}
+	}
+	//*** cd
 
 	if (!mHudPause || mHudStep)
 	{
-		float dt = deltaTime;
+		float deltaTime = dt;
 		if (mHudStep)
-			dt = 0.008f;
+			deltaTime = 0.008f;
 		//mParticleSystem->update(dt);
 		mHudStep = false;
 	}
-	//mParticleSystem->update(0.016f);
-	//mParticleMesh.haveVertsChanged();
-	//mTestCube.rotate(spinY, 0, 1, 0);
 }
 
 //--------------------------------------------------------------
@@ -136,8 +201,12 @@ void ofApp::draw(){
 
 	for (int i = 0; i < mBoxes.size(); ++i)
 	{
-		ofSetColor(mBoxes[i].mColor);
+		if(mCollisions[i])
+			ofSetColor(ofColor::red);
+		else
+			ofSetColor(mBoxes[i].mColor);
 		mBoxes[i].draw();
+		//mBoxes[i].drawWireframe();
 	}
 	//ofSetColor(mHudColor);
 	//mTestCube.draw();
@@ -161,7 +230,6 @@ void ofApp::keyPressed(int key){
 	case OF_KEY_ESC: quit();
 		break;
 	case 'v':
-		mValve = true;
 		break;
 	case 'w':
 		mMoveVec.y = 1;
@@ -206,7 +274,7 @@ void ofApp::keyReleased(int key){
 		case 'u':
 			break;
 		case 'v':
-			mValve = false;
+			mLockMouse = !mLockMouse;
 			/*{
 				ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
 				mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 500, true);
@@ -223,6 +291,10 @@ void ofApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y ){
+
+	if (mLockMouse)
+		return;
+
 	int distX = (x - mMouse.x);
 	int distY = (y - mMouse.y);
 
