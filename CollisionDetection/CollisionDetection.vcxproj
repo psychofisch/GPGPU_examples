@@ -178,6 +178,7 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Cube.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\oclHelper.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
@@ -201,6 +202,7 @@
     <ClCompile Include="src\Stopwatch.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Cube.h" />
     <ClInclude Include="src\oclHelper.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.h" />

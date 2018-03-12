@@ -5,6 +5,7 @@
 #include "ofxXmlSettings.h"
 
 #include "ParticleSystem.h"
+#include "Cube.h"
 #include "vec2i.h"
 
 class ofApp : public ofBaseApp{
@@ -29,7 +30,6 @@ class ofApp : public ofBaseApp{
 		void quit();
 
 	private:
-		ofBoxPrimitive mTestBox;
 		ofCamera mMainCamera;
 		ofLight mLight;
 		vec2i mMouse;
@@ -37,6 +37,9 @@ class ofApp : public ofBaseApp{
 		ofVec3f mCameraRotation;
 		float mMouseSens;
 		bool mValve;
+
+		Cube mTestCube;
+		std::vector<Cube> mBoxes;
 
 		ofxXmlSettings mXmlSettings;
 

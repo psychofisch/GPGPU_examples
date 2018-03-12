@@ -19,18 +19,39 @@ void ofApp::setup(){
 
 	ofBackground(69, 69, 69);
 
-	mTestBox.setResolution(1);
-	mTestBox.setScale(1.f);
-	mTestBox.setPosition(ofVec3f(0.f));
+	mTestCube.setResolution(1);
+	mTestCube.setScale(1.f);
+	mTestCube.set(10.f);
+	mTestCube.setPosition(ofVec3f(0.f));
+
+	ofVec3f boxPos;
+	float gap = 2.f;
+	mBoxes.resize(1000, mTestCube);
+	int sqrtBox = sqrtf(mBoxes.size());
+	for (int i = 0; i < mBoxes.size(); ++i)
+	{
+		boxPos.x += gap + mTestCube.getWidth();
+		if (i % sqrtBox == 0)
+		{
+			boxPos.x = 0.f;
+			boxPos.z += gap + mTestCube.getWidth();
+		}
+
+		mBoxes[i].setPosition(boxPos);
+		if (i % 2 == 0)
+			mBoxes[i].mColor = ofColor::cyan;
+		else
+			mBoxes[i].mColor = ofColor::magenta;
+	}
 
 	mMainCamera.lookAt(ofVec3f(0.f));
 	//mMainCamera.setNearClip(0.01f);
 	//mMainCamera.setFarClip(50.f);
 	mMainCamera.setupPerspective(true, 90.f, 0.01, 1000.f);
-	mMainCamera.setPosition(0, 5.f, 5.f);
+	mMainCamera.setPosition(0, 10.f, 10.f);
 
 	mLight.setPointLight();
-	mLight.setPosition(ofVec3f(1.f, 5.f, 0.f));
+	mLight.setPosition(ofVec3f(10.f, 20.f, 0.f));
 
 	ofBoxPrimitive testRect;
 
@@ -76,6 +97,8 @@ void ofApp::update(){
 	moveVec.z = mMoveVec.y * 0.1f;
 	moveVec.y = 0.f;
 
+	moveVec *= 2.f;
+
 	mMainCamera.dolly(-moveVec.z);
 	mMainCamera.truck(moveVec.x);
 
@@ -92,7 +115,7 @@ void ofApp::update(){
 	}
 	//mParticleSystem->update(0.016f);
 	//mParticleMesh.haveVertsChanged();
-	//mTestBox.rotate(spinY, 0, 1, 0);
+	//mTestCube.rotate(spinY, 0, 1, 0);
 }
 
 //--------------------------------------------------------------
@@ -104,17 +127,21 @@ void ofApp::draw(){
 	mLight.enable();
 	mMainCamera.begin();
 
-	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
+	//mTestCube.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
 	ofPushMatrix();
 	//ofRotate(angle, axis.x, axis.y, axis.z);
 	//ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
 	ofPushStyle();
-	ofSetColor(mHudColor);
-	mTestBox.draw();
-	//mParticleMesh.drawVertices();
-	//mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
-	//mParticleSystem->draw();
+
+	for (int i = 0; i < mBoxes.size(); ++i)
+	{
+		ofSetColor(mBoxes[i].mColor);
+		mBoxes[i].draw();
+	}
+	//ofSetColor(mHudColor);
+	//mTestCube.draw();
+
 	ofPopStyle();
 	ofPopMatrix();
 
@@ -168,7 +195,7 @@ void ofApp::keyReleased(int key){
 		case 'h':
 			std::cout << "Camera:" << mMainCamera.getPosition() << std::endl;
 			std::cout << "Camera:" << mMainCamera.getGlobalOrientation() << std::endl;
-			std::cout << "Box: " << mTestBox.getPosition() << std::endl;
+			std::cout << "Box: " << mTestCube.getPosition() << std::endl;
 			break;
 		case 'r':
 			break;

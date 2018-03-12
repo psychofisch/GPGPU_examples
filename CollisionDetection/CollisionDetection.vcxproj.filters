@@ -64,6 +64,9 @@
     <ClCompile Include="src\Stopwatch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Cube.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -285,6 +288,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\vec2i.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Cube.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
