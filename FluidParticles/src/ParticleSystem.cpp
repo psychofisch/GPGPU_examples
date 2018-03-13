@@ -47,14 +47,17 @@ ParticleSystem::~ParticleSystem()
 void ParticleSystem::setupAll(ofxXmlSettings & settings)
 {
 	setupCPU(settings);
-	/*setupCompute(settings);
+	setupCompute(settings);
 	setupCUDA(settings);
-	setupOCL(settings);*/
+	setupOCL(settings);
 	setupThrust(settings);
 }
 
 void ParticleSystem::setupCPU(ofxXmlSettings & settings)
 {
+	if (settings.getValue("CPU::ENABLED", false) == false)
+		return;
+
 	mThreshold = settings.getValue("CPU:THRESHOLD", 1000);
 
 	mAvailableModes[ComputeMode::CPU] = settings.getValue("CPU:ENABLED", true);
@@ -62,6 +65,9 @@ void ParticleSystem::setupCPU(ofxXmlSettings & settings)
 
 void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 {
+	if (settings.getValue("COMPUTE::ENABLED", false) == false)
+		return;
+
 	// compile the compute code
 	if (mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, settings.getValue("COMPUTE:SOURCE", "particles.compute"))
 		&& mComputeData.computeShader.linkProgram())
@@ -81,6 +87,9 @@ void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 
 void ParticleSystem::setupCUDA(ofxXmlSettings & settings)
 {
+	if (settings.getValue("CUDA::ENABLED", false) == false)
+		return;
+
 	//load CUDA command line arguments from settings file
 	const int cmdArgc = settings.getValue("CUDA:ARGC", 0);
 	const char* cmdArgs = settings.getValue("CUDA:ARGV", "").c_str();
@@ -100,6 +109,9 @@ void ParticleSystem::setupCUDA(ofxXmlSettings & settings)
 
 void ParticleSystem::setupOCL(ofxXmlSettings & settings)
 {
+	if (settings.getValue("OCL::ENABLED", false) == false)
+		return;
+
 	int platformID = settings.getValue("OCL:PLATFORMID", 0);
 	int deviceID = settings.getValue("OCL:DEVICEID", 0);
 	std::string sourceFile = settings.getValue("OCL:SOURCE", "data/particles.cl");
@@ -140,6 +152,9 @@ void ParticleSystem::setupOCL(ofxXmlSettings & settings)
 
 void ParticleSystem::setupThrust(ofxXmlSettings & settings)
 {
+	if (settings.getValue("THRUST::ENABLED", false) == false)
+		return;
+
 	/*mThrustData.position = thrust::device_malloc<float4>(mCapacity);
 	mThrustData.positionOut = thrust::device_malloc<float4>(mCapacity);
 	mThrustData.velocity = thrust::device_malloc<float4>(mCapacity);*/
