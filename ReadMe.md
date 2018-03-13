@@ -1,8 +1,10 @@
 # GPGPU_examples
 
-## Fluid Particles
+## Intro
 This is a proof of concept implementation of fluid particles on CPU and GPU.
-Currently implemented modes are CPU, OpenGL Compute Shader, CUDA and OpenCL.
+Currently implemented modes are  
+&ensp;Fluid: CPU, OpenGL Compute Shader, CUDA and OpenCL.  
+&ensp;CollisionDetection: CPU.
 
 ### Build
 This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9.8/of_v0.9.8_vs_release.zip) and it is configured that the folder structure looks this:
@@ -11,9 +13,13 @@ This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9
 └───GPGPU_examples
 │   │   ReadMe.md (this file)
 │   │
+│   └───CollisionDetection
+│   │   └   ...
+│   │
+│   └───Executables
+│   │   └   ...
+│   │
 │   └───FluidParticles
-│   │   │   FluidParticles.sln
-│   │   │   bin
 │   │   └   ...
 │   │
 │   └───NvidiaCUDA
@@ -33,7 +39,25 @@ This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9
 
 It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda-downloads) to be installed.
 
-### Controls
+## CollisionDetection
+#### Controls
+| Key        | Function         
+| ---------- |-------------|
+| mouse | look around |
+| WASD  | move  |
+| M | switch between CPU and the different GPU modes (if more than 1000 particles are present in the scene "CPU" mode becomes unavailable -> performance) |
+| Esc | close application |
+
+#### Settings
+The file ```GPGPU_examples/CollisionDetection/bin/data/settings.xml``` holds all available settings for the program that can not be changed via the HUD.  
+```
+┌───settings.xml
+```
+
+All settings in ```GPGPU_examples/CollisionDetection/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
+
+## Fluid
+#### Controls
 | Key        | Function         
 | ---------- |-------------|
 | left mouse | rotate around y axis |
@@ -44,7 +68,7 @@ It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda
 | V (hold) | add single particles |
 | Esc | close application |
 
-### Settings
+#### Settings
 The file ```GPGPU_examples/FluidParticles/bin/data/settings.xml``` holds all available settings for the program that can not be changed via the HUD.  
 ```
 ┌───settings.xml
@@ -72,9 +96,13 @@ The file ```GPGPU_examples/FluidParticles/bin/data/settings.xml``` holds all ava
 │   │   │   SOURCE → string, path to source file
 │   │   │   PLATFORMID → int, specify platformID
 │   │   │   DEVICEID → int, specify deviceID
+│   │
+│   └───THRUST
+│   │   │   ENABLED → int, enables/disables mode
 ```
 
 All settings in ```GPGPU_examples/FluidParticles/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
+
 
 # Author
 Thomas Fischer (psychofisch)
