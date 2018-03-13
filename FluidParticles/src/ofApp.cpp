@@ -110,6 +110,10 @@ void ofApp::update(){
 		mParticleSystem->addCube(tmpSize * ofVec3f(0.5f, 1.0f, 0.5f), tmpSize * 0.1f, 2, true);
 	}
 
+	ofVec3f moveVec = mMoveVec * deltaTime;
+	mParticleSystem->addPosition(moveVec);
+	mTestBox.move(moveVec);
+
 	if (!mHudPause || mHudStep)
 	{
 		float dt = deltaTime;
@@ -165,6 +169,18 @@ void ofApp::keyPressed(int key){
 	{
 	case OF_KEY_ESC: quit();
 		break;
+	case 'w':
+		mMoveVec.z = -1.f;
+		break;
+	case 's':
+		mMoveVec.z = 1.f;
+		break;
+	case 'a':
+		mMoveVec.x = -1.f;
+		break;
+	case 'd':
+		mMoveVec.x = 1.f;
+		break;
 	case 'v':
 		mValve = true;
 		break;
@@ -177,6 +193,14 @@ void ofApp::keyPressed(int key){
 void ofApp::keyReleased(int key){
 	switch (key)
 	{
+		case 'w': //fallthrough
+		case 's':
+			mMoveVec.z = 0.f;
+			break;
+		case 'a': //fallthrough
+		case 'd':
+			mMoveVec.x = 0.f;
+			break;
 		case 'h':
 			std::cout << "Camera:" << mMainCamera.getPosition() << std::endl;
 			std::cout << "Box: " << mTestBox.getPosition() << std::endl;
@@ -196,7 +220,7 @@ void ofApp::keyReleased(int key){
 		case 'u':
 			mParticleSystem->update(0.16f);
 			break;
-		case 'd':
+		case 'e':
 		{
 			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
 			mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));

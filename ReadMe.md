@@ -38,7 +38,7 @@ It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda
 | ---------- |-------------|
 | left mouse | rotate around y axis |
 | right mouse | move camera up and down |
-| D | add particles |
+| E | add particles |
 | M | switch between CPU and the different GPU modes (if more than 1000 particles are present in the scene "CPU" mode becomes unavailable -> performance) |
 | R | set number of particles back to 0 |
 | V (hold) | add single particles |

@@ -23,14 +23,15 @@
 //		return false;
 //}
 
-__device__ float4 calculatePressure(float4* position, float4* velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
+__device__ float4 calculatePressure(float4* positions, float4* velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
 
 __global__ void particleUpdate(
-	float4* position, 
+	float4* positions, 
 	float4* positionOut,
 	float4* velocity, 
 	const float dt, 
 	const float3 gravity,
+	const float3 position,
 	const float3 dimension,
 	const uint numberOfParticles,
 	SimulationData simData)
@@ -40,11 +41,13 @@ __global__ void particleUpdate(
 	if (index >= numberOfParticles)
 		return;
 
-	float3 particlePosition = make_float3(position[index]);
+	float3 particlePosition = make_float3(positions[index]);
 	float3 particleVelocity = make_float3(velocity[index]);
-	float4 particlePressure = calculatePressure(position, velocity, index, particlePosition, particleVelocity, numberOfParticles, simData);
+	float4 particlePressure = calculatePressure(positions, velocity, index, particlePosition, particleVelocity, numberOfParticles, simData);
 
 	particleVelocity += (gravity + make_float3(particlePressure)) * dt;
+
+	particlePosition -= position;
 
 	// static collision
 	//TODO: write some kind of for-loop
@@ -82,7 +85,7 @@ __global__ void particleUpdate(
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionOut[index] = make_float4(particlePosition);
+	positionOut[index] = make_float4(particlePosition + position);
 	velocity[index] = make_float4(particleVelocity);
 }
 
@@ -132,11 +135,12 @@ __device__ float4 calculatePressure(float4* position, float4* velocity, uint ind
 }
 
 extern "C" void cudaUpdate(
-	float4* position,
+	float4* positions,
 	float4* positionOut,
 	float4* velocity,
 	const float dt,
 	const float3 gravity,
+	const float3 position,
 	const float3 dimension,
 	const uint numberOfParticles,
 	SimulationData simData)
@@ -156,5 +160,5 @@ extern "C" void cudaUpdate(
 		threads = maxThreads;
 	}
 
-	particleUpdate<<< num, threads >>>(position, positionOut, velocity, dt, gravity, dimension, numberOfParticles, simData);
+	particleUpdate<<< num, threads >>>(positions, positionOut, velocity, dt, gravity, dimension, position, numberOfParticles, simData);
 }

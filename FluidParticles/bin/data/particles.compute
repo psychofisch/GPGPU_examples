@@ -25,11 +25,11 @@ uniform float rho0;
 uniform float spring;
 uniform float springNear;
 uniform vec3 gravity;
+uniform vec3 position;
 uniform int numberOfParticles;
 uniform vec3 mDimension;
 
 vec4 calculatePressure(uint index, vec3 pos, vec3 vel);
-mat2x4 applyViscosity(uint index, vec3 velocity);
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
 void main(){
@@ -44,6 +44,8 @@ void main(){
 	// fluid simulation
 	vec4 particlePressure = calculatePressure(index, particlePosition, particleVelocity);
 	// *** fs
+
+	particlePosition -= position;
 
 	// gravity
 	particleVelocity += (gravity + particlePressure.xyz) * dt;
@@ -67,7 +69,7 @@ void main(){
 	//particleVelocity -= dt * particleVelocity * 0.1f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionOutBuffer[index] = vec4(particlePosition, 666.f);
+	positionOutBuffer[index] = vec4(particlePosition + position, 666.f);
 	velocityBuffer[index] = vec4(particleVelocity, particlePressure.w);
 }
 

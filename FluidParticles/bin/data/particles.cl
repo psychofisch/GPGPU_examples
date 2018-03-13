@@ -15,11 +15,12 @@ float4 calculatePressure(__global float4* position,
 	struct SimulationData simData);
 
 __kernel void particleUpdate(
-	__global float4 *position,
+	__global float4 *positions,
 	__global float4 *positionsOut,
 	__global float4 *velocity,
 	const float dt,
 	const float4 gravity,
+	const float4 position,
 	const float4 dimension,
 	const uint numberOfParticles,
 	struct SimulationData simData
@@ -30,10 +31,12 @@ __kernel void particleUpdate(
 	if(index >= numberOfParticles)
 		return;
 	
-	float3 particlePosition = position[index].xyz;
+	float3 particlePosition = positions[index].xyz;
 	float3 particleVelocity = velocity[index].xyz;
-	float4 particlePressure = calculatePressure(position, velocity, index, particlePosition, particleVelocity, numberOfParticles, simData);
+	float4 particlePressure = calculatePressure(positions, velocity, index, particlePosition, particleVelocity, numberOfParticles, simData);
 	
+	particlePosition -= position.xyz;
+
 	//gravity
 	particleVelocity += (gravity.xyz + particlePressure.xyz) * dt;
 
@@ -73,7 +76,7 @@ __kernel void particleUpdate(
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionsOut[index] = (float4)(particlePosition, index);
+	positionsOut[index] = (float4)(particlePosition + position.xyz, index);
 	velocity[index] = (float4)(particleVelocity, numberOfParticles);
 	//velocityBuffer[index] = particlePressure;
 }

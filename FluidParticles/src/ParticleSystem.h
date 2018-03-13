@@ -68,11 +68,12 @@ struct OCLData
 
 //definitions for CUDA
 extern "C" void cudaUpdate(
-	float4* position,
+	float4* positions,
 	float4* positionOut,
 	float4* velocity,
 	const float dt,
 	const float3 gravity,
+	const float3 position,
 	const float3 dimension,
 	const uint numberOfParticles,
 	SimulationData simData);
@@ -103,6 +104,7 @@ public:
 	~ParticleSystem();
 
 	// setup methods
+
 	void setupAll(ofxXmlSettings& settings);
 	void setupCPU(ofxXmlSettings& settings);
 	void setupCompute(ofxXmlSettings& settings);
@@ -117,6 +119,7 @@ public:
 	uint getCapacity() const;
 	ComputeMode getMode() const;
 	CUDAta& getCudata();
+	ofVec3f getPosition() const;
 
 	// simple setters
 
@@ -128,6 +131,10 @@ public:
 	void setRotation(ofQuaternion rotation);
 	// sets a new computation mode; usually used in combination with "nextMode"
 	void setMode(ComputeMode m);
+	// sets the position of the particle system
+	void setPosition(ofVec3f p);
+	// adds the given value to the current position of the particle system
+	void addPosition(ofVec3f p);
 
 	// other methods
 
@@ -138,7 +145,7 @@ public:
 	// adds the given number of particles in a cube form 
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	// draws the particle VBO
-	void draw();
+	void draw() const;
 
 	//Simulation
 
@@ -160,10 +167,11 @@ private:
 		mThreshold;
 	ComputeMode mMode;
 	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
-	ofVec4f	*mPosition,
-		*mVelocity;
+	ofVec4f	*mParticlePosition,
+		*mParticleVelocity;
 	ofVec3f	mDimension,
-		mGravity;
+		mGravity,
+		mPosition;
 	ofVbo mParticlesVBO;
 	ofBufferObject mParticlesBuffer;
 	ofQuaternion mRotation;

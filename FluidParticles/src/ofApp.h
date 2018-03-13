@@ -38,6 +38,7 @@ class ofApp : public ofBaseApp{
 		ofQuaternion mGlobalRotation;
 		ofVec2f mMouse;
 		float mMouseSens;
+		ofVec3f mMoveVec;
 		bool mValve;
 
 		ofxXmlSettings mXmlSettings;
