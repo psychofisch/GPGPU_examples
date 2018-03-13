@@ -31,7 +31,7 @@ void ofApp::setup(){
 	float offset = -(side + gap) * sqrtBox * 0.5f;
 	ofVec3f boxPos(0.f);
 	boxPos.x = boxPos.z = offset;
-	mBoxes.resize(boxNumber, mTestCube);
+	mCubes.resize(boxNumber, mTestCube);
 	mCollisions.resize(boxNumber, false);
 	for (int i = 0; i < boxNumber; ++i)
 	{
@@ -42,13 +42,13 @@ void ofApp::setup(){
 			boxPos.z += gap + side;
 		}
 
-		mBoxes[i].set(side * ofRandom(0.7f, 1.3f), side * ofRandom(0.7f, 1.3f), side * ofRandom(0.7f, 1.3f));
+		mCubes[i].set(side * ofRandom(0.7f, 1.3f), side * ofRandom(0.7f, 1.3f), side * ofRandom(0.7f, 1.3f));
 
-		mBoxes[i].setPosition(boxPos);
+		mCubes[i].setPosition(boxPos);
 		if (i % 2 == 0)
-			mBoxes[i].mColor = ofColor::cyan;
+			mCubes[i].mColor = ofColor::cyan;
 		else
-			mBoxes[i].mColor = ofColor::magenta;
+			mCubes[i].mColor = ofColor::magenta;
 	}
 
 	mMainCamera.lookAt(ofVec3f(0.f));
@@ -106,71 +106,23 @@ void ofApp::update(){
 	mMainCamera.dolly(-moveVec.z);
 	mMainCamera.truck(moveVec.x);
 
+	// move cubes
 	ofSeedRandom(1337);
-	for (int i = 0; i < mBoxes.size(); ++i)
+	for (int i = 0; i < mCubes.size(); ++i)
 	{
 		float r = ofRandom(0.5f, 1.5f);
 		float sign = 1.f;
 		if (i % 2 == 0)
 			sign *= -1.f;
 		ofNode pos;
-		pos.setPosition(mBoxes[i].getPosition());
+		pos.setPosition(mCubes[i].getPosition());
 		pos.rotateAround(sign * 30.f * r * dt, ofVec3f(0.f, 1.f, 0.f), ofVec3f(0.f));
-		mBoxes[i].setPosition(pos.getPosition());
+		mCubes[i].setPosition(pos.getPosition());
 	}
+	//*** mc
 
 	// Collision detection
-	std::vector<ofVec3f[2]> minMax(mBoxes.size());
-	for (size_t i = 0; i < mBoxes.size(); ++i) // calculate bounding boxes
-	{
-		const std::vector<ofVec3f>& vertices = mBoxes[i].getMesh().getVertices();
-		ofVec3f min, max, pos;
-		min = ofVec3f(INFINITY);
-		max = ofVec3f(-INFINITY);
-		pos = mBoxes[i].getPosition();
-		for (size_t o = 0; o < vertices.size(); o++)
-		{
-			ofVec3f current = vertices[o] + pos;
-			for (size_t p = 0; p < 3; p++)
-			{
-				if (current[p] < min[p])
-					min[p] = current[p];
-				else if (current[p] > max[p])
-					max[p] = current[p];
-			}
-		}
-		minMax[i][0] = min;
-		minMax[i][1] = max;
-	}
-
-	for (size_t i = 0; i < minMax.size(); i++)
-	{
-		ofVec3f currentMin = minMax[i][0];
-		ofVec3f currentMax = minMax[i][1];
-		mCollisions[i] = false;
-		for (size_t j = 0; j < minMax.size(); j++)
-		{
-			if (i == j)
-				continue;
-			int cnt = 0;
-			for (size_t p = 0; p < 3; p++)
-			{
-				ofVec3f otherMin = minMax[j][0];
-				ofVec3f otherMax = minMax[j][1];
-				if (	(otherMin[p] < currentMax[p] && otherMin[p] > currentMin[p])
-					||	(otherMax[p] < currentMax[p] && otherMax[p] > currentMin[p])
-					||	(otherMax[p] > currentMax[p] && otherMin[p] < currentMin[p])
-					||	(otherMax[p] < currentMax[p] && otherMin[p] > currentMin[p]))
-					cnt++;
-			}
-
-			if (cnt >= 3)
-			{
-				mCollisions[i] = true;
-				break;
-			}
-		}
-	}
+	mCollisionSystem.getCollisions(mCubes, mCollisions);
 	//*** cd
 
 	if (!mHudPause || mHudStep)
@@ -199,14 +151,14 @@ void ofApp::draw(){
 	//ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
 	ofPushStyle();
 
-	for (int i = 0; i < mBoxes.size(); ++i)
+	for (int i = 0; i < mCubes.size(); ++i)
 	{
-		if(mCollisions[i])
+		if(mCollisions[i] >= 0)
 			ofSetColor(ofColor::red);
 		else
-			ofSetColor(mBoxes[i].mColor);
-		mBoxes[i].draw();
-		//mBoxes[i].drawWireframe();
+			ofSetColor(mCubes[i].mColor);
+		mCubes[i].draw();
+		//mCubes[i].drawWireframe();
 	}
 	//ofSetColor(mHudColor);
 	//mTestCube.draw();
@@ -389,17 +341,17 @@ void ofApp::quit()
 	this->exit();
 }
 
-std::string ofApp::iHudGetModeString(ParticleSystem::ComputeMode m)
+std::string ofApp::iHudGetModeString(CollisionSystem::ComputeMode m)
 {
-	if (m == ParticleSystem::ComputeMode::CPU)
+	if (m == CollisionSystem::ComputeMode::CPU)
 		return "CPU";
-	else if (m == ParticleSystem::ComputeMode::COMPUTE_SHADER)
+	else if (m == CollisionSystem::ComputeMode::COMPUTE_SHADER)
 		return "Compute Shader";
-	else if (m == ParticleSystem::ComputeMode::OPENCL)
+	else if (m == CollisionSystem::ComputeMode::OPENCL)
 		return "OpenCL";
-	else if (m == ParticleSystem::ComputeMode::CUDA)
+	else if (m == CollisionSystem::ComputeMode::CUDA)
 		return "CUDA";
-	else if (m == ParticleSystem::ComputeMode::THRUST)
+	else if (m == CollisionSystem::ComputeMode::THRUST)
 		return "Thrust";
 	else
 		return "UNKNOWN";

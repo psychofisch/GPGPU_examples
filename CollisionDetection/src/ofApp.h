@@ -4,9 +4,10 @@
 #include "ofxGui.h"
 #include "ofxXmlSettings.h"
 
-#include "ParticleSystem.h"
 #include "Cube.h"
 #include "vec2i.h"
+//#include "ParticleSystem.h"
+#include "CollisionSystem.h"
 
 class ofApp : public ofBaseApp{
 
@@ -39,7 +40,7 @@ class ofApp : public ofBaseApp{
 		bool mLockMouse;
 
 		Cube mTestCube;
-		std::vector<Cube> mBoxes;
+		std::vector<Cube> mCubes;
 
 		ofxXmlSettings mXmlSettings;
 
@@ -57,7 +58,8 @@ class ofApp : public ofBaseApp{
 		ofParameter<bool> mHudStep;
 		ofParameter<ofColor> mHudColor;
 
-		std::string iHudGetModeString(ParticleSystem::ComputeMode m);
+		std::string iHudGetModeString(CollisionSystem::ComputeMode m);
 
-		std::vector<bool> mCollisions;
+		CollisionSystem mCollisionSystem;
+		std::vector<int> mCollisions;
 };
