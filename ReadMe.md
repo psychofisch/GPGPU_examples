@@ -74,6 +74,7 @@ The file ```GPGPU_examples/FluidParticles/bin/data/settings.xml``` holds all ava
 ┌───settings.xml
 │   └───GENERAL
 │   │   │   MAXPARTICLES → int, maximum number of particles
+│   │   │   DROPSIZE → int, number of particles dropped
 │   │
 │   └───CONTROLS
 │   │   │   MOUSESENS → float, mouse sensitivity
