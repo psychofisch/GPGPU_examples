@@ -108,15 +108,18 @@ void ofApp::update(){
 
 	// move cubes
 	ofSeedRandom(1337);
+	ofNode pos;
+	ofVec3f up(0.f, 1.f, 0.f);
+	ofVec3f zero(0.f);
+	int half = mCubes.size() * 0.5f;
 	for (int i = 0; i < mCubes.size(); ++i)
 	{
 		float r = ofRandom(0.5f, 1.5f);
 		float sign = 1.f;
 		if (i % 2 == 0)
 			sign *= -1.f;
-		ofNode pos;
 		pos.setPosition(mCubes[i].getPosition());
-		pos.rotateAround(sign * 30.f * r * dt, ofVec3f(0.f, 1.f, 0.f), ofVec3f(0.f));
+		pos.rotateAround(sign * 30.f * r * dt, up, zero);
 		mCubes[i].setPosition(pos.getPosition());
 	}
 	//*** mc

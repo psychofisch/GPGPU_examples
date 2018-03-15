@@ -1,6 +1,6 @@
 <group>
 	<Debug_Information>
-		<FPS>70</FPS>
+		<FPS>75</FPS>
 	</Debug_Information>
 	<Program_Information>
 		<Mode>Compute Shader</Mode>
