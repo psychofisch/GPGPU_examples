@@ -39,6 +39,7 @@
 #else
 	#define CUDAERRORS(x) x
 #endif
+
 //#ifdef _WIN32
 //
 //#include <intrin.h>

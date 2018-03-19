@@ -80,9 +80,9 @@ void ofApp::setup(){
 
 	mHudControlGroup.setName("Program Information");
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
+	mHudControlGroup.add(mHudMovement.set("Movement", true));
+	mHudControlGroup.add(mHudDraw.set("Draw", true));
 	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
-	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
-	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
 
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
@@ -112,7 +112,7 @@ void ofApp::update(){
 	ofVec3f up(0.f, 1.f, 0.f);
 	ofVec3f zero(0.f);
 	int half = mCubes.size() * 0.5f;
-	for (int i = 0; i < mCubes.size(); ++i)
+	for (int i = 0; i < mCubes.size() && mHudMovement; ++i)
 	{
 		float r = ofRandom(0.5f, 1.5f);
 		float sign = 1.f;
@@ -154,7 +154,7 @@ void ofApp::draw(){
 	//ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
 	ofPushStyle();
 
-	for (int i = 0; i < mCubes.size(); ++i)
+	for (int i = 0; i < mCubes.size() && mHudDraw; ++i)
 	{
 		if(mCollisions[i] >= 0)
 			ofSetColor(ofColor::red);

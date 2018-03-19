@@ -53,10 +53,11 @@ class ofApp : public ofBaseApp{
 		ofParameterGroup mHudControlGroup;
 		ofParameter<std::string> mHudMode;
 		ofParameter<size_t> mHudWorkGroup;
-		ofParameter<std::string> mHudParticles;
+		//ofParameter<std::string> mHudParticles;
 		ofParameter<bool> mHudPause;
 		ofParameter<bool> mHudStep;
-		ofParameter<ofColor> mHudColor;
+		ofParameter<bool> mHudDraw;
+		ofParameter<bool> mHudMovement;
 
 		std::string iHudGetModeString(CollisionSystem::ComputeMode m);
 
