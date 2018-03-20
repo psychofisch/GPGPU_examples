@@ -223,12 +223,11 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 			if (p >= 3)
 			{
 				result = j;
-				collisions[i] = result;
-				break;// OPT: do not delete this (30% performance loss)
+				break;
 			}
-			else // OPT: do not remove this else (10% performance loss)
-				collisions[i] = result;
 		}
+
+		collisions[i] = result;
 	}
 }
 
@@ -242,14 +241,15 @@ void CollisionSystem::iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::v
 	/*if(mMinMax.size() != cubes.size())
 	mMinMax.resize(cubes.size());*/
 
-	if (mComputeData.minMaxBuffer.size() < sizeof(ComputeShaderData) * cubes.size())
+	if (mComputeData.minMaxBuffer.size() < sizeof(MinMaxData) * cubes.size())
 	{
-		mComputeData.minMaxBuffer.allocate(sizeof(ComputeShaderData) * cubes.size(), GL_DYNAMIC_DRAW);
+		mComputeData.minMaxBuffer.allocate(sizeof(MinMaxData) * cubes.size(), GL_DYNAMIC_DRAW);
 	}
 
 	if (mComputeData.collisionBuffer.size() < sizeof(int) * cubes.size())
 	{
-		mComputeData.collisionBuffer.allocate(sizeof(int) * cubes.size(), GL_STREAM_DRAW);
+		//mComputeData.collisionBuffer.allocate(sizeof(int) * cubes.size(), GL_STREAM_DRAW);
+		mComputeData.collisionBuffer.allocate(sizeof(int) * cubes.size(), GL_DYNAMIC_DRAW);
 	}
 
 	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member

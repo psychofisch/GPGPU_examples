@@ -13,7 +13,7 @@
 // general definitions
 struct MinMaxData
 {
-	ofVec3f min, max;
+	ofVec4f min, max;
 };
 
 //definitions for Compute Shader

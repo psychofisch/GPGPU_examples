@@ -23,7 +23,7 @@ void ofApp::setup(){
 	mTestCube.set(10.f);
 	mTestCube.setPosition(ofVec3f(0.f));
 
-	int boxNumber = 1000;
+	int boxNumber = mXmlSettings.getValue("GENERAL:BOXES", 1000);
 	int sqrtBox = sqrtf(boxNumber);
 	float gap = 10.f;
 	float side = mTestCube.getWidth();
