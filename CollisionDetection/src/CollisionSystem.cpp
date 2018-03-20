@@ -172,19 +172,21 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 		{
 			if (i == j)
 				continue;
-			int cnt = 0;
+			//int cnt = 0;
 			ofVec3f otherMin = mMinMax[j].min;
 			ofVec3f otherMax = mMinMax[j].max;
+
 			bool loop = true;
-			while (loop)
+			int p = 0;
+			while (loop && p <= 3)
 			{
-				if (   (otherMin[cnt] < currentMax[cnt] && otherMin[cnt] > currentMin[cnt])
-					|| (otherMax[cnt] < currentMax[cnt] && otherMax[cnt] > currentMin[cnt])
-					|| (otherMax[cnt] > currentMax[cnt] && otherMin[cnt] < currentMin[cnt])
-					|| (otherMax[cnt] < currentMax[cnt] && otherMin[cnt] > currentMin[cnt]))
+				if (   (otherMin[p] < currentMax[p] && otherMin[p] > currentMin[p])
+					|| (otherMax[p] < currentMax[p] && otherMax[p] > currentMin[p])
+					|| (otherMax[p] > currentMax[p] && otherMin[p] < currentMin[p])
+					|| (otherMax[p] < currentMax[p] && otherMin[p] > currentMin[p])) // TODO: optimize this
 				{
 					loop = true;
-					++cnt;
+					++p;
 				}
 				else
 				{
@@ -192,7 +194,7 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 				}
 			}
 
-			if (cnt >= 3)
+			if (p >= 3)
 			{
 				result = j;
 				collisions[i] = result;
