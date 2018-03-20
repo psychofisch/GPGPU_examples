@@ -16,7 +16,6 @@ void ofApp::setup(){
 	}
 
 	ofSetVerticalSync(false);
-
 	ofBackground(69, 69, 69);
 
 	mTestCube.setResolution(1);
@@ -51,6 +50,8 @@ void ofApp::setup(){
 			mCubes[i].mColor = ofColor::magenta;
 	}
 
+	mCollisionSystem.setupAll(mXmlSettings);
+
 	mMainCamera.lookAt(ofVec3f(0.f));
 	//mMainCamera.setNearClip(0.01f);
 	//mMainCamera.setFarClip(50.f);
@@ -59,8 +60,6 @@ void ofApp::setup(){
 
 	mLight.setPointLight();
 	mLight.setPosition(ofVec3f(0.f, 30.f, 0.f));
-
-	ofBoxPrimitive testRect;
 
 	int maxParticles = mXmlSettings.getValue("GENERAL:MAXPARTICLES", 5000);
 	if (maxParticles <= 0)
@@ -237,6 +236,9 @@ void ofApp::keyReleased(int key){
 			break;
 		case 'm':
 		{
+			CollisionSystem::ComputeMode currentMode = mCollisionSystem.nextMode(mCollisionSystem.getMode());
+			mCollisionSystem.setMode(currentMode);
+			mHudMode = iHudGetModeString(currentMode);
 		}
 			break;
 		default: std::cout << "this key hasn't been assigned\n";

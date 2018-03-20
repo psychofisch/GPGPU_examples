@@ -11,7 +11,7 @@
 </CPU>
 <COMPUTE>
     <ENABLED>1</ENABLED>
-    <SOURCE>particles.compute</SOURCE>
+    <SOURCE>collision.compute</SOURCE>
 </COMPUTE>
 <CUDA>
     <ENABLED>1</ENABLED>

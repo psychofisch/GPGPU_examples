@@ -312,6 +312,9 @@
     <None Include="bin\data\particles.cl">
       <Filter>src</Filter>
     </None>
+    <None Include="bin\data\collision.compute">
+      <Filter>src</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\particles.cu">

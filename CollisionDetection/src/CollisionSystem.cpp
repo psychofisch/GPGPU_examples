@@ -13,40 +13,38 @@ CollisionSystem::~CollisionSystem()
 }
 
 
-//void CollisionSystem::setupAll(ofxXmlSettings & settings)
-//{
-//	setupCPU(settings);
-//	setupCompute(settings);
-//	setupCUDA(settings);
-//	setupOCL(settings);
-//	//setupThrust(settings);
-//}
-//
-//void CollisionSystem::setupCPU(ofxXmlSettings & settings)
-//{
-//	//mThreshold = settings.getValue("CPU:THRESHOLD", 1000);
-//
-//	mAvailableModes[ComputeMode::CPU] = settings.getValue("CPU:ENABLED", true);
-//}
+void CollisionSystem::setupAll(ofxXmlSettings & settings)
+{
+	setupCPU(settings);
+	setupCompute(settings);
+	//setupCUDA(settings);
+	//setupOCL(settings);
+	//setupThrust(settings);
+}
 
-//void CollisionSystem::setupCompute(ofxXmlSettings & settings)
-//{
-//	// compile the compute code
-//	if (mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, settings.getValue("COMPUTE:SOURCE", "particles.compute"))
-//		&& mComputeData.computeShader.linkProgram())
-//	{
-//		//allocate buffer memory
-//		mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
-//		mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
-//		mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mVelocity, GL_DYNAMIC_DRAW);
-//
-//		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
-//	}
-//	else
-//	{
-//		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
-//	}
-//}
+void CollisionSystem::setupCPU(ofxXmlSettings & settings)
+{
+	//mThreshold = settings.getValue("CPU:THRESHOLD", 1000);
+
+	mAvailableModes[ComputeMode::CPU] = settings.getValue("CPU:ENABLED", true);
+}
+
+void CollisionSystem::setupCompute(ofxXmlSettings & settings)
+{
+	// compile the compute code
+	if (mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, settings.getValue("COMPUTE:SOURCE", "collision.compute"))
+		&& mComputeData.computeShader.linkProgram())
+	{
+		//allocate buffer memory
+		//mComputeData.minMaxBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+
+		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
+	}
+	else
+	{
+		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
+	}
+}
 //
 //void CollisionSystem::setupCUDA(ofxXmlSettings & settings)
 //{
@@ -118,11 +116,37 @@ CollisionSystem::~CollisionSystem()
 //	mAvailableModes[ComputeMode::THRUST] = true;
 //}
 
+CollisionSystem::ComputeMode CollisionSystem::getMode() const
+{
+	return mMode;
+}
+
+CollisionSystem::ComputeMode CollisionSystem::nextMode(CollisionSystem::ComputeMode current) const
+{
+	int enumSize = ComputeMode::COMPUTEMODES_SIZE;
+
+	for (int i = 0; i < enumSize; ++i)
+	{
+		int next = (current + 1 + i) % enumSize;
+		if (mAvailableModes[next]) // checks if the next mode is even available
+			return static_cast<ComputeMode>(next);
+	}
+
+	return current;
+}
+
+void CollisionSystem::setMode(ComputeMode m)
+{
+	mMode = m;
+}
+
 void CollisionSystem::getCollisions(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
 {
 	switch (mMode)
 	{
 		case CPU: iGetCollisionsCPU(cubes, collisions);
+			break;
+		case COMPUTE_SHADER: iGetCollisionsCompute(cubes, collisions);
 			break;
 		default:
 			break;
@@ -139,8 +163,9 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 	/*if(mMinMax.size() != cubes.size())
 		mMinMax.resize(cubes.size());*/
 
-	std::vector<MinMaxData> mMinMax(cubes.size());//storing mMinMax locally is about 10% faster than having a member
-	for (int i = 0; i < cubes.size(); ++i) // calculate bounding boxes
+	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
+	// calculate bounding boxes
+	for (int i = 0; i < cubes.size(); ++i)
 	{
 		const Cube& currentCube = cubes[i];
 		const std::vector<ofVec3f>& vertices = currentCube.getMesh().getVertices();
@@ -163,7 +188,8 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 		mMinMax[i].max = max;
 	}
 
-	for (int i = 0; i < mMinMax.size(); i++)
+	// check min and max of all boxes for collision
+	for (int i = 0; i < mMinMax.size(); i++) 
 	{
 		ofVec3f currentMin = mMinMax[i].min;
 		ofVec3f currentMax = mMinMax[i].max;
@@ -198,10 +224,74 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 			{
 				result = j;
 				collisions[i] = result;
-				break;
+				break;// OPT: do not delete this (30% performance loss)
 			}
-			else
+			else // OPT: do not remove this else (10% performance loss)
 				collisions[i] = result;
 		}
 	}
+}
+
+void CollisionSystem::iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+{
+	if (cubes.size() != collisions.size())
+	{
+		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
+	}
+
+	/*if(mMinMax.size() != cubes.size())
+	mMinMax.resize(cubes.size());*/
+
+	if (mComputeData.minMaxBuffer.size() < sizeof(ComputeShaderData) * cubes.size())
+	{
+		mComputeData.minMaxBuffer.allocate(sizeof(ComputeShaderData) * cubes.size(), GL_DYNAMIC_DRAW);
+	}
+
+	if (mComputeData.collisionBuffer.size() < sizeof(int) * cubes.size())
+	{
+		mComputeData.collisionBuffer.allocate(sizeof(int) * cubes.size(), GL_STREAM_DRAW);
+	}
+
+	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
+	// calculate bounding boxes
+	for (int i = 0; i < cubes.size(); ++i)
+	{
+		const Cube& currentCube = cubes[i];
+		const std::vector<ofVec3f>& vertices = currentCube.getMesh().getVertices();
+		ofVec3f min, max, pos;
+		min = ofVec3f(INFINITY);
+		max = ofVec3f(-INFINITY);
+		pos = currentCube.getPosition();
+		for (int o = 0; o < vertices.size(); o++)
+		{
+			ofVec3f current = vertices[o] + pos;
+			for (int p = 0; p < 3; p++)
+			{
+				if (current[p] < min[p])
+					min[p] = current[p];
+				else if (current[p] > max[p])
+					max[p] = current[p];
+			}
+		}
+		mMinMax[i].min = min;
+		mMinMax[i].max = max;
+	}
+
+	// copy minMax data to GPU
+	mComputeData.minMaxBuffer.updateData(mMinMax);
+
+	mComputeData.minMaxBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
+	mComputeData.collisionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
+
+	mComputeData.computeShader.begin();
+	mComputeData.computeShader.setUniform1i("amountOfCubes", cubes.size());
+	// call the kernel
+	// local size: hard-coded "512", because it is also hard-coded in the kernel source code
+	mComputeData.computeShader.dispatchCompute(std::ceilf(float(cubes.size()) / 512), 1, 1);
+	mComputeData.computeShader.end();//forces the program to wait until the calculation is finished 
+
+	int* collisionsGPU = mComputeData.collisionBuffer.map<int>(GL_READ_ONLY);
+	//std::copy(collisionsGPU, collisionsGPU + collisions.size(), collisions);
+	memcpy(&collisions[0], collisionsGPU, sizeof(int) * collisions.size());
+	mComputeData.collisionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
 }
