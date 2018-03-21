@@ -164,28 +164,12 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 		mMinMax.resize(cubes.size());*/
 
 	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
-	// calculate bounding boxes
+	// read bounding boxes
 	for (int i = 0; i < cubes.size(); ++i)
 	{
-		const Cube& currentCube = cubes[i];
-		const std::vector<ofVec3f>& vertices = currentCube.getMesh().getVertices();
-		ofVec3f min, max, pos;
-		min = ofVec3f(INFINITY);
-		max = ofVec3f(-INFINITY);
-		pos = currentCube.getPosition();
-		for (int o = 0; o < vertices.size(); o++)
-		{
-			ofVec3f current = vertices[o] + pos;
-			for (int p = 0; p < 3; p++)
-			{
-				if (current[p] < min[p])
-					min[p] = current[p];
-				else if (current[p] > max[p])
-					max[p] = current[p];
-			}
-		}
-		mMinMax[i].min = min;
-		mMinMax[i].max = max;
+		MinMaxData currentCube = cubes[i].getGlobalMinMax();
+		mMinMax[i].min = currentCube.min;
+		mMinMax[i].max = currentCube.max;
 	}
 
 	// check min and max of all boxes for collision
@@ -253,28 +237,12 @@ void CollisionSystem::iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::v
 	}
 
 	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
-	// calculate bounding boxes
+	// read bounding boxes
 	for (int i = 0; i < cubes.size(); ++i)
 	{
-		const Cube& currentCube = cubes[i];
-		const std::vector<ofVec3f>& vertices = currentCube.getMesh().getVertices();
-		ofVec3f min, max, pos;
-		min = ofVec3f(INFINITY);
-		max = ofVec3f(-INFINITY);
-		pos = currentCube.getPosition();
-		for (int o = 0; o < vertices.size(); o++)
-		{
-			ofVec3f current = vertices[o] + pos;
-			for (int p = 0; p < 3; p++)
-			{
-				if (current[p] < min[p])
-					min[p] = current[p];
-				else if (current[p] > max[p])
-					max[p] = current[p];
-			}
-		}
-		mMinMax[i].min = min;
-		mMinMax[i].max = max;
+		MinMaxData currentCube = cubes[i].getGlobalMinMax();
+		mMinMax[i].min = currentCube.min;
+		mMinMax[i].max = currentCube.max;
 	}
 
 	// copy minMax data to GPU

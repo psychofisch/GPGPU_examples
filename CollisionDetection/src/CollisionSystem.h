@@ -2,6 +2,7 @@
 
 #include <ofxXmlSettings.h>
 
+#include "CollisionDefinitions.h"
 #include "Cube.h"
 
 #ifdef _DEBUG
@@ -11,10 +12,7 @@
 #endif
 
 // general definitions
-struct MinMaxData
-{
-	ofVec4f min, max;
-};
+// *** nothing ***
 
 //definitions for Compute Shader
 struct ComputeShaderData

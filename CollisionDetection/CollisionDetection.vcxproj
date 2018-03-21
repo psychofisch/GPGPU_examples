@@ -199,7 +199,12 @@
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxml.cpp" />
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxmlerror.cpp" />
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxmlparser.cpp" />
-    <ClCompile Include="src\ParticleSystem.cpp" />
+    <ClCompile Include="src\ParticleSystem.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\Stopwatch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -259,8 +264,13 @@
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxGui\src\ofxToggle.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src\ofxXmlSettings.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxml.h" />
-    <ClInclude Include="src\ParticleDefinitions.h" />
-    <ClInclude Include="src\ParticleSystem.h" />
+    <ClInclude Include="src\CollisionDefinitions.h" />
+    <ClInclude Include="src\ParticleSystem.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="src\Stopwatch.h" />
     <ClInclude Include="src\ThrustHelper.h" />
     <ClInclude Include="src\vec2i.h" />
@@ -295,7 +305,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\particles.cu" />
+    <CudaCompile Include="src\particles.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
     <CudaCompile Include="src\ThrustHelper.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

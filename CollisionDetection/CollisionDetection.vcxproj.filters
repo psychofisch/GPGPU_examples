@@ -284,9 +284,6 @@
     <ClInclude Include="src\Stopwatch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\ParticleDefinitions.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\ThrustHelper.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -299,6 +296,9 @@
     <ClInclude Include="src\CollisionSystem.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\CollisionDefinitions.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
@@ -307,12 +307,10 @@
     <FxCompile Include="bin\data\particles.compute">
       <Filter>src</Filter>
     </FxCompile>
+    <FxCompile Include="bin\data\collision.compute" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bin\data\particles.cl">
-      <Filter>src</Filter>
-    </None>
-    <None Include="bin\data\collision.compute">
       <Filter>src</Filter>
     </None>
   </ItemGroup>

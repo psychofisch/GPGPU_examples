@@ -48,6 +48,8 @@ void ofApp::setup(){
 			mCubes[i].mColor = ofColor::cyan;
 		else
 			mCubes[i].mColor = ofColor::magenta;
+
+		mCubes[i].recalculateMinMax();
 	}
 
 	mCollisionSystem.setupAll(mXmlSettings);
