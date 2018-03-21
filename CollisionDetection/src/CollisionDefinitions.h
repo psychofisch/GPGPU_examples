@@ -17,3 +17,5 @@ struct MinMaxData
 		return tmp;
 	}
 };
+
+

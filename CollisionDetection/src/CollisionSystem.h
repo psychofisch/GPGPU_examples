@@ -1,18 +1,22 @@
 #pragma once
 
+// general includes
 #include <ofxXmlSettings.h>
 
+// CUDA includes
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
+
+// own includes
 #include "CollisionDefinitions.h"
 #include "Cube.h"
 
-#ifdef _DEBUG
-#define GLERROR std::cout << __LINE__ << ": " << glGetError() << std::endl
-#else
-#define GLERROR
-#endif
-
 // general definitions
-// *** nothing ***
+#ifdef _DEBUG
+	#define GLERROR std::cout << __LINE__ << ": " << glGetError() << std::endl
+#else
+	#define GLERROR
+#endif
 
 //definitions for Compute Shader
 struct ComputeShaderData
@@ -21,6 +25,22 @@ struct ComputeShaderData
 	ofBufferObject minMaxBuffer;
 	ofBufferObject collisionBuffer;
 };
+
+//definitions for CUDA
+extern "C" void cudaGetCollisions(
+	float4* minMaxBuffer,
+	int* collisionBuffer,
+	const int amountOfCubes);
+
+struct CUDAta
+{
+	size_t maxWorkGroupSize;
+	size_t currentArraySize;
+	float4 *minMaxBuffer;
+	int *collisionBuffer;
+};
+
+float4 make_float4(ofVec4f v_);
 
 class CollisionSystem
 {
@@ -58,7 +78,9 @@ private:
 	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
 	//std::vector<MinMaxData> mMinMax;
 	ComputeShaderData mComputeData;
+	CUDAta mCudata;
 
 	void iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 };

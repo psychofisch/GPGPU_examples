@@ -18,7 +18,7 @@
     <ARGV />
 </CUDA>
 <OCL>
-    <ENABLED>1</ENABLED>
+    <ENABLED>0</ENABLED>
     <SOURCE>data/particles.cl</SOURCE>
     <PLATFORMID>1</PLATFORMID>
     <DEVICEID>0</DEVICEID>

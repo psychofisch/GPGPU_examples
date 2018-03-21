@@ -307,7 +307,9 @@
     <FxCompile Include="bin\data\particles.compute">
       <Filter>src</Filter>
     </FxCompile>
-    <FxCompile Include="bin\data\collision.compute" />
+    <FxCompile Include="bin\data\collision.compute">
+      <Filter>src</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="bin\data\particles.cl">
@@ -315,10 +317,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\particles.cu">
+    <CudaCompile Include="src\ThrustHelper.cu">
       <Filter>src</Filter>
     </CudaCompile>
-    <CudaCompile Include="src\ThrustHelper.cu">
+    <CudaCompile Include="src\collision.cu">
       <Filter>src</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -1,6 +1,11 @@
 #include "CollisionSystem.h"
 
-
+float4 make_float4(ofVec4f v_)
+{
+	float4 tmp;
+	tmp.x = v_.x; tmp.y = v_.y; tmp.z = v_.z; tmp.w = v_.w;
+	return tmp;
+}
 
 CollisionSystem::CollisionSystem()
 	:mMode(CPU)
@@ -17,7 +22,7 @@ void CollisionSystem::setupAll(ofxXmlSettings & settings)
 {
 	setupCPU(settings);
 	setupCompute(settings);
-	//setupCUDA(settings);
+	setupCUDA(settings);
 	//setupOCL(settings);
 	//setupThrust(settings);
 }
@@ -45,25 +50,21 @@ void CollisionSystem::setupCompute(ofxXmlSettings & settings)
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
 	}
 }
-//
-//void CollisionSystem::setupCUDA(ofxXmlSettings & settings)
-//{
-//	//load CUDA command line arguments from settings file
-//	const int cmdArgc = settings.getValue("CUDA:ARGC", 0);
-//	const char* cmdArgs = settings.getValue("CUDA:ARGV", "").c_str();
-//
-//	// find a CUDA device
-//	findCudaDevice(cmdArgc, &cmdArgs);
-//
-//	// allocate memory
-//	// note: do not use the CUDAERRORS macro here, because the case when these allocations fail in release mode has to be handled
-//	checkCudaErrors(cudaMalloc(&mCUData.position, sizeof(ofVec4f) * mCapacity));
-//	checkCudaErrors(cudaMalloc(&mCUData.velocity, sizeof(ofVec4f) * mCapacity));
-//	checkCudaErrors(cudaMalloc(&mCUData.positionOut, sizeof(ofVec4f) * mCapacity));
-//
-//	// "checkCudaErrors" will quit the program in case of a problem, so it is safe to assume that if the program reached this point CUDA will work
-//	mAvailableModes[ComputeMode::CUDA] = settings.getValue("CUDA:ENABLED", true);
-//}
+void CollisionSystem::setupCUDA(ofxXmlSettings & settings)
+{
+	//load CUDA command line arguments from settings file
+	const int cmdArgc = settings.getValue("CUDA:ARGC", 0);
+	const char* cmdArgs = settings.getValue("CUDA:ARGV", "").c_str();
+
+	// find a CUDA device
+	findCudaDevice(cmdArgc, &cmdArgs);
+
+	mCudata.currentArraySize = 0;
+
+	// "checkCudaErrors" will quit the program in case of a problem, so it is safe to assume that if the program reached this point CUDA will work
+	mAvailableModes[ComputeMode::CUDA] = settings.getValue("CUDA:ENABLED", true);
+}
+
 //
 //void CollisionSystem::setupOCL(ofxXmlSettings & settings)
 //{
@@ -147,6 +148,8 @@ void CollisionSystem::getCollisions(std::vector<Cube>& cubes, OUT std::vector<in
 		case CPU: iGetCollisionsCPU(cubes, collisions);
 			break;
 		case COMPUTE_SHADER: iGetCollisionsCompute(cubes, collisions);
+			break;
+		case CUDA: iGetCollisionsCUDA(cubes, collisions);
 			break;
 		default:
 			break;
@@ -262,4 +265,46 @@ void CollisionSystem::iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::v
 	//std::copy(collisionsGPU, collisionsGPU + collisions.size(), collisions);
 	memcpy(&collisions[0], collisionsGPU, sizeof(int) * collisions.size());
 	mComputeData.collisionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
+}
+
+void CollisionSystem::iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+{
+	if (cubes.size() != collisions.size())
+	{
+		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
+	}
+
+	/*if(mMinMax.size() != cubes.size())
+	mMinMax.resize(cubes.size());*/
+
+	if (mCudata.currentArraySize < cubes.size())
+	{
+		if (mCudata.currentArraySize > 0)
+		{
+			cudaFree(mCudata.minMaxBuffer);
+			cudaFree(mCudata.collisionBuffer);
+		}
+
+		mCudata.currentArraySize = cubes.size();
+
+		checkCudaErrors(cudaMallocManaged(&mCudata.minMaxBuffer, sizeof(float4) * 2 * mCudata.currentArraySize));
+		checkCudaErrors(cudaMallocManaged(&mCudata.collisionBuffer, sizeof(int) * mCudata.currentArraySize));
+	}
+
+	float4* minMax = mCudata.minMaxBuffer;
+	// read bounding boxes
+	for (int i = 0; i < cubes.size(); ++i)
+	{
+		MinMaxData currentCube = cubes[i].getGlobalMinMax();
+		minMax[(i * 2)] = make_float4(currentCube.min);
+		minMax[(i * 2) +1] = make_float4(currentCube.max);
+	}
+
+	cudaDeviceSynchronize();
+
+	cudaGetCollisions(mCudata.minMaxBuffer, mCudata.collisionBuffer, mCudata.currentArraySize);
+
+	cudaDeviceSynchronize();
+
+	memcpy(&collisions[0], mCudata.collisionBuffer, sizeof(int) * collisions.size());
 }
