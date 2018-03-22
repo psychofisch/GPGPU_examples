@@ -1,6 +1,6 @@
 <group>
 	<Debug_Information>
-		<FPS>254</FPS>
+		<FPS>76</FPS>
 	</Debug_Information>
 	<Program_Information>
 		<Mode>CUDA</Mode>

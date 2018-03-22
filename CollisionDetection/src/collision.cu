@@ -42,15 +42,15 @@ __global__ void getCollisions(
 			|| (otherMax.x > currentMax.x && otherMin.x < currentMin.x)
 			|| (otherMax.x < currentMax.x && otherMin.x > currentMin.x))
 			&&
-			((      otherMin.y < currentMax.y && otherMin.y > currentMin.y)
-				|| (otherMax.y < currentMax.y && otherMax.y > currentMin.y)
-				|| (otherMax.y > currentMax.y && otherMin.y < currentMin.y)
-				|| (otherMax.y < currentMax.y && otherMin.y > currentMin.y))
-			&&
-			((      otherMin.z < currentMax.z && otherMin.z > currentMin.z)
-				|| (otherMax.z < currentMax.z && otherMax.z > currentMin.z)
-				|| (otherMax.z > currentMax.z && otherMin.z < currentMin.z)
-				|| (otherMax.z < currentMax.z && otherMin.z > currentMin.z))
+			((  otherMin.z < currentMax.z && otherMin.z > currentMin.z)
+			|| (otherMax.z < currentMax.z && otherMax.z > currentMin.z)
+			|| (otherMax.z > currentMax.z && otherMin.z < currentMin.z)
+			|| (otherMax.z < currentMax.z && otherMin.z > currentMin.z))
+			&&	
+			((	otherMin.y < currentMax.y && otherMin.y > currentMin.y)
+			|| (otherMax.y < currentMax.y && otherMax.y > currentMin.y)
+			|| (otherMax.y > currentMax.y && otherMin.y < currentMin.y)
+			|| (otherMax.y < currentMax.y && otherMin.y > currentMin.y))
 			) // TODO: optimize this
 		{
 			result = j;

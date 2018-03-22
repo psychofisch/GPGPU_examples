@@ -287,6 +287,8 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vect
 
 		mCudata.currentArraySize = cubes.size();
 
+		std::cout << "CUDA: allocating memory for " << mCudata.currentArraySize << " cubes.\n";
+
 		checkCudaErrors(cudaMallocManaged(&mCudata.minMaxBuffer, sizeof(float4) * 2 * mCudata.currentArraySize));
 		checkCudaErrors(cudaMallocManaged(&mCudata.collisionBuffer, sizeof(int) * mCudata.currentArraySize));
 	}
