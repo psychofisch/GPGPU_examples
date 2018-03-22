@@ -7,6 +7,9 @@
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 
+// OpenCL includes
+#include "oclHelper.h"
+
 // own includes
 #include "CollisionDefinitions.h"
 #include "Cube.h"
@@ -38,6 +41,14 @@ struct CUDAta
 	size_t currentArraySize;
 	float4 *minMaxBuffer;
 	int *collisionBuffer;
+};
+
+struct OCLData
+{
+	size_t maxWorkGroupSize;
+	size_t currentArraySize;
+	cl::Buffer minMaxBuffer;
+	cl::Buffer collisionBuffer;
 };
 
 float4 make_float4(ofVec4f v_);
@@ -79,8 +90,11 @@ private:
 	//std::vector<MinMaxData> mMinMax;
 	ComputeShaderData mComputeData;
 	CUDAta mCudata;
+	oclHelper mOCLHelper;
+	OCLData mOCLData;
 
 	void iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 };

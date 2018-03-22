@@ -83,7 +83,7 @@ bool oclHelper::compileKernel(const char * file)
 	handle_clerror(mError, __LINE__);
 
 	//create kernels
-	mKernel = cl::Kernel(program, "particleUpdate", &mError);
+	mKernel = cl::Kernel(program, "getCollisions", &mError);
 	handle_clerror(mError, __LINE__);
 
 	mQueue = cl::CommandQueue(mContext, mDevices[mDeviceId], 0, &mError);
