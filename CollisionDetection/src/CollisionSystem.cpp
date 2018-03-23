@@ -24,7 +24,7 @@ void CollisionSystem::setupAll(ofxXmlSettings & settings)
 	setupCompute(settings);
 	setupCUDA(settings);
 	setupOCL(settings);
-	//setupThrust(settings);
+	setupThrust(settings);
 }
 
 void CollisionSystem::setupCPU(ofxXmlSettings & settings)
@@ -102,6 +102,11 @@ void CollisionSystem::setupOCL(ofxXmlSettings & settings)
 	}
 }
 
+void CollisionSystem::setupThrust(ofxXmlSettings & settings)
+{
+	mAvailableModes[THRUST] = true;
+}
+
 //void CollisionSystem::setupThrust(ofxXmlSettings & settings)
 //{
 //	/*mThrustData.position = thrust::device_malloc<float4>(mCapacity);
@@ -148,6 +153,8 @@ void CollisionSystem::getCollisions(std::vector<Cube>& cubes, OUT std::vector<in
 		case CUDA: iGetCollisionsCUDA(cubes, collisions);
 			break;
 		case OPENCL: iGetCollisionsOCL(cubes, collisions);
+			break;
+		case THRUST: iGetCollisionsThrust(cubes, collisions);
 			break;
 		default:
 			break;
@@ -382,4 +389,66 @@ void CollisionSystem::iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vecto
 	// copy the result back to the CPU
 	err = queue.enqueueReadBuffer(mOCLData.collisionBuffer, CL_TRUE, 0, mOCLData.currentArraySize * sizeof(int), &collisions[0]);
 	oclHelper::handle_clerror(err, __LINE__);
+}
+
+void CollisionSystem::iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+{
+	if (cubes.size() != collisions.size())
+	{
+		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
+	}
+
+	/*if(mMinMax.size() != cubes.size())
+	mMinMax.resize(cubes.size());*/
+
+	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
+	// read bounding boxes
+	for (int i = 0; i < cubes.size(); ++i)
+	{
+		MinMaxData currentCube = cubes[i].getGlobalMinMax();
+		mMinMax[i].min = currentCube.min;
+		mMinMax[i].max = currentCube.max;
+	}
+
+	// check min and max of all boxes for collision
+	for (int i = 0; i < mMinMax.size(); i++)
+	{
+		ofVec3f currentMin = mMinMax[i].min;
+		ofVec3f currentMax = mMinMax[i].max;
+		int result = -1;
+		for (int j = 0; j < mMinMax.size(); j++)
+		{
+			if (i == j)
+				continue;
+			//int cnt = 0;
+			ofVec3f otherMin = mMinMax[j].min;
+			ofVec3f otherMax = mMinMax[j].max;
+
+			bool loop = true;
+			int p = 0;
+			while (loop && p <= 3)
+			{
+				if ((otherMin[p] < currentMax[p] && otherMin[p] > currentMin[p])
+					|| (otherMax[p] < currentMax[p] && otherMax[p] > currentMin[p])
+					|| (otherMax[p] > currentMax[p] && otherMin[p] < currentMin[p])
+					|| (otherMax[p] < currentMax[p] && otherMin[p] > currentMin[p])) // TODO: optimize this
+				{
+					loop = true;
+					++p;
+				}
+				else
+				{
+					loop = false;
+				}
+			}
+
+			if (p >= 3)
+			{
+				result = j;
+				break;
+			}
+		}
+
+		collisions[i] = result;
+	}
 }

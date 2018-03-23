@@ -13,6 +13,7 @@
 // own includes
 #include "CollisionDefinitions.h"
 #include "Cube.h"
+#include "ThrustHelper.h"
 
 // general definitions
 #ifdef _DEBUG
@@ -92,9 +93,11 @@ private:
 	CUDAta mCudata;
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
+	ThrustHelper::ThrustData mThrustData;
 
 	void iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 };

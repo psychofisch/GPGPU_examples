@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ParticleDefinitions.h"
-
 #include <cuda_runtime.h>
 
 #include <thrust\device_vector.h>
@@ -13,46 +11,31 @@
 
 #include <helper_math.h>
 
+#include "CollisionDefinitions.h"
+
 __host__ __device__ bool operator==(float3& lhs, float3& rhs);
 
 namespace ThrustHelper
 {
 	struct ThrustData
 	{
-		thrust::device_vector<float4> position;
-		thrust::device_vector<float4> positionOut;
-		thrust::device_vector<float4> velocity;
+		thrust::device_vector<MinMaxData> minMaxBuffer;
+		thrust::device_vector<int> collisions;
 	};
 
 	ThrustData* setup(uint numberOfParticles);
 
-	struct PressureFunctor : public thrust::binary_function < float4, float4, float4 > {
-		float3 pos;
-		float3 vel;
-		SimulationData simData;
+	struct CollisionFunctor : public thrust::binary_function < MinMaxData, MinMaxData, int > {
+		MinMaxData minMax;
+		int collision;
 
-		PressureFunctor(float3 pos_, float3 vel_, SimulationData simData_);
-		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel);
-	};
-
-	struct SimulationFunctor : public thrust::binary_function < float4, float4, float4 > {
-		float dt;
-		float3 dimension;
-		float3 gravity;
-		SimulationData simData;
-
-		SimulationFunctor(float dt_, float3 dim_, float3 g_, SimulationData simData_);
+		CollisionFunctor(float3 pos_, float3 vel_, SimulationData simData_);
 		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel);
 	};
 
 	void thrustUpdate(
 		ThrustData& tdata,
-		float4* position,
-		float4* positionOut,
-		float4* velocity,
-		const float dt,
-		const float3 gravity,
-		const float3 dimension,
-		const uint numberOfParticles,
-		SimulationData simData);
+		MinMaxData* minMaxBuffer,
+		int* collisionBuffer,
+		const uint amountOfCubes);
 }

@@ -121,14 +121,9 @@ ThrustHelper::ThrustData* ThrustHelper::setup(uint numberOfParticles)
 
 void ThrustHelper::thrustUpdate(
 	ThrustData& tdata,
-	float4* position,
-	float4* positionOut,
-	float4* velocity,
-	const float dt,
-	const float3 gravity,
-	const float3 dimension,
-	const uint numberOfParticles,
-	SimulationData simData)
+	MinMaxData* minMaxBuffer,
+	int* collisionBuffer,
+	const uint amountOfCubes)
 {
 	/*thrust::device_vector<float4> devicePos(position, position + numberOfParticles);
 	thrust::device_vector<float4> deviceVel(velocity, velocity + numberOfParticles);
