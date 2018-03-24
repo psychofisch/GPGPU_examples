@@ -12,10 +12,11 @@
 
 struct MinMaxDataThrust
 {
-	float4 min, max;
+	float3 min, max;
+	int id;
 };
 
-typedef thrust::tuple<MinMaxDataThrust, int> thrustMinMaxTuple;
+//typedef thrust::tuple<MinMaxDataThrust, int> thrustMinMaxTuple;
 
 namespace ThrustHelper
 {
@@ -25,12 +26,12 @@ namespace ThrustHelper
 		thrust::device_vector<int> collisions;
 	};
 
-	struct CollisionFunctor : public thrust::unary_function < thrustMinMaxTuple, int > {
+	struct CollisionFunctor : public thrust::unary_function < MinMaxDataThrust, int > {
 		uint tdata;
 		MinMaxDataThrust* minMaxRaw;
 
 		CollisionFunctor(uint td_, MinMaxDataThrust* mmd_);
-		__host__ __device__ int operator()(thrustMinMaxTuple minMax);
+		__host__ __device__ int operator()(MinMaxDataThrust minMax);
 	};
 
 	void thrustGetCollisions(

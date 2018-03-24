@@ -7,6 +7,13 @@ float4 make_float4(ofVec4f v_)
 	return tmp;
 }
 
+float3 make_float3(ofVec4f v_)
+{
+	float3 tmp;
+	tmp.x = v_.x; tmp.y = v_.y; tmp.z = v_.z;
+	return tmp;
+}
+
 CollisionSystem::CollisionSystem()
 	:mMode(CPU)
 {
@@ -406,8 +413,9 @@ void CollisionSystem::iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::ve
 	for (int i = 0; i < cubes.size(); ++i)
 	{
 		MinMaxData currentCube = cubes[i].getGlobalMinMax();
-		mMinMax[i].min = make_float4(currentCube.min);
-		mMinMax[i].max = make_float4(currentCube.max);
+		mMinMax[i].min = make_float3(currentCube.min);
+		mMinMax[i].max = make_float3(currentCube.max);
+		mMinMax[i].id = i;
 	}
 
 	// check min and max of all boxes for collision

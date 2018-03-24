@@ -53,6 +53,7 @@ struct OCLData
 };
 
 float4 make_float4(ofVec4f v_);
+float3 make_float3(ofVec4f v_);
 
 class CollisionSystem
 {

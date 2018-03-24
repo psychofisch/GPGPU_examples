@@ -5,36 +5,36 @@ ThrustHelper::CollisionFunctor::CollisionFunctor(uint td_, MinMaxDataThrust* mmd
 	minMaxRaw(mmd_)
 {}
 
-__host__ __device__ int ThrustHelper::CollisionFunctor::operator()(thrustMinMaxTuple minMax)
+__host__ __device__ int ThrustHelper::CollisionFunctor::operator()(MinMaxDataThrust minMax)
 {
-	int result = -1;
-	float3 currentMin = make_float3(thrust::get<0>(minMax).min);
-	float3 currentMax = make_float3(thrust::get<0>(minMax).max);
-	int i = thrust::get<1>(minMax);
+	int result = -666;
+	float3 currentMin = minMax.min;
+	float3 currentMax = minMax.max;
+	int i = minMax.id;
 	for (int j = 0; j < tdata; j++)
 	{
 		if (i == j)
 			continue;
 		//int cnt = 0;
-		float3 otherMin = make_float3(minMaxRaw[j].min);
-		float3 otherMax = make_float3(minMaxRaw[j].max);
+		float3 otherMin = minMaxRaw[j].min;
+		float3 otherMax = minMaxRaw[j].max;
 
 		bool loop = true;
 		int p = 0;
-		if (((otherMin.x < currentMax.x && otherMin.x > currentMin.x)
+		if (((  otherMin.x < currentMax.x && otherMin.x > currentMin.x)
 			|| (otherMax.x < currentMax.x && otherMax.x > currentMin.x)
 			|| (otherMax.x > currentMax.x && otherMin.x < currentMin.x)
 			|| (otherMax.x < currentMax.x && otherMin.x > currentMin.x))
 			&&
-			((otherMin.z < currentMax.z && otherMin.z > currentMin.z)
-				|| (otherMax.z < currentMax.z && otherMax.z > currentMin.z)
-				|| (otherMax.z > currentMax.z && otherMin.z < currentMin.z)
-				|| (otherMax.z < currentMax.z && otherMin.z > currentMin.z))
+		((		otherMin.z < currentMax.z && otherMin.z > currentMin.z)
+			|| (otherMax.z < currentMax.z && otherMax.z > currentMin.z)
+			|| (otherMax.z > currentMax.z && otherMin.z < currentMin.z)
+			|| (otherMax.z < currentMax.z && otherMin.z > currentMin.z))
 			&&
-			((otherMin.y < currentMax.y && otherMin.y > currentMin.y)
-				|| (otherMax.y < currentMax.y && otherMax.y > currentMin.y)
-				|| (otherMax.y > currentMax.y && otherMin.y < currentMin.y)
-				|| (otherMax.y < currentMax.y && otherMin.y > currentMin.y))
+		((		otherMin.y < currentMax.y && otherMin.y > currentMin.y)
+			|| (otherMax.y < currentMax.y && otherMax.y > currentMin.y)
+			|| (otherMax.y > currentMax.y && otherMin.y < currentMin.y)
+			|| (otherMax.y < currentMax.y && otherMin.y > currentMin.y))
 			) // TODO: optimize this
 		{
 			result = j;
@@ -58,17 +58,16 @@ void ThrustHelper::thrustGetCollisions(
 	if (tdata.collisions.size() < amountOfCubes)
 	{
 		std::cout << "Thrust: allocating memory for " << amountOfCubes << " cubes.\n";
-
-		tdata.minMaxBuffer.assign(minMaxBuffer, minMaxBuffer + amountOfCubes);
 		tdata.collisions.resize(amountOfCubes);
 	}
 	
-	MinMaxDataThrust* minMaxDevice = thrust::raw_pointer_cast(tdata.minMaxBuffer.data());
+	tdata.minMaxBuffer.assign(minMaxBuffer, minMaxBuffer + amountOfCubes);
 
+	MinMaxDataThrust* minMaxDevice = thrust::raw_pointer_cast(tdata.minMaxBuffer.data());
 	// calculate simulation
 	thrust::transform(
-		thrust::make_zip_iterator(make_tuple(tdata.minMaxBuffer.begin(), tdata.collisions.begin())),
-		thrust::make_zip_iterator(make_tuple(tdata.minMaxBuffer.end(), tdata.collisions.end())),
+		tdata.minMaxBuffer.begin(),
+		tdata.minMaxBuffer.end(),
 		tdata.collisions.begin(),
 		CollisionFunctor(amountOfCubes, minMaxDevice)
 	);
