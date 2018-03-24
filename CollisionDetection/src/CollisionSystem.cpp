@@ -401,7 +401,7 @@ void CollisionSystem::iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::ve
 	/*if(mMinMax.size() != cubes.size())
 	mMinMax.resize(cubes.size());*/
 
-	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
+	thrust::host_vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
 	// read bounding boxes
 	for (int i = 0; i < cubes.size(); ++i)
 	{
@@ -411,44 +411,5 @@ void CollisionSystem::iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::ve
 	}
 
 	// check min and max of all boxes for collision
-	for (int i = 0; i < mMinMax.size(); i++)
-	{
-		ofVec3f currentMin = mMinMax[i].min;
-		ofVec3f currentMax = mMinMax[i].max;
-		int result = -1;
-		for (int j = 0; j < mMinMax.size(); j++)
-		{
-			if (i == j)
-				continue;
-			//int cnt = 0;
-			ofVec3f otherMin = mMinMax[j].min;
-			ofVec3f otherMax = mMinMax[j].max;
-
-			bool loop = true;
-			int p = 0;
-			while (loop && p <= 3)
-			{
-				if ((otherMin[p] < currentMax[p] && otherMin[p] > currentMin[p])
-					|| (otherMax[p] < currentMax[p] && otherMax[p] > currentMin[p])
-					|| (otherMax[p] > currentMax[p] && otherMin[p] < currentMin[p])
-					|| (otherMax[p] < currentMax[p] && otherMin[p] > currentMin[p])) // TODO: optimize this
-				{
-					loop = true;
-					++p;
-				}
-				else
-				{
-					loop = false;
-				}
-			}
-
-			if (p >= 3)
-			{
-				result = j;
-				break;
-			}
-		}
-
-		collisions[i] = result;
-	}
+	ThrustHelper::thrustGetCollisions(mThrustData, mMinMax.data(), collisions.data(), collisions.size());
 }

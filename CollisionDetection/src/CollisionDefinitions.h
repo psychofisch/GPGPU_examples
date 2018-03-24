@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ofVec3f.h>
 #include <ofVec4f.h>
 
 #define OUT 
