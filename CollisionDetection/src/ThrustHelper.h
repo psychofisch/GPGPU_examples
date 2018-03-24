@@ -20,20 +20,23 @@ struct MinMaxDataThrust
 
 namespace ThrustHelper
 {
+	// storage of the device vectors
 	struct ThrustData
 	{
 		thrust::device_vector<MinMaxDataThrust> minMaxBuffer;
 		thrust::device_vector<int> collisions;
 	};
 
+	// define a struct to hold the function that is used by Thrust
 	struct CollisionFunctor : public thrust::unary_function < MinMaxDataThrust, int > {
-		uint tdata;
+		uint amountOfCubes;
 		MinMaxDataThrust* minMaxRaw;
 
-		CollisionFunctor(uint td_, MinMaxDataThrust* mmd_);
+		CollisionFunctor(uint aoc_, MinMaxDataThrust* mmd_);
 		__host__ __device__ int operator()(MinMaxDataThrust minMax);
 	};
 
+	// this function is called from outside to call the Thrust implementation
 	void thrustGetCollisions(
 		ThrustData& tdata,
 		MinMaxDataThrust* minMaxBuffer,

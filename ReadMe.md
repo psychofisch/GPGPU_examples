@@ -2,9 +2,8 @@
 
 ## Intro
 This is a proof of concept implementation of fluid particles on CPU and GPU.
-Currently implemented modes are  
-&ensp;Fluid: CPU, OpenGL Compute Shader, CUDA and OpenCL.  
-&ensp;CollisionDetection: CPU.
+Currently implemented modes are CPU, OpenGL Compute Shader, CUDA, OpenCL and Thrust.
+(Thrust is disabled in the Fluid Simulation by default, because of its bad performance)
 
 ### Build
 This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9.8/of_v0.9.8_vs_release.zip) and it is configured that the folder structure looks this:
@@ -46,12 +45,40 @@ It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda
 | mouse | look around |
 | WASD  | move  |
 | M | switch between CPU and the different GPU modes (if more than 1000 particles are present in the scene "CPU" mode becomes unavailable -> performance) |
+| C | lock camera |
 | Esc | close application |
 
 #### Settings
 The file ```GPGPU_examples/CollisionDetection/bin/data/settings.xml``` holds all available settings for the program that can not be changed via the HUD.  
 ```
 ┌───settings.xml
+│   └───GENERAL
+│   │   │   BOXES → int, number of boxes
+│   │
+│   └───CONTROLS
+│   │   │   MOUSESENS → float, mouse sensitivity
+│   │
+│   └───CPU
+│   │   │   ENABLED → int, enables/disables mode
+│   │   │   THRESHOLD → int, skip CPU mode if #boxes > threshold
+│   │
+│   └───COMPUTE
+│   │   │   ENABLED → int, enables/disables mode
+│   │   │   SOURCE → string, path to source file
+│   │
+│   └───CUDA
+│   │   │   ENABLED → int, enables/disables mode
+│   │   │   ARGC → int, number of cmd line arguments
+│   │   │   ARGV → string, cmd line arguments
+│   │
+│   └───OCL
+│   │   │   ENABLED → int, enables/disables mode
+│   │   │   SOURCE → string, path to source file
+│   │   │   PLATFORMID → int, specify platformID
+│   │   │   DEVICEID → int, specify deviceID
+│   │
+│   └───THRUST
+│   │   │   ENABLED → int, enables/disables mode
 ```
 
 All settings in ```GPGPU_examples/CollisionDetection/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
@@ -104,6 +131,8 @@ The file ```GPGPU_examples/FluidParticles/bin/data/settings.xml``` holds all ava
 
 All settings in ```GPGPU_examples/FluidParticles/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
 
+# Known Issues
+* Collision: While developing my whole system crashed sometimes when switching into CUDA mode. I'm still not sure what is causing this, because I can't reproduce it. BEWARE!
 
 # Author
 Thomas Fischer (psychofisch)

@@ -95,6 +95,7 @@ private:
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
 	ThrustHelper::ThrustData mThrustData;
+	bool mCPUThreshold;
 
 	void iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);

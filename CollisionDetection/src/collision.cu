@@ -35,8 +35,6 @@ __global__ void getCollisions(
 		float3 otherMin = make_float3(minMaxBuffer[j * 2]);
 		float3 otherMax = make_float3(minMaxBuffer[(j * 2) + 1]);
 
-		bool loop = true;
-		int p = 0;
 		if (((  otherMin.x < currentMax.x && otherMin.x > currentMin.x)
 			|| (otherMax.x < currentMax.x && otherMax.x > currentMin.x)
 			|| (otherMax.x > currentMax.x && otherMin.x < currentMin.x)

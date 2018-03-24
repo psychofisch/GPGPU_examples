@@ -1,11 +1,22 @@
 <group>
 	<Debug_Information>
-		<FPS>71</FPS>
+		<FPS>76</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>XXX</Mode>
-		<Particles>0/XXX</Particles>
-		<Particle_Color>100, 100, 140, 255</Particle_Color>
+		<Mode>Thrust</Mode>
+		<Particles>120/20000</Particles>
+		<Particle_Color>63, 151, 58, 255</Particle_Color>
+	<Workgroup_Size>4095</Workgroup_Size>
+	<Pause>0</Pause>
+		<Step>0</Step>
+	<Movement>1</Movement>
+	<Draw>1</Draw>
 	</Program_Information>
+	<Simulation_Settings>
+		<Smoothing_Width>0.382653</Smoothing_Width>
+	<Rest_Density>19.1327</Rest_Density>
+	<Spring>1.27551</Spring>
+		<Spring_Near>1.47959</Spring_Near>
+	</Simulation_Settings>
 <group/>
 </group>

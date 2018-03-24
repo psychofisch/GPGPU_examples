@@ -89,6 +89,8 @@ void ofApp::setup(){
 	mHud.add(mHudDebugGroup);
 	mHud.add(mHudControlGroup);
 	mHud.loadFromFile("hud.xml");
+
+	mHudMode = iHudGetModeString(mCollisionSystem.getMode());
 }
 
 //--------------------------------------------------------------
@@ -229,7 +231,7 @@ void ofApp::keyReleased(int key){
 			break; 
 		case 'u':
 			break;
-		case 'v':
+		case 'c':
 			mLockMouse = !mLockMouse;
 			/*{
 				ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
