@@ -104,7 +104,7 @@ void CollisionSystem::setupOCL(ofxXmlSettings & settings)
 
 void CollisionSystem::setupThrust(ofxXmlSettings & settings)
 {
-	mAvailableModes[THRUST] = true;
+	mAvailableModes[THRUST] = settings.getValue("THRUST:ENABLED", true);
 }
 
 //void CollisionSystem::setupThrust(ofxXmlSettings & settings)
@@ -401,13 +401,13 @@ void CollisionSystem::iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::ve
 	/*if(mMinMax.size() != cubes.size())
 	mMinMax.resize(cubes.size());*/
 
-	thrust::host_vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
+	thrust::host_vector<MinMaxDataThrust> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
 	// read bounding boxes
 	for (int i = 0; i < cubes.size(); ++i)
 	{
 		MinMaxData currentCube = cubes[i].getGlobalMinMax();
-		mMinMax[i].min = currentCube.min;
-		mMinMax[i].max = currentCube.max;
+		mMinMax[i].min = make_float4(currentCube.min);
+		mMinMax[i].max = make_float4(currentCube.max);
 	}
 
 	// check min and max of all boxes for collision

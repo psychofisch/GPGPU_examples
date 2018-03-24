@@ -10,29 +10,32 @@
 
 #include <helper_math.h>
 
-#include "CollisionDefinitions.h"
+struct MinMaxDataThrust
+{
+	float4 min, max;
+};
 
-typedef thrust::tuple<MinMaxData, int> thrustMinMax;
+typedef thrust::tuple<MinMaxDataThrust, int> thrustMinMaxTuple;
 
 namespace ThrustHelper
 {
 	struct ThrustData
 	{
-		thrust::device_vector<MinMaxData> minMaxBuffer;
+		thrust::device_vector<MinMaxDataThrust> minMaxBuffer;
 		thrust::device_vector<int> collisions;
 	};
 
-	struct CollisionFunctor : public thrust::unary_function < thrustMinMax, int > {
-		ThrustData& tdata;
-		MinMaxData* minMaxRaw;
+	struct CollisionFunctor : public thrust::unary_function < thrustMinMaxTuple, int > {
+		uint tdata;
+		MinMaxDataThrust* minMaxRaw;
 
-		CollisionFunctor(ThrustData& td_, MinMaxData* mmd_);
-		__host__ __device__ int operator()(thrustMinMax minMax);
+		CollisionFunctor(uint td_, MinMaxDataThrust* mmd_);
+		__host__ __device__ int operator()(thrustMinMaxTuple minMax);
 	};
 
 	void thrustGetCollisions(
 		ThrustData& tdata,
-		MinMaxData* minMaxBuffer,
+		MinMaxDataThrust* minMaxBuffer,
 		int* collisionBuffer,
 		const uint amountOfCubes);
 }
