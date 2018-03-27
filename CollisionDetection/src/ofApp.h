@@ -58,6 +58,7 @@ class ofApp : public ofBaseApp{
 		ofParameter<bool> mHudStep;
 		ofParameter<bool> mHudDraw;
 		ofParameter<bool> mHudMovement;
+		ofParameter<bool> mHudCollision;
 
 		std::string iHudGetModeString(CollisionSystem::ComputeMode m);
 

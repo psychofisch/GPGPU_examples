@@ -1,9 +1,9 @@
 <group>
 	<Debug_Information>
-		<FPS>79</FPS>
+		<FPS>144</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
+		<Mode>CPU</Mode>
 		<Particles>120/20000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
@@ -11,6 +11,7 @@
 		<Step>0</Step>
 	<Movement>1</Movement>
 	<Draw>1</Draw>
+	<Collisions>1</Collisions>
 	</Program_Information>
 	<Simulation_Settings>
 		<Smoothing_Width>0.382653</Smoothing_Width>

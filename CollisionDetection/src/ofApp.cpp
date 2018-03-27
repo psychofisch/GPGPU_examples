@@ -25,30 +25,50 @@ void ofApp::setup(){
 
 	int boxNumber = mXmlSettings.getValue("GENERAL:BOXES", 1000);
 	int sqrtBox = sqrtf(boxNumber);
-	float gap = 10.f;
 	float side = mTestCube.getWidth();
-	float offset = -(side + gap) * sqrtBox * 0.5f;
 	ofVec3f boxPos(0.f);
-	boxPos.x = boxPos.z = offset;
+	ofVec3f direction;
+	float ringSize = std::max(boxNumber * 0.15f, side * 5.f);
+	float ringWidth = 0.3f;
 	mCubes.resize(boxNumber, mTestCube);
 	mCollisions.resize(boxNumber, false);
 	for (int i = 0; i < boxNumber; ++i)
 	{
-		boxPos.x += gap + side;
-		if (i % sqrtBox == 0)
+		if (i > boxNumber * 0.666f)
 		{
-			boxPos.x = offset;
-			boxPos.z += gap + side;
+			direction.x = ofRandom(-1.f, 1.0f);
+			direction.y = ofRandom(-0.1f, 0.1f);
+			direction.z = ofRandom(-1.f, 1.0f);
 		}
+		else if (i > boxNumber * 0.333f)
+		{
+			direction.x = ofRandom(-1.f, 1.0f);
+			direction.z = ofRandom(-0.1f, 0.1f);
+			direction.y = ofRandom(-1.f, 1.0f);
+		}
+		else
+		{
+			direction.z = ofRandom(-1.f, 1.0f);
+			direction.x = ofRandom(-0.1f, 0.1f);
+			direction.y = ofRandom(-1.f, 1.0f);
+		}
+		direction.normalize();
 
-		mCubes[i].set(side * ofRandom(0.7f, 1.3f), side * ofRandom(0.7f, 1.3f), side * ofRandom(0.7f, 1.3f));
+		boxPos = direction * (ringSize * ofRandom(1.f - ringWidth, 1.f + ringWidth));
 
+		//shape
+		mCubes[i].set(side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f));
+
+		//position
 		mCubes[i].setPosition(boxPos);
+
+		//color
 		if (i % 2 == 0)
 			mCubes[i].mColor = ofColor::cyan;
 		else
 			mCubes[i].mColor = ofColor::magenta;
 
+		//minMax
 		mCubes[i].recalculateMinMax();
 	}
 
@@ -57,7 +77,7 @@ void ofApp::setup(){
 	mMainCamera.lookAt(ofVec3f(0.f));
 	//mMainCamera.setNearClip(0.01f);
 	//mMainCamera.setFarClip(50.f);
-	mMainCamera.setupPerspective(true, 90.f, 0.01, 1000.f);
+	mMainCamera.setupPerspective(true, 90.f, 0.01, 10000.f);
 	mMainCamera.setPosition(0, 10.f, 10.f);
 
 	mLight.setPointLight();
@@ -83,6 +103,7 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
 	mHudControlGroup.add(mHudMovement.set("Movement", true));
 	mHudControlGroup.add(mHudDraw.set("Draw", true));
+	mHudControlGroup.add(mHudCollision.set("Collisions", true));
 	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
 
 	mHud.setup();
@@ -104,31 +125,43 @@ void ofApp::update(){
 	moveVec.z = mMoveVec.y * 0.1f;
 	moveVec.y = 0.f;
 
-	moveVec *= 500.f * dt;
+	moveVec *= 500.f * std::max(mCubes.size() * 0.001f, 1.f) * dt;
 
 	mMainCamera.dolly(-moveVec.z);
 	mMainCamera.truck(moveVec.x);
 
 	// move cubes
-	ofSeedRandom(1337);
+	ofSeedRandom(1337);//seed every frame so that every cube has a constant "random" speed value
 	ofNode pos;
-	ofVec3f up(0.f, 1.f, 0.f);
-	ofVec3f zero(0.f);
 	int half = mCubes.size() * 0.5f;
 	for (int i = 0; i < mCubes.size() && mHudMovement; ++i)
 	{
-		float r = ofRandom(0.5f, 1.5f);
+		float r = ofRandom(0.8f, 1.2f);
 		float sign = 1.f;
-		if (i % 2 == 0)
+		if (i > half)
 			sign *= -1.f;
 		pos.setPosition(mCubes[i].getPosition());
-		pos.rotateAround(sign * 30.f * r * dt, up, zero);
+
+		if (i > mCubes.size() * 0.666f)
+		{
+			pos.rotateAround(sign * 30.f * r * dt, vec3::up, ofVec3f::zero());
+		}
+		else if (i > mCubes.size() * 0.333f)
+		{
+			pos.rotateAround(sign * 30.f * r * dt, vec3::forward, ofVec3f::zero());
+		}
+		else
+		{
+			pos.rotateAround(sign * 30.f * r * dt, vec3::left, ofVec3f::zero());
+		}
+		
 		mCubes[i].setPosition(pos.getPosition());
 	}
 	//*** mc
 
 	// Collision detection
-	mCollisionSystem.getCollisions(mCubes, mCollisions);
+	if(mHudCollision)
+		mCollisionSystem.getCollisions(mCubes, mCollisions);
 	//*** cd
 
 	if (!mHudPause || mHudStep)
