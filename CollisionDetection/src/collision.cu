@@ -23,8 +23,8 @@ __global__ void getCollisions(
 	if (index >= amountOfCubes)
 		return;
 
-	float3 currentMin = make_float3(minMaxBuffer[(index * 2u)]); //min
-	float3 currentMax = make_float3(minMaxBuffer[(index * 2u) + 1u]); //max
+	float3 currentMin = make_float3(minMaxBuffer[(index * 2)]); //min
+	float3 currentMax = make_float3(minMaxBuffer[(index * 2) + 1]); //max
 	int result = -1;
 
 	for (int j = 0; j < amountOfCubes; j++)
