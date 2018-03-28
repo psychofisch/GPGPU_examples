@@ -23,12 +23,12 @@
 //		return false;
 //}
 
-__device__ float4 calculatePressure(float4* positions, float4* velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
+__device__ float4 calculatePressure(const float4* __restrict__ positions, const float4* __restrict__ velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
 
 __global__ void particleUpdate(
-	float4* positions, 
-	float4* positionOut,
-	float4* velocity, 
+	const float4* __restrict__ positions,
+	float4* __restrict__ positionOut,
+	float4* __restrict__ velocity,
 	const float dt, 
 	const float3 gravity,
 	const float3 position,
@@ -89,7 +89,7 @@ __global__ void particleUpdate(
 	velocity[index] = make_float4(particleVelocity);
 }
 
-__device__ float4 calculatePressure(float4* position, float4* velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData)
+__device__ float4 calculatePressure(const float4* __restrict__ position, const float4* __restrict__ velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData)
 {
 	float4 pressureVec = make_float4(0.f);
 	float4 viscosityVec = pressureVec;

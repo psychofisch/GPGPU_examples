@@ -179,9 +179,7 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 	// read bounding boxes
 	for (int i = 0; i < cubes.size(); ++i)
 	{
-		MinMaxData currentCube = cubes[i].getGlobalMinMax();
-		mMinMax[i].min = currentCube.min;
-		mMinMax[i].max = currentCube.max;
+		mMinMax[i] = cubes[i].getGlobalMinMax();
 	}
 
 	// check min and max of all boxes for collision
@@ -189,37 +187,34 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 	{
 		ofVec3f currentMin = mMinMax[i].min;
 		ofVec3f currentMax = mMinMax[i].max;
+		ofVec3f otherMin, otherMax;
 		int result = -1;
 		for (int j = 0; j < mMinMax.size(); j++)
 		{
 			if (i == j)
 				continue;
 
-			ofVec3f otherMin = mMinMax[j].min;
-			ofVec3f otherMax = mMinMax[j].max;
+			otherMin = mMinMax[j].min;
+			otherMax = mMinMax[j].max;
 
-			bool loop = true;
-			int p = 0;
-			while (loop && p <= 3)
-			{
-				if (   (otherMin[p] < currentMax[p] && otherMin[p] > currentMin[p])
-					|| (otherMax[p] < currentMax[p] && otherMax[p] > currentMin[p])
-					|| (otherMax[p] > currentMax[p] && otherMin[p] < currentMin[p])
-					|| (otherMax[p] < currentMax[p] && otherMin[p] > currentMin[p])) // TODO: optimize this
-				{
-					loop = true;
-					++p;
-				}
-				else
-				{
-					loop = false;
-				}
-			}
-
-			if (p >= 3)
+			if ((  (otherMin.x < currentMax.x && otherMin.x > currentMin.x)
+				|| (otherMax.x < currentMax.x && otherMax.x > currentMin.x)
+				|| (otherMax.x > currentMax.x && otherMin.x < currentMin.x)
+				|| (otherMax.x < currentMax.x && otherMin.x > currentMin.x))
+			&&
+				(  (otherMin.z < currentMax.z && otherMin.z > currentMin.z)
+				|| (otherMax.z < currentMax.z && otherMax.z > currentMin.z)
+				|| (otherMax.z > currentMax.z && otherMin.z < currentMin.z)
+				|| (otherMax.z < currentMax.z && otherMin.z > currentMin.z))
+			&&	
+				(  (otherMin.y < currentMax.y && otherMin.y > currentMin.y)
+				|| (otherMax.y < currentMax.y && otherMax.y > currentMin.y)
+				|| (otherMax.y > currentMax.y && otherMin.y < currentMin.y)
+				|| (otherMax.y < currentMax.y && otherMin.y > currentMin.y))
+			) // TODO: optimize this
 			{
 				result = j;
-				break;
+				break;// OPT: do not delete this (30% performance loss)
 			}
 		}
 

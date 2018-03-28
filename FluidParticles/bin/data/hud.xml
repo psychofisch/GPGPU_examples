@@ -1,17 +1,17 @@
 <group>
 	<Debug_Information>
-		<FPS>1338</FPS>
+		<FPS>94</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>CPU</Mode>
-		<Particles>0/50000</Particles>
+		<Mode>CUDA</Mode>
+		<Particles>20000/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
 		<Step>0</Step>
 	</Program_Information>
 	<Simulation_Settings>
-		<Smoothing_Width>0.110969</Smoothing_Width>
+		<Smoothing_Width>0.0727037</Smoothing_Width>
 	<Rest_Density>14.2857</Rest_Density>
 	<Spring>0.688775</Spring>
 		<Spring_Near>0.739796</Spring_Near>

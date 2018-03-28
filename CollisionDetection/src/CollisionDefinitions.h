@@ -24,6 +24,13 @@ struct MinMaxData
 		tmp.max = this->max + p_;
 		return tmp;
 	}
+
+	MinMaxData operator=(const MinMaxData& other)
+	{
+		this->min = other.min;
+		this->max = other.max;
+		return *this;
+	}
 };
 
 
