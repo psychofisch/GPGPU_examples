@@ -183,6 +183,7 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 	}
 
 	// check min and max of all boxes for collision
+	std::vector<int> tmpCol(collisions.size());// OPT: local storage has a bit better performance again
 	for (int i = 0; i < mMinMax.size(); i++) 
 	{
 		ofVec3f currentMin = mMinMax[i].min;
@@ -218,8 +219,10 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 			}
 		}
 
-		collisions[i] = result;
+		tmpCol[i] = result;
 	}
+
+	collisions = tmpCol;
 }
 
 void CollisionSystem::iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
