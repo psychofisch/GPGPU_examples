@@ -1,23 +1,20 @@
 <group>
 	<Debug_Information>
-		<FPS>45</FPS>
+		<FPS>534</FPS>
 	</Debug_Information>
 	<Program_Information>
 		<Mode>CPU</Mode>
-		<Particles>120/20000</Particles>
+		<Particles>0/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
 		<Step>0</Step>
-	<Movement>1</Movement>
-	<Draw>1</Draw>
-	<Collisions>1</Collisions>
 	</Program_Information>
 	<Simulation_Settings>
-		<Smoothing_Width>0.382653</Smoothing_Width>
-	<Rest_Density>19.1327</Rest_Density>
-	<Spring>1.27551</Spring>
-		<Spring_Near>1.47959</Spring_Near>
+		<Smoothing_Width>0.0727037</Smoothing_Width>
+	<Rest_Density>14.2857</Rest_Density>
+	<Spring>0.688775</Spring>
+		<Spring_Near>0.739796</Spring_Near>
 	</Simulation_Settings>
 <group/>
 </group>

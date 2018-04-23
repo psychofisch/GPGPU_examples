@@ -10,12 +10,6 @@
 
 #include <helper_math.h>
 
-struct MinMaxDataThrust
-{
-	float3 min, max;
-	int id;
-};
-
 //typedef thrust::tuple<MinMaxDataThrust, int> thrustMinMaxTuple;
 
 namespace ThrustHelper

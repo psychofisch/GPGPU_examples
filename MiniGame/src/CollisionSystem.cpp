@@ -306,7 +306,7 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vect
 	cudaDeviceSynchronize();
 
 	// calculate the collisions
-	cudaGetCollisions(mCudata.minMaxBuffer, mCudata.collisionBuffer, mCudata.currentArraySize);
+	Collision::cudaGetCollisions(mCudata.minMaxBuffer, mCudata.collisionBuffer, mCudata.currentArraySize);
 
 	cudaDeviceSynchronize();
 
