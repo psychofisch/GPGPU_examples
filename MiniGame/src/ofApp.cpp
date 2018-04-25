@@ -46,6 +46,7 @@ void ofApp::setup(){
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 	mParticleSystem->setDimensions(ofVec3f(1.f));
 	Particle::CUDAta tmpCUDA = mParticleSystem->getCudata();
+	mParticleSystem->createParticleShader(mXmlSettings.getValue("GENERAL:VERT", "shader.vert"), mXmlSettings.getValue("GENERAL:FRAG", "shader.frag"));
 	//mParticleSystem->addDamBreak(200);
 	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);
 	//mParticleSystem->addRandom();
@@ -70,7 +71,7 @@ void ofApp::setup(){
 	mHudSimulationGroup.setName("Simulation Settings");
 	mHudControlGroup.add(mHudPause.set("Pause", false));
 	mHudControlGroup.add(mHudStep.set("Step", false));
-	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", 0.1f, 0.00000001f, 1.f));
+	mHudSimulationGroup.add(mHudSmoothingWidth.set("Interaction Radius", 0.1f, 0.00000001f, 1.f));
 	mHudSimulationGroup.add(mHudRestDensity.set("Rest Density", 3.5f, 0.0f, 50.f));
 	mHudSimulationGroup.add(mHudSpring.set("Spring", 1.0f, 0.0f, 10.f));
 	mHudSimulationGroup.add(mHudSpringNear.set("Spring Near", 1.0f, 0.0f, 10.f));
@@ -82,6 +83,9 @@ void ofApp::setup(){
 	mHud.loadFromFile("hud.xml");
 
 	mHudMode = iHudGetModeString(mParticleSystem->getMode());
+
+	mShader = true;
+	std::cout << "OpenGL " << ofGetGLRenderer()->getGLVersionMajor() << "." << ofGetGLRenderer()->getGLVersionMinor() << std::endl;
 }
 
 //--------------------------------------------------------------
@@ -133,32 +137,32 @@ void ofApp::update(){
 void ofApp::draw(){
 	ofEnableDepthTest();
 
-	mMainCamera.lookAt(ofVec3f(0.f));
+	mMainCamera.lookAt(ofVec3f(0));
 	//ofEnableLighting();
 	//mLight.enable();
 	mMainCamera.begin();
 
 	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
-	ofPushMatrix();
+	//ofPushMatrix();
 	ofVec3f axis;
 	float angle;
 	mGlobalRotation.getRotate(angle, axis);
 	ofRotate(angle, axis.x, axis.y, axis.z);
 	ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
-	ofPushStyle();
+	//ofPushStyle();
 	ofSetColor(mHudColor);
-	glPointSize(2.f);
+	//glPointSize(2.f);
 	mTestBox.drawAxes(1.f);
 	//mParticleMesh.drawVertices();
 	//mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
-	mParticleSystem->draw();
-	ofPopStyle();
-	ofPopMatrix();
+	mParticleSystem->draw(mShader);
+	//ofPopStyle();
+	//ofPopMatrix();
 
 	mMainCamera.end();
 	//mLight.disable();
-	//ofDisableLighting();
+	ofDisableLighting();
 
 	ofDisableDepthTest();
 
@@ -241,6 +245,8 @@ void ofApp::keyReleased(int key){
 			mParticleSystem->setMode(currentMode);
 			mHudMode = iHudGetModeString(currentMode);
 		}
+			break;
+		case 'q': mShader = !mShader;
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;

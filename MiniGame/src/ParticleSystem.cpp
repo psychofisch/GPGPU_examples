@@ -14,11 +14,19 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 	for (int i = 0; i < ComputeMode::COMPUTEMODES_SIZE; ++i)
 		mAvailableModes[i] = false;
+
 	//***
 
 	//*** general GL setup
 	mParticlesBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticlePosition, GL_DYNAMIC_DRAW);
 	mParticlesVBO.setVertexBuffer(mParticlesBuffer, 3, sizeof(ofVec4f));
+
+	ofSpherePrimitive sphere;
+	sphere.set(1.f, 3, ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
+	mParticleModel = sphere.getMesh();
+	mParticleModel.enableColors();
+	mParticleModel.enableNormals();
+	mParticleModel.enableTextures();
 }
 
 ParticleSystem::~ParticleSystem()
@@ -162,6 +170,16 @@ void ParticleSystem::setupThrust(ofxXmlSettings & settings)
 	mThrustData = ThrustHelper::setup(mNumberOfParticles);
 
 	mAvailableModes[ComputeMode::THRUST] = true;
+}
+
+void ParticleSystem::createParticleShader(std::string vert, std::string frag)
+{
+	mParticleShader.load(vert, frag);
+
+	GLint err = glGetError();
+	if (err != GL_NO_ERROR) {
+		ofLogNotice() << "Load Shader came back with GL error:	" << err;
+	}
 }
 
 void ParticleSystem::setNumberOfParticles(uint nop)
@@ -351,9 +369,30 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	mNumberOfParticles += particleCap;
 }
 
-void ParticleSystem::draw() const
+void ParticleSystem::draw(bool shader)
 {
-	mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
+	if (mNumberOfParticles == 0)
+		return;
+	//mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
+
+	if(shader)
+		mParticleShader.begin();
+	//mComputeData.positionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
+	ofMatrix4x4 identity;
+	identity.makeIdentityMatrix();
+	identity.scale(ofVec3f(0.01f));
+	mParticlesBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
+	//mParticleShader.setUniform3f("systemPos", mPosition);
+	mParticleShader.setUniformMatrix4f("scale", identity);
+	//mParticleModel.drawFaces();
+	mParticleModel.drawInstanced(OF_MESH_FILL, mNumberOfParticles);
+	if(shader)
+		mParticleShader.end();
+
+	GLint err = glGetError();
+	if (err != GL_NO_ERROR) {
+		ofLogNotice() << __FILE__ << ":" << __LINE__ << "Load Shader came back with GL error:	" << err;
+	}
 }
 
 ofVec3f ParticleSystem::getDimensions() const
@@ -486,7 +525,6 @@ void ParticleSystem::iUpdateCPU(float dt)
 
 	//mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mParticlePosition);
 }
-
 
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel)
 {

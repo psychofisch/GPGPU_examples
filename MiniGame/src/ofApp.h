@@ -39,7 +39,7 @@ class ofApp : public ofBaseApp{
 		ofVec2f mMouse;
 		float mMouseSens;
 		ofVec3f mMoveVec;
-		bool mValve;
+		bool mValve, mShader;
 
 		ofxXmlSettings mXmlSettings;
 

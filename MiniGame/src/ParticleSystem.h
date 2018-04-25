@@ -8,12 +8,13 @@
 
 // Openframeworks includes
 #include <ofVec3f.h>
-#include <ofRectangle.h>
-#include <ofMath.h>
-#include <ofQuaternion.h>
-#include <ofShader.h>
-#include <ofVbo.h>
+//#include <ofRectangle.h>
+//#include <ofMath.h>
+//#include <ofQuaternion.h>
+//#include <ofShader.h>
+//#include <ofVbo.h>
 #include <ofxXmlSettings.h>
+//#include <of3dPrimitives.h>
 
 // CUDA includes
 #include <cuda_runtime.h>
@@ -114,6 +115,7 @@ public:
 	void setupCUDA(ofxXmlSettings& settings);
 	void setupOCL(ofxXmlSettings& settings);
 	void setupThrust(ofxXmlSettings& settings);
+	void createParticleShader(std::string vert, std::string frag);
 
 	// simple getters
 
@@ -148,7 +150,7 @@ public:
 	// adds the given number of particles in a cube form 
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	// draws the particle VBO
-	void draw() const;
+	void draw(bool shader);
 
 	//Simulation
 
@@ -169,6 +171,8 @@ private:
 		mCapacity,
 		mThreshold;
 	ComputeMode mMode;
+	ofVboMesh mParticleModel;
+	ofShader mParticleShader;
 	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
 	ofVec4f	*mParticlePosition,
 		*mParticleVelocity;
