@@ -150,7 +150,7 @@ public:
 	// adds the given number of particles in a cube form 
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	// draws the particle VBO
-	void draw(bool shader);
+	void draw();
 
 	//Simulation
 

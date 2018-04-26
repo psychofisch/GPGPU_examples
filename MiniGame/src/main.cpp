@@ -4,7 +4,7 @@
 //========================================================================
 int main(int argc, const char * argv){
 	ofGLFWWindowSettings settings;
-	settings.setGLVersion(3, 2); //version of opengl corresponding to your GLSL version
+	settings.setGLVersion(4, 4); //version of opengl corresponding to your GLSL version
 	settings.width = 1024;
 	settings.height = 768;
 	ofCreateWindow(settings);

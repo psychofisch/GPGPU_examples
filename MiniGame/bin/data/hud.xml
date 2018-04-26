@@ -1,9 +1,9 @@
 <group>
 	<Debug_Information>
-		<FPS>233</FPS>
+		<FPS>209</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
+		<Mode>OpenCL</Mode>
 		<Particles>500/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>

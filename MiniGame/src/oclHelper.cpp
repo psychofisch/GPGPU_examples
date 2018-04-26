@@ -60,7 +60,7 @@ bool oclHelper::compileKernel(const char * file)
 	std::ifstream sourceFile(file);
 	if (!sourceFile)
 	{
-		std::cout << "kernel source file \"" << file << "\" not found!" << std::endl;
+		std::cout << "OpenCL: kernel source file \"" << file << "\" not found!" << std::endl;
 		return true;
 	}
 	std::string sourceCode(

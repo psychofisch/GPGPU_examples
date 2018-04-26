@@ -84,7 +84,6 @@ void ofApp::setup(){
 
 	mHudMode = iHudGetModeString(mParticleSystem->getMode());
 
-	mShader = true;
 	std::cout << "OpenGL " << ofGetGLRenderer()->getGLVersionMajor() << "." << ofGetGLRenderer()->getGLVersionMinor() << std::endl;
 }
 
@@ -156,7 +155,7 @@ void ofApp::draw(){
 	mTestBox.drawAxes(1.f);
 	//mParticleMesh.drawVertices();
 	//mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
-	mParticleSystem->draw(mShader);
+	mParticleSystem->draw();
 	//ofPopStyle();
 	//ofPopMatrix();
 
@@ -245,8 +244,6 @@ void ofApp::keyReleased(int key){
 			mParticleSystem->setMode(currentMode);
 			mHudMode = iHudGetModeString(currentMode);
 		}
-			break;
-		case 'q': mShader = !mShader;
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;

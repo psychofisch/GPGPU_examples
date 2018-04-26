@@ -10,7 +10,7 @@ in vec3  normal;
 // layout(location = 2) in vec4  color_coord;
 // layout(location = 3) in vec3  normal;
 
-layout (std140, binding = 0) buffer PositionBuffer{
+layout (std140, binding = 5) buffer PositionBuffer{
 	vec4 positionBuffer[];
 };
 

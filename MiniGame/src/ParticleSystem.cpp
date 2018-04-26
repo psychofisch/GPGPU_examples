@@ -178,7 +178,7 @@ void ParticleSystem::createParticleShader(std::string vert, std::string frag)
 
 	GLint err = glGetError();
 	if (err != GL_NO_ERROR) {
-		ofLogNotice() << "Load Shader came back with GL error:	" << err;
+		ofLogNotice() << __FILE__ << ":" << __LINE__ << ": Load Shader came back with GL error:	" << err;
 	}
 }
 
@@ -232,8 +232,8 @@ void ParticleSystem::setMode(ComputeMode m)
 		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mParticlePosition);
 		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mParticleVelocity);
 
-		ofVec4f* positionsFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);//TODO: use mapRange
-		mComputeData.positionBuffer.unmap();
+		//ofVec4f* positionsFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);//TODO: use mapRange
+		//mComputeData.positionBuffer.unmap();
 	}
 	else if (m == ComputeMode::OPENCL)
 	{
@@ -369,29 +369,36 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	mNumberOfParticles += particleCap;
 }
 
-void ParticleSystem::draw(bool shader)
+void ParticleSystem::draw()
 {
 	if (mNumberOfParticles == 0)
 		return;
+	
 	//mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
 
-	if(shader)
-		mParticleShader.begin();
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
+
+	mParticlesBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 5);
+
+	mParticleShader.begin();
 	//mComputeData.positionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
 	ofMatrix4x4 identity;
 	identity.makeIdentityMatrix();
-	identity.scale(ofVec3f(0.01f));
-	mParticlesBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
+	identity.scale(ofVec3f(mSimData.interactionRadius * 0.1f));
 	//mParticleShader.setUniform3f("systemPos", mPosition);
 	mParticleShader.setUniformMatrix4f("scale", identity);
 	//mParticleModel.drawFaces();
 	mParticleModel.drawInstanced(OF_MESH_FILL, mNumberOfParticles);
-	if(shader)
-		mParticleShader.end();
+	mParticleShader.end();
+
+	mParticlesBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 5);
+
+	//glDisable(GL_CULL_FACE);
 
 	GLint err = glGetError();
 	if (err != GL_NO_ERROR) {
-		ofLogNotice() << __FILE__ << ":" << __LINE__ << "Load Shader came back with GL error:	" << err;
+		ofLogNotice() << __FILE__ << ":" << __LINE__ << ": GL error:	" << err;
 	}
 }
 
@@ -606,6 +613,10 @@ void ParticleSystem::iUpdateCompute(float dt)
 	ofVec4f* positionsFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);//TODO: use mapRange
 	std::copy(positionsFromGPU, positionsFromGPU + mNumberOfParticles, mParticlePosition);
 	mComputeData.positionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
+
+	mComputeData.positionBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 0);
+	mComputeData.positionOutBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 1);
+	mComputeData.velocityBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 2);
 
 	//ofVec4f* tmpPositionFromGPU;
 	//tmpPositionFromGPU = mComputeData.velocityBuffer.map<ofVec4f>(GL_READ_ONLY);
