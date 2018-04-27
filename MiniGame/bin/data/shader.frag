@@ -1,9 +1,9 @@
 #version 440
 
-in vec4 colorVarying;
+in vec4 color;
 
 out vec4 fragColor;
 
 void main(){
-	fragColor = colorVarying;
+	fragColor = color;
 }

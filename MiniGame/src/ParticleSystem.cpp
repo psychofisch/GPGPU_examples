@@ -27,6 +27,10 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mParticleModel.enableColors();
 	mParticleModel.enableNormals();
 	mParticleModel.enableTextures();
+
+	mParticleTmp.set(0.01f, 3);
+
+	mMeasureTime = false;
 }
 
 ParticleSystem::~ParticleSystem()
@@ -204,7 +208,7 @@ void ParticleSystem::setRotation(ofQuaternion rotation)
 
 void ParticleSystem::setMode(ComputeMode m)
 {
-	// sync all data back to RAM
+	// sync velocity data back from the GPU to RAM (particle positions get synced back every frame)
 	if (mMode == ComputeMode::COMPUTE_SHADER)
 	{
 		/*ofVec4f* tmpPtrFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);
@@ -374,27 +378,59 @@ void ParticleSystem::draw()
 	if (mNumberOfParticles == 0)
 		return;
 	
-	//mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
+	if (mGenericSwitch)
+	{
+		// *** DEBUG ONLY! EXTREMELY SLOW!
+		mParticleShader.begin();
 
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+		mParticleShader.setUniform1i("mode", 0);
 
-	mParticlesBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 5);
+		//mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
+		for (int i = 0; i < mNumberOfParticles; ++i)
+		{
+			mParticleTmp.setPosition(mParticlePosition[i]);
+			mParticleTmp.drawFaces();
+		}
 
-	mParticleShader.begin();
-	//mComputeData.positionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
-	ofMatrix4x4 identity;
-	identity.makeIdentityMatrix();
-	identity.scale(ofVec3f(mSimData.interactionRadius * 0.1f));
-	//mParticleShader.setUniform3f("systemPos", mPosition);
-	mParticleShader.setUniformMatrix4f("scale", identity);
-	//mParticleModel.drawFaces();
-	mParticleModel.drawInstanced(OF_MESH_FILL, mNumberOfParticles);
-	mParticleShader.end();
+		mParticleShader.end();
+		// ***
+	}
+	else
+	{
+		// *** DESIRED METHOD but does not render correctly in Compute Shader and OpenCL mode
+		//glEnable(GL_CULL_FACE);
+		//glCullFace(GL_BACK);
 
-	mParticlesBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 5);
+		mParticleShader.begin();
 
-	//glDisable(GL_CULL_FACE);
+		// create to scale the particles in the shader
+		ofMatrix4x4 identity;
+		identity.makeIdentityMatrix();
+		identity.scale(ofVec3f(mSimData.interactionRadius * 0.1f));
+
+		// bind the buffer positions
+		//mParticlesBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 4);
+		mParticlesVBO.getVertexBuffer().bindBase(GL_SHADER_STORAGE_BUFFER, 4);
+
+		// set uniforms
+		//mParticleShader.setUniform3f("systemPos", mPosition);
+		mParticleShader.setUniform1i("mode", 1);
+		mParticleShader.setUniformMatrix4f("scale", identity);
+		mParticleShader.setUniform1i("particles", mNumberOfParticles);
+
+		// draw particles
+		mParticleModel.drawInstanced(OF_MESH_FILL, mNumberOfParticles);
+		//mParticleModel.drawInstanced(OF_MESH_POINTS, mNumberOfParticles);
+
+		// unbind and clean up
+		//mParticlesBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 4);
+		mParticlesVBO.getVertexBuffer().unbindBase(GL_SHADER_STORAGE_BUFFER, 4);
+
+		mParticleShader.end();
+
+		//glDisable(GL_CULL_FACE);
+		// ***
+	}
 
 	GLint err = glGetError();
 	if (err != GL_NO_ERROR) {
@@ -529,8 +565,6 @@ void ParticleSystem::iUpdateCPU(float dt)
 		mParticleVelocity[i] = particleVelocity;
 		mParticlePosition[i] = particlePosition + mPosition;
 	}
-
-	//mComputeData.positionBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mParticlePosition);
 }
 
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel)
@@ -681,6 +715,10 @@ void ParticleSystem::iUpdateOCL(float dt)
 	// copy the result to the GPU position buffer
 	err = queue.enqueueCopyBuffer(mOCLData.positionOutBuffer, mOCLData.positionBuffer, 0, 0, mNumberOfParticles * sizeof(ofVec4f));
 	oclHelper::handle_clerror(err, __LINE__);
+
+	// wait until the queue is finished
+	err = queue.finish();
+	oclHelper::handle_clerror(err, __LINE__);
 }
 
 void ParticleSystem::iUpdateCUDA(float dt)
@@ -734,4 +772,9 @@ uint ParticleSystem::debug_testIfParticlesOutside()
 		}
 	}
 	return count;
+}
+
+void ParticleSystem::toggleGenericSwitch()
+{
+	mGenericSwitch = !mGenericSwitch;
 }

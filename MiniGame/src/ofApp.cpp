@@ -245,6 +245,8 @@ void ofApp::keyReleased(int key){
 			mHudMode = iHudGetModeString(currentMode);
 		}
 			break;
+		case 'y':	mParticleSystem->toggleGenericSwitch();
+			break;
 		default: std::cout << "this key hasn't been assigned\n";
 			break;
 	}

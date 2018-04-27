@@ -165,6 +165,8 @@ public:
 	void measureNextUpdate();
 	// returns the number of particles that are outside of the bounding volume
 	uint debug_testIfParticlesOutside();
+	// a generic switch used in debugging
+	void toggleGenericSwitch();
 
 private:
 	uint mNumberOfParticles,
@@ -172,6 +174,7 @@ private:
 		mThreshold;
 	ComputeMode mMode;
 	ofVboMesh mParticleModel;
+	ofSpherePrimitive mParticleTmp;
 	ofShader mParticleShader;
 	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
 	ofVec4f	*mParticlePosition,
@@ -189,7 +192,8 @@ private:
 	Particle::CUDAta mCUData;
 	ThrustHelper::ThrustParticleData* mThrustData;
 	Stopwatch mClock;
-	bool mMeasureTime;
+	bool mMeasureTime,
+		mGenericSwitch;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
