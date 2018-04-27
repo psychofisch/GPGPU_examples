@@ -41,6 +41,7 @@ void ofApp::setup(){
 		std::cout << "WARNING: GENERAL:MAXPARTICLES was \"<= 0\" again.\n";
 		maxParticles = 5000;
 	}
+
 	mParticleSystem = new ParticleSystem(maxParticles);
 	mParticleSystem->setupAll(mXmlSettings);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);

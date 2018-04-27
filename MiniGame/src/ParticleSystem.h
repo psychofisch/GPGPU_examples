@@ -39,8 +39,10 @@ namespace Particle
 	//general definitions
 #ifdef _DEBUG
 #define CUDAERRORS(x) checkCudaErrors(x)
+#define HANDLE_GL_ERROR() {GLenum err; while ((err = glGetError()) != GL_NO_ERROR) ofLogNotice() << __FILE__ << ":" << __LINE__ << ": GL error:	" << err;}
 #else
 #define CUDAERRORS(x) x
+#define HANDLE_GL_ERROR()
 #endif
 //#ifdef _WIN32
 //

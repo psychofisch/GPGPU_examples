@@ -25,6 +25,7 @@ uniform mat4 modelViewProjectionMatrix;
 uniform vec3 systemPos;
 uniform vec4 globalColor = vec4(1.0);
 uniform mat4 scale;
+uniform int particleNo;
 uniform int particles;
 uniform int mode;
 
@@ -32,24 +33,25 @@ out vec4 color;
 
 void main()
 {	
-	if(mode == 0)
-	{
-		color = vec4(1.0);
-		gl_Position = modelViewProjectionMatrix * position;
-	}
-	else //if(mode == 1)
-	{
-		// when drawing instanced geometry, we can use gl_InstanceID
-		// this tells you which primitive we are currently working on
-		
-		vec4 vPos = (scale * position) + vec4(systemPos, 0.0) + positionBuffer[gl_InstanceID];
-		//vec4 vPos = (position) + positionBuffer[gl_InstanceID];
+	int particleNumber;
+	vec4 vPos;
+	vec3 vCol;
 
-		float val = float(gl_InstanceID)/particles;
-		vec3 vCol = mix(vec3(1.0, 0, 0), vec3(0, 1.0, 0), val);
-		
-		color = vec4(vCol, 1.0);
-		//gl_Position = projectionMatrix * modelViewMatrix * vPos;
-		gl_Position = modelViewProjectionMatrix * vPos;
-	}
+	// when drawing instanced geometry, we can use gl_InstanceID
+	// this tells you which primitive we are currently working on
+	particleNumber = gl_InstanceID;
+	//vPos = (scale * position) + vec4(systemPos, 0.0) + positionBuffer[gl_InstanceID];
+	vPos = (scale * position) + positionBuffer[gl_InstanceID];
+
+	//float val = float(gl_InstanceID)/particles;
+	//vec3 vCol = mix(vec3(1.0, 0, 0), vec3(0, 1.0, 0), val);
+	
+	//color = vec4(vCol, 1.0);
+	//gl_Position = projectionMatrix * modelViewMatrix * vPos;
+	
+	float val = float(particleNumber)/particles;
+	vCol = mix(vec3(1.0, 0, 0), vec3(0, 1.0, 0), val);
+	color = vec4(vCol, 1.0);
+	
+	gl_Position = modelViewProjectionMatrix * vPos;
 }

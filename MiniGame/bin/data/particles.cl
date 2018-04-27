@@ -76,7 +76,7 @@ __kernel void particleUpdate(
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionsOut[index] = (float4)(particlePosition + position.xyz, index);
+	positionsOut[index] = (float4)(particlePosition + position.xyz, 0.f);
 	velocity[index] = (float4)(particleVelocity, numberOfParticles);
 	//velocityBuffer[index] = particlePressure;
 }

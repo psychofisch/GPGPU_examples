@@ -19,6 +19,10 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 	//*** general GL setup
 	mParticlesBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticlePosition, GL_DYNAMIC_DRAW);
+	//mParticlesBuffer.allocate(sizeof(ofVec4f) * mCapacity, GL_DYNAMIC_DRAW_ARB);
+	//mParticlesBuffer.updateData(sizeof(ofVec4f) * mCapacity, mParticlePosition);
+	HANDLE_GL_ERROR();
+
 	mParticlesVBO.setVertexBuffer(mParticlesBuffer, 3, sizeof(ofVec4f));
 
 	ofSpherePrimitive sphere;
@@ -63,6 +67,8 @@ void ParticleSystem::setupAll(ofxXmlSettings & settings)
 	setupCUDA(settings);
 	setupOCL(settings);
 	setupThrust(settings);
+
+	HANDLE_GL_ERROR();
 }
 
 void ParticleSystem::setupCPU(ofxXmlSettings & settings)
@@ -73,6 +79,8 @@ void ParticleSystem::setupCPU(ofxXmlSettings & settings)
 	mThreshold = settings.getValue("CPU:THRESHOLD", 1000);
 
 	mAvailableModes[ComputeMode::CPU] = settings.getValue("CPU:ENABLED", true);
+
+	HANDLE_GL_ERROR();
 }
 
 void ParticleSystem::setupCompute(ofxXmlSettings & settings)
@@ -95,6 +103,8 @@ void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 	{
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
 	}
+
+	HANDLE_GL_ERROR();
 }
 
 void ParticleSystem::setupCUDA(ofxXmlSettings & settings)
@@ -117,6 +127,8 @@ void ParticleSystem::setupCUDA(ofxXmlSettings & settings)
 	
 	// "checkCudaErrors" will quit the program in case of a problem, so it is safe to assume that if the program reached this point CUDA will work
 	mAvailableModes[ComputeMode::CUDA] = settings.getValue("CUDA:ENABLED", true);
+
+	HANDLE_GL_ERROR();
 }
 
 void ParticleSystem::setupOCL(ofxXmlSettings & settings)
@@ -160,6 +172,8 @@ void ParticleSystem::setupOCL(ofxXmlSettings & settings)
 		std::cout << "ERROR: Unable to create OpenCL context\n";
 		mAvailableModes[ComputeMode::OPENCL] = false;
 	}
+
+	HANDLE_GL_ERROR();
 }
 
 void ParticleSystem::setupThrust(ofxXmlSettings & settings)
@@ -174,16 +188,15 @@ void ParticleSystem::setupThrust(ofxXmlSettings & settings)
 	mThrustData = ThrustHelper::setup(mNumberOfParticles);
 
 	mAvailableModes[ComputeMode::THRUST] = true;
+
+	HANDLE_GL_ERROR();
 }
 
 void ParticleSystem::createParticleShader(std::string vert, std::string frag)
 {
 	mParticleShader.load(vert, frag);
 
-	GLint err = glGetError();
-	if (err != GL_NO_ERROR) {
-		ofLogNotice() << __FILE__ << ":" << __LINE__ << ": Load Shader came back with GL error:	" << err;
-	}
+	HANDLE_GL_ERROR();
 }
 
 void ParticleSystem::setNumberOfParticles(uint nop)
@@ -371,6 +384,11 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	}
 
 	mNumberOfParticles += particleCap;
+
+	// copy the particles to the GL buffer for drawing
+	mParticlesBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mParticlePosition);
+
+	HANDLE_GL_ERROR();
 }
 
 void ParticleSystem::draw()
@@ -378,64 +396,41 @@ void ParticleSystem::draw()
 	if (mNumberOfParticles == 0)
 		return;
 	
-	if (mGenericSwitch)
-	{
-		// *** DEBUG ONLY! EXTREMELY SLOW!
-		mParticleShader.begin();
+	// *** DESIRED METHOD but does not render correctly in Compute Shader and OpenCL mode
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 
-		mParticleShader.setUniform1i("mode", 0);
+	mParticleShader.begin();
 
-		//mParticlesVBO.draw(GL_POINTS, 0, mNumberOfParticles);
-		for (int i = 0; i < mNumberOfParticles; ++i)
-		{
-			mParticleTmp.setPosition(mParticlePosition[i]);
-			mParticleTmp.drawFaces();
-		}
+	// create to scale the particles in the shader
+	ofMatrix4x4 identity;
+	identity.makeIdentityMatrix();
+	identity.scale(ofVec3f(mSimData.interactionRadius * 0.1f));
 
-		mParticleShader.end();
-		// ***
-	}
-	else
-	{
-		// *** DESIRED METHOD but does not render correctly in Compute Shader and OpenCL mode
-		//glEnable(GL_CULL_FACE);
-		//glCullFace(GL_BACK);
+	// bind the buffer positions
+	//mParticlesBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 4);
+	mParticlesVBO.getVertexBuffer().bindBase(GL_SHADER_STORAGE_BUFFER, 4);
 
-		mParticleShader.begin();
+	// set uniforms
+	//mParticleShader.setUniform3f("systemPos", mPosition);
+	mParticleShader.setUniform1i("mode", 1);
+	mParticleShader.setUniformMatrix4f("scale", identity);
+	mParticleShader.setUniform1i("particles", mNumberOfParticles);
 
-		// create to scale the particles in the shader
-		ofMatrix4x4 identity;
-		identity.makeIdentityMatrix();
-		identity.scale(ofVec3f(mSimData.interactionRadius * 0.1f));
+	// draw particles
+	mParticleModel.drawInstanced(OF_MESH_FILL, mNumberOfParticles);
+	//mParticleModel.drawInstanced(OF_MESH_POINTS, mNumberOfParticles);
 
-		// bind the buffer positions
-		//mParticlesBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 4);
-		mParticlesVBO.getVertexBuffer().bindBase(GL_SHADER_STORAGE_BUFFER, 4);
+	// unbind and clean up
+	//mParticlesBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 4);
+	mParticlesVBO.getVertexBuffer().unbindBase(GL_SHADER_STORAGE_BUFFER, 4);
 
-		// set uniforms
-		//mParticleShader.setUniform3f("systemPos", mPosition);
-		mParticleShader.setUniform1i("mode", 1);
-		mParticleShader.setUniformMatrix4f("scale", identity);
-		mParticleShader.setUniform1i("particles", mNumberOfParticles);
+	mParticleShader.end();
 
-		// draw particles
-		mParticleModel.drawInstanced(OF_MESH_FILL, mNumberOfParticles);
-		//mParticleModel.drawInstanced(OF_MESH_POINTS, mNumberOfParticles);
+	//glDisable(GL_CULL_FACE);
+	// ***
 
-		// unbind and clean up
-		//mParticlesBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 4);
-		mParticlesVBO.getVertexBuffer().unbindBase(GL_SHADER_STORAGE_BUFFER, 4);
-
-		mParticleShader.end();
-
-		//glDisable(GL_CULL_FACE);
-		// ***
-	}
-
-	GLint err = glGetError();
-	if (err != GL_NO_ERROR) {
-		ofLogNotice() << __FILE__ << ":" << __LINE__ << ": GL error:	" << err;
-	}
+	HANDLE_GL_ERROR();
 }
 
 ofVec3f ParticleSystem::getDimensions() const
@@ -506,7 +501,7 @@ void ParticleSystem::update(float dt)
 	}
 
 	// copy CPU data to the GL buffer for drawing
-	mParticlesBuffer.updateData(mNumberOfParticles * sizeof(ofVec4f), mParticlePosition);
+	mParticlesBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mParticlePosition);
 
 	if (mMeasureTime)
 	{
