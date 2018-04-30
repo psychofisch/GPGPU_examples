@@ -15,6 +15,7 @@ void ofApp::setup(){
 		mXmlSettings.loadFile("settings.xml");
 	}
 
+	// graphic setup
 	ofGetWindowPtr()->setWindowTitle(mXmlSettings.getValue("GENERAL:TITLE", "Minigame"));
 
 	ofSetVerticalSync(false);
@@ -33,8 +34,7 @@ void ofApp::setup(){
 	mLight.setPointLight();
 	mLight.setPosition(ofVec3f(0.f));
 
-	ofBoxPrimitive testRect;
-
+	// particle setup
 	int maxParticles = mXmlSettings.getValue("GENERAL:MAXPARTICLES", 5000);
 	if (maxParticles <= 0)
 	{
@@ -54,6 +54,7 @@ void ofApp::setup(){
 
 	mValve = false;
 
+	// control and HUD setup
 	mRotationAxis = 0b000;
 
 	mMouse = ofVec2f(-1, -1);
@@ -86,6 +87,20 @@ void ofApp::setup(){
 	mHudMode = iHudGetModeString(mParticleSystem->getMode());
 
 	std::cout << "OpenGL " << ofGetGLRenderer()->getGLVersionMajor() << "." << ofGetGLRenderer()->getGLVersionMinor() << std::endl;
+
+	// level collision setup
+	Cube tmpCube;
+	tmpCube.set(.25f);
+	
+	tmpCube.setPosition(ofVec3f(0.3f, 0, 0) + (tmpCube.getDepth() * 0.5f));
+	mLevelCollider.push_back(tmpCube);
+
+	for (size_t i = 0; i < mLevelCollider.size(); i++)
+	{
+		mLevelCollider[i].recalculateMinMax();
+	}
+
+	mLevelShader.load("simple.vert", "simple.frag");
 }
 
 //--------------------------------------------------------------
@@ -125,7 +140,19 @@ void ofApp::update(){
 		float dt = deltaTime;
 		if (mHudStep)
 			dt = 0.008f;
+
+		// collision preparation
+		std::vector<MinMaxData> minMax(mLevelCollider.size());
+		for (size_t i = 0; i < mLevelCollider.size(); i++)
+		{
+			minMax[i] = mLevelCollider[i].getLocalMinMax() + mLevelCollider[i].getPosition();
+		}
+		mParticleSystem->setStaticCollision(minMax);
+
+		// update particles
 		mParticleSystem->update(dt);
+
+		// reset this bool if step mode is activated (no unnecessary branching)
 		mHudStep = false;
 	}
 	//mParticleSystem->update(0.016f);
@@ -144,6 +171,7 @@ void ofApp::draw(){
 
 	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
+	// draw particles
 	//ofPushMatrix();
 	ofVec3f axis;
 	float angle;
@@ -159,6 +187,17 @@ void ofApp::draw(){
 	mParticleSystem->draw();
 	//ofPopStyle();
 	//ofPopMatrix();
+	// *** dp
+
+	// draw level
+	mLevelShader.begin();
+	mLevelShader.setUniform3f("systemPos", mParticleSystem->getPosition());
+	for (size_t i = 0; i < mLevelCollider.size(); ++i)
+	{
+		mLevelCollider[i].draw();
+	}
+	mLevelShader.end();
+	// *** dl
 
 	mMainCamera.end();
 	//mLight.disable();

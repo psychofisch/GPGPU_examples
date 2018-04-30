@@ -277,6 +277,11 @@ void ParticleSystem::addPosition(ofVec3f p)
 	setPosition(mPosition + p);
 }
 
+void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
+{
+	mStaticCollision = collision;
+}
+
 ParticleSystem::ComputeMode ParticleSystem::nextMode(ParticleSystem::ComputeMode current) const
 {
 	int enumSize = ComputeMode::COMPUTEMODES_SIZE;
@@ -532,19 +537,20 @@ void ParticleSystem::iUpdateCPU(float dt)
 
 		particlePosition -= mPosition;
 
-		//gravity
+		// gravity
 		particleVelocity += (mGravity + particlePressure) * dt;
 		//particleVelocity += (mGravity) * dt;
-		//***g
+		// ***g
 
-		//static collision
+		ofVec3f newpos = particlePosition + particleVelocity * dt;
+		// bounding box collision
 		for (int i = 0; i < 3; ++i)
 		{
-			if ((particlePosition[i] + particleVelocity[i] * dt > mDimension[i] && particleVelocity[i] > 0.f) // max boundary
-				|| (particlePosition[i] + particleVelocity[i] * dt < 0.f && particleVelocity[i] < 0.f) // min boundary
+			if ((newpos[i] > mDimension[i] && particleVelocity[i] > 0.f) // max boundary
+				|| (newpos[i] < 0.f && particleVelocity[i] < 0.f) // min boundary
 				)
 			{
-				if (particlePosition[i] + particleVelocity[i] * dt < 0.f)
+				if (newpos[i] < 0.f)
 					particlePosition[i] = 0.f;
 				else
 					particlePosition[i] = mDimension[i];
@@ -552,7 +558,56 @@ void ParticleSystem::iUpdateCPU(float dt)
 				particleVelocity[i] *= -.3f;
 			}
 		}
-		//*** sc
+		//*** bbc
+
+		// static collision
+		int collisionCnt = 3; //support 3 collisions at once
+		for (size_t i = 0; i < mStaticCollision.size() && collisionCnt > 0; i++)
+		{
+			const ofVec3f currentMin = mStaticCollision[i].min;
+			const ofVec3f currentMax = mStaticCollision[i].max;
+			//ofVec3f otherMin, otherMax;
+			int result = -1;
+
+			if (((newpos.x < currentMax.x && newpos.x > currentMin.x))
+				&&
+				((newpos.z < currentMax.z && newpos.z > currentMin.z))
+				&&
+				((newpos.y < currentMax.y && newpos.y > currentMin.y))
+				)
+			{
+				ofVec3f aabbCenter = currentMin + ((currentMax - currentMin)*0.5f);
+				ofVec3f whichSide = (aabbCenter - newpos).normalized();
+				int closest = 666;
+				float current = -66.6;
+				for (size_t i = 0; i < 6; ++i)
+				{
+					float angle = whichSide.dot(Particle::directions[i]);
+					if (angle > current)
+					{
+						current = angle;
+						closest = i;
+					}
+				}
+
+				if (closest == 666)
+				{
+					std::cout << "W00T!?\n";
+					__debugbreak();
+				}
+
+				//ofVec3f reflection;
+				ofVec3f n = Particle::directions[closest];
+
+				// source -> https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector#13266
+				particleVelocity = particleVelocity - (2 * particleVelocity.dot(n) * n);
+				
+				collisionCnt = 0;
+				//result = j;
+				//break;// OPT: do not delete this (30% performance loss)
+			}
+		}
+		// *** sc
 
 		//particleVelocity += dt * particleVelocity * -0.01f;//damping
 		particlePosition += particleVelocity * dt;

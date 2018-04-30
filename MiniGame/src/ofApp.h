@@ -5,6 +5,7 @@
 #include "ofxXmlSettings.h"
 
 #include "ParticleSystem.h"
+#include "CollisionSystem.h"
 
 class ofApp : public ofBaseApp{
 
@@ -40,6 +41,8 @@ class ofApp : public ofBaseApp{
 		float mMouseSens;
 		ofVec3f mMoveVec;
 		bool mValve;
+		std::vector<Cube> mLevelCollider;
+		ofShader mLevelShader;
 
 		ofxXmlSettings mXmlSettings;
 
