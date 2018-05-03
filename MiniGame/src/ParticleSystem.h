@@ -53,12 +53,13 @@ namespace Particle
 //}
 //
 //#endif
-const ofVec3f directions[6] = { ofVec3f(1.f, 0, 0),
-	ofVec3f(-1.f, 0, 0),
-	ofVec3f(0, 1.f, 0),
-	ofVec3f(0, -1.f, 0),
-	ofVec3f(0, 0, 1.f),
-	ofVec3f(0, 0, -1.f) };
+	const ofVec3f directions[6] = { ofVec3f(1.f, 0, 0),
+									ofVec3f(-1.f, 0, 0),
+									ofVec3f(0, 1.f, 0),
+									ofVec3f(0, -1.f, 0),
+									ofVec3f(0, 0, 1.f),
+									ofVec3f(0, 0, -1.f) };
+	const ofVec3f gravity = ofVec3f(0, -9.81f, 0);
 
 //definitions for Compute Shader
 	struct ComputeShaderData
@@ -151,6 +152,8 @@ public:
 	void addPosition(ofVec3f p);
 	// set static collisions
 	void setStaticCollision(std::vector<MinMaxData>& collision);
+	// set gravity
+	void setGravity(ofVec3f g);
 
 	// other methods
 

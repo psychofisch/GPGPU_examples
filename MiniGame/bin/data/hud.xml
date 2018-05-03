@@ -1,10 +1,10 @@
 <group>
 	<Debug_Information>
-		<FPS>74</FPS>
+		<FPS>116</FPS>
 	</Debug_Information>
 	<Program_Information>
 		<Mode>CPU</Mode>
-		<Particles>1000/50000</Particles>
+		<Particles>500/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
@@ -12,10 +12,10 @@
 	</Program_Information>
 	<Simulation_Settings>
 		<Smoothing_Width>0.0727037</Smoothing_Width>
-	<Rest_Density>14.2857</Rest_Density>
-	<Spring>0.688775</Spring>
-		<Spring_Near>0.739796</Spring_Near>
-	<Interaction_Radius>0.1</Interaction_Radius>
+	<Rest_Density>6.63265</Rest_Density>
+	<Spring>20.9184</Spring>
+		<Spring_Near>0.765306</Spring_Near>
+	<Interaction_Radius>0.173469</Interaction_Radius>
 	</Simulation_Settings>
 <group/>
 </group>

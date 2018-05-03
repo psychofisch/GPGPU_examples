@@ -45,7 +45,7 @@ void ofApp::setup(){
 	mParticleSystem = new ParticleSystem(maxParticles);
 	mParticleSystem->setupAll(mXmlSettings);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
-	mParticleSystem->setDimensions(ofVec3f(1.f));
+	mParticleSystem->setDimensions(ofVec3f(1.f, 1.f, 1.f));
 	Particle::CUDAta tmpCUDA = mParticleSystem->getCudata();
 	mParticleSystem->createParticleShader(mXmlSettings.getValue("GENERAL:VERT", "shader.vert"), mXmlSettings.getValue("GENERAL:FRAG", "shader.frag"));
 	//mParticleSystem->addDamBreak(200);
@@ -53,6 +53,8 @@ void ofApp::setup(){
 	//mParticleSystem->addRandom();
 
 	mValve = false;
+
+	mMoveVec.y = 1.f;
 
 	// control and HUD setup
 	mRotationAxis = 0b000;
@@ -74,8 +76,8 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudPause.set("Pause", false));
 	mHudControlGroup.add(mHudStep.set("Step", false));
 	mHudSimulationGroup.add(mHudSmoothingWidth.set("Interaction Radius", 0.1f, 0.00000001f, 1.f));
-	mHudSimulationGroup.add(mHudRestDensity.set("Rest Density", 3.5f, 0.0f, 50.f));
-	mHudSimulationGroup.add(mHudSpring.set("Spring", 1.0f, 0.0f, 10.f));
+	mHudSimulationGroup.add(mHudRestDensity.set("Rest Density", 0.5f, 0.0f, 10.f));
+	mHudSimulationGroup.add(mHudSpring.set("Spring", 1.0f, 0.0f, 100.f));
 	mHudSimulationGroup.add(mHudSpringNear.set("Spring Near", 1.0f, 0.0f, 10.f));
 
 	mHud.setup();
@@ -92,7 +94,13 @@ void ofApp::setup(){
 	Cube tmpCube;
 	tmpCube.set(.25f);
 	
-	tmpCube.setPosition(ofVec3f(0.3f, 0, 0) + (tmpCube.getDepth() * 0.5f));
+	tmpCube.setPosition(ofVec3f(0.3f, -0.01f, -0.01f) + (tmpCube.getDepth() * 0.5f));
+	mLevelCollider.push_back(tmpCube);
+
+	tmpCube.setPosition(ofVec3f(0.6f, -0.01f, -0.01f) + (tmpCube.getDepth() * 0.5f));
+	mLevelCollider.push_back(tmpCube);
+
+	tmpCube.setPosition(ofVec3f(0.9f, -0.01f, -0.01f) + (tmpCube.getDepth() * 0.5f));
 	mLevelCollider.push_back(tmpCube);
 
 	for (size_t i = 0; i < mLevelCollider.size(); i++)
@@ -131,9 +139,12 @@ void ofApp::update(){
 		mParticleSystem->addCube(tmpSize * ofVec3f(0.5f, 1.0f, 0.5f), tmpSize * 0.1f, 2, true);
 	}
 
-	ofVec3f moveVec = mMoveVec * deltaTime;
-	mParticleSystem->addPosition(moveVec);
-	mTestBox.move(moveVec);
+	//ofVec3f moveVec = mMoveVec /** deltaTime*/;
+	//mParticleSystem->addPosition(moveVec);
+	//mTestBox.move(moveVec);
+	ofVec3f gravity = Particle::gravity.y * mMoveVec.normalized();
+	mParticleSystem->setGravity(gravity);
+	 
 
 	if (!mHudPause || mHudStep)
 	{
@@ -194,7 +205,8 @@ void ofApp::draw(){
 	mLevelShader.setUniform3f("systemPos", mParticleSystem->getPosition());
 	for (size_t i = 0; i < mLevelCollider.size(); ++i)
 	{
-		mLevelCollider[i].draw();
+		//mLevelCollider[i].draw();
+		mLevelCollider[i].drawWireframe();
 	}
 	mLevelShader.end();
 	// *** dl
@@ -268,7 +280,8 @@ void ofApp::keyReleased(int key){
 		case 'e':
 		{
 			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-			mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
+			//mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
+			mParticleSystem->addCube(ofVec3f(0, 0.5f, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 		}
 			break;
 		case 'v':

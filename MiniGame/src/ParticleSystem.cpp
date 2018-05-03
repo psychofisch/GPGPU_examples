@@ -1,8 +1,7 @@
 #include "ParticleSystem.h"
 
 ParticleSystem::ParticleSystem(uint maxParticles)
-	:mGravity(0.f, -9.81f, 0.f),
-	mCapacity(maxParticles),
+	:mCapacity(maxParticles),
 	mNumberOfParticles(0),
 	mMode(ComputeMode::CPU)
 {
@@ -15,6 +14,7 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	for (int i = 0; i < ComputeMode::COMPUTEMODES_SIZE; ++i)
 		mAvailableModes[i] = false;
 
+	mGravity = Particle::gravity;
 	//***
 
 	//*** general GL setup
@@ -282,6 +282,11 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 	mStaticCollision = collision;
 }
 
+void ParticleSystem::setGravity(ofVec3f g)
+{
+	mGravity = g;
+}
+
 ParticleSystem::ComputeMode ParticleSystem::nextMode(ParticleSystem::ComputeMode current) const
 {
 	int enumSize = ComputeMode::COMPUTEMODES_SIZE;
@@ -521,6 +526,7 @@ void ParticleSystem::update(float dt)
 void ParticleSystem::iUpdateCPU(float dt)
 {
 	float maxSpeed = 500.f;
+	float fluidDamp = 0.1f;
 
 	//optimization
 	maxSpeed = 1.f / maxSpeed;
@@ -555,7 +561,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 				else
 					particlePosition[i] = mDimension[i];
 
-				particleVelocity[i] *= -.3f;
+				particleVelocity[i] *= -fluidDamp;
 			}
 		}
 		//*** bbc
@@ -580,7 +586,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 				ofVec3f whichSide = (aabbCenter - newpos).normalized();
 				int closest = 666;
 				float current = -66.6;
-				for (size_t i = 0; i < 6; ++i)
+				for (int i = 0; i < 6; ++i)
 				{
 					float angle = whichSide.dot(Particle::directions[i]);
 					if (angle > current)
@@ -601,6 +607,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 
 				// source -> https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector#13266
 				particleVelocity = particleVelocity - (2 * particleVelocity.dot(n) * n);
+				particleVelocity *= fluidDamp;
 				
 				collisionCnt = 0;
 				//result = j;
@@ -623,6 +630,10 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 	interactionRadius *= interactionRadius;
 	//float amplitude = 1.f;
 	ofVec3f particlePosition = pos;
+	float density = 0.f;
+	float spring = mSimData.spring;
+	float springNear = mSimData.springNear;
+	float rho0 = mSimData.rho0;
 
 	ofVec3f pressureVec, viscosityVec;
 	for (uint i = 0; i < mNumberOfParticles; ++i)
@@ -635,7 +646,8 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 		float dist = dirVec.lengthSquared();
 
 		//if (dist > interactionRadius * 1.f)
-		if (dist > interactionRadius * 1.0f || dist < 0.00001f)
+		if (dist > interactionRadius)
+		//if (dist > interactionRadius * 1.0f || dist < 0.00001f)
 			continue;
 
 		ofVec3f dirVecN = dirVec.getNormalized();
@@ -643,23 +655,42 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 		float distRel = sqrtf(dist / interactionRadius);
 
 		// viscosity
-		if (moveDir > 0)
+		if (true || moveDir > 0)
 		{
-			ofVec3f impulse = (1.f - distRel) * (mSimData.spring * moveDir + mSimData.springNear * moveDir * moveDir) * dirVecN;
+			//ofVec3f impulse = (1.f - distRel) * (mSimData.spring * moveDir + mSimData.springNear * moveDir * moveDir) * dirVecN;
+			ofVec3f impulse = (1.f - distRel) * (spring * moveDir) * dirVecN;
 			viscosityVec -= impulse * 0.5f;//goes back to the caller-particle
 			//viscosityVec.w = 666.0f;
 		}
 		// *** v
 
+		//if (distRel < 0.2f)
+		//	__debugbreak();
+
+		// pressure 
 		float oneminusx = 1.f - distRel;
 		float sqx = oneminusx * oneminusx;
-		float pressure = 1.f - mSimData.rho0 * (sqx * oneminusx - sqx);
+		//float pressure = 1.f - rho0 * (sqx * oneminusx - sqx);
+		float pressure = (sqx * rho0);
+		// *** p
+
+		// spring
+		//float spring = mSimData.springNear * (sqx);
+		// *** s
+
+		density += 1.f;
 
 		//float pressure = 1.f - (dist / interactionRadius);
 		//float pressure = amplitude * expf(-dist / interactionRadius);
 		//pressureVec += pressure * vectorMath::normalize(dirVec);
-		pressureVec += pressure * dirVec.getNormalized();
+		pressureVec += (pressure - springNear) * dirVecN;
 	}
+
+	/*if (index == 1)
+		std::cout << density << std::endl;*/
+
+	//pressureVec = pressureVec.length() * ((density / mSimData.springNear) - 0.5f) * pressureVec.getNormalized();
+
 	return pressureVec + viscosityVec;
 }
 
