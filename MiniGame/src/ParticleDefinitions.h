@@ -6,7 +6,7 @@ typedef unsigned int uint;
 struct SimulationData
 {
 	float interactionRadius;
-	float rho0;//restDensity
-	float spring;
-	float springNear;
+	float pressureMultiplier;
+	float viscosity;
+	float restPressure;
 };

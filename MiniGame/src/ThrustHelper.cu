@@ -38,7 +38,7 @@ __host__ __device__ float4 ThrustHelper::PressureFunctor::operator()(float4 oute
 	// viscosity
 	if (moveDir > 0)
 	{
-		float3 impulse = (1.f - distRel) * (simData.spring * moveDir + simData.springNear * moveDir * moveDir) * dirVecN;
+		float3 impulse = (1.f - distRel) * (simData.viscosity * moveDir + simData.restPressure * moveDir * moveDir) * dirVecN;
 		viscosityVec = (impulse * 0.5f);//goes back to the caller-particle
 										//viscosityVec.w = 666.0f;
 	}
@@ -46,7 +46,7 @@ __host__ __device__ float4 ThrustHelper::PressureFunctor::operator()(float4 oute
 
 	float oneminusx = 1.f - distRel;
 	float sqx = oneminusx * oneminusx;
-	float pressure = 1.f - simData.rho0 * (sqx * oneminusx - sqx);
+	float pressure = 1.f - simData.pressureMultiplier * (sqx * oneminusx - sqx);
 
 	pressureVec = pressure * dirVecN;
 

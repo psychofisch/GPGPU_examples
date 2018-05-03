@@ -111,7 +111,7 @@ __device__ float4 calculatePressure(const float4* __restrict__ position, const f
 		// viscosity
 		if (moveDir > 0)
 		{
-			float3 impulse = (1.f - distRel) * (simData.spring * moveDir + simData.springNear * moveDir * moveDir) * dirVecN;
+			float3 impulse = (1.f - distRel) * (simData.viscosity * moveDir + simData.restPressure * moveDir * moveDir) * dirVecN;
 			viscosityVec -= make_float4(impulse * 0.5f);//goes back to the caller-particle
 											   //viscosityVec.w = 666.0f;
 		}
@@ -119,7 +119,7 @@ __device__ float4 calculatePressure(const float4* __restrict__ position, const f
 
 		float oneminusx = 1.f - distRel;
 		float sqx = oneminusx * oneminusx;
-		float pressure = 1.f - simData.rho0 * (sqx * oneminusx - sqx);
+		float pressure = 1.f - simData.pressureMultiplier * (sqx * oneminusx - sqx);
 		//float pressure = 1.f - (dist / simData.interactionRadius);
 		////float pressure = amplitude * exp(-dist / interactionRadius);
 

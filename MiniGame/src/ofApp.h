@@ -58,13 +58,12 @@ class ofApp : public ofBaseApp{
 		ofParameter<std::string> mHudParticles;
 		ofParameter<bool> mHudPause;
 		ofParameter<bool> mHudStep;
-		ofParameter<ofColor> mHudColor;
 
 		ofParameterGroup mHudSimulationGroup;
-		ofParameter<float> mHudSmoothingWidth;
-		ofParameter<float> mHudRestDensity;
-		ofParameter<float> mHudSpring;
-		ofParameter<float> mHudSpringNear;
+		ofParameter<float> mHudInteractionRadius;
+		ofParameter<float> mHudPressureMultiplier;
+		ofParameter<float> mHudViscosity;
+		ofParameter<float> mHudRestPressure;
 
 		std::string iHudGetModeString(ParticleSystem::ComputeMode m);
 };

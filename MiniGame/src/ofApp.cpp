@@ -70,15 +70,14 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
 	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
 	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
-	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
 
 	mHudSimulationGroup.setName("Simulation Settings");
 	mHudControlGroup.add(mHudPause.set("Pause", false));
 	mHudControlGroup.add(mHudStep.set("Step", false));
-	mHudSimulationGroup.add(mHudSmoothingWidth.set("Interaction Radius", 0.1f, 0.00000001f, 1.f));
-	mHudSimulationGroup.add(mHudRestDensity.set("Rest Density", 0.5f, 0.0f, 10.f));
-	mHudSimulationGroup.add(mHudSpring.set("Spring", 1.0f, 0.0f, 100.f));
-	mHudSimulationGroup.add(mHudSpringNear.set("Spring Near", 1.0f, 0.0f, 10.f));
+	mHudSimulationGroup.add(mHudInteractionRadius.set("Interaction Radius", 0.1f, 0.00000001f, 1.f));
+	mHudSimulationGroup.add(mHudPressureMultiplier.set("Pressure Multiplier", 0.5f, 0.0f, 10.f));
+	mHudSimulationGroup.add(mHudViscosity.set("Viscosity", 1.0f, 0.0f, 100.f));
+	mHudSimulationGroup.add(mHudRestPressure.set("Rest Pressure", .1f, 0.0f, 1.f));
 
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
@@ -94,13 +93,8 @@ void ofApp::setup(){
 	Cube tmpCube;
 	tmpCube.set(.25f);
 	
-	tmpCube.setPosition(ofVec3f(0.3f, -0.01f, -0.01f) + (tmpCube.getDepth() * 0.5f));
-	mLevelCollider.push_back(tmpCube);
-
-	tmpCube.setPosition(ofVec3f(0.6f, -0.01f, -0.01f) + (tmpCube.getDepth() * 0.5f));
-	mLevelCollider.push_back(tmpCube);
-
-	tmpCube.setPosition(ofVec3f(0.9f, -0.01f, -0.01f) + (tmpCube.getDepth() * 0.5f));
+	tmpCube.set(0.1f, 0.3f, 0.9f);
+	tmpCube.setPosition(ofVec3f(0.3f, -0.01f, -0.01f) + (tmpCube.getSize() * 0.5f));
 	mLevelCollider.push_back(tmpCube);
 
 	for (size_t i = 0; i < mLevelCollider.size(); i++)
@@ -121,13 +115,13 @@ void ofApp::update(){
 	//mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
 	SimulationData simD;
-	simD.interactionRadius = mHudSmoothingWidth;
-	simD.rho0 = mHudRestDensity;
-	simD.spring = mHudSpring;
-	simD.springNear = mHudSpringNear;
+	simD.interactionRadius = mHudInteractionRadius;
+	simD.pressureMultiplier = mHudPressureMultiplier;
+	simD.viscosity = mHudViscosity;
+	simD.restPressure = mHudRestPressure;
 	mParticleSystem->setSimulationData(simD);
-	//mParticleSystem->setSmoothingWidth(mHudSmoothingWidth);
-	//mParticleSystem->setRestDensity(mHudRestDensity);
+	//mParticleSystem->setSmoothingWidth(mHudInteractionRadius);
+	//mParticleSystem->setRestDensity(mHudPressureMultiplier);
 	//mParticleSystem->getCudata().maxWorkGroupSize = mHudWorkGroup;
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
@@ -183,21 +177,13 @@ void ofApp::draw(){
 	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
 	// draw particles
-	//ofPushMatrix();
 	ofVec3f axis;
 	float angle;
 	mGlobalRotation.getRotate(angle, axis);
 	ofRotate(angle, axis.x, axis.y, axis.z);
 	ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
-	//ofPushStyle();
-	ofSetColor(mHudColor);
-	//glPointSize(2.f);
 	mTestBox.drawAxes(1.f);
-	//mParticleMesh.drawVertices();
-	//mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
 	mParticleSystem->draw();
-	//ofPopStyle();
-	//ofPopMatrix();
 	// *** dp
 
 	// draw level
@@ -227,16 +213,16 @@ void ofApp::keyPressed(int key){
 	case OF_KEY_ESC: quit();
 		break;
 	case 'w':
-		mMoveVec.z = -1.f;
-		break;
-	case 's':
 		mMoveVec.z = 1.f;
 		break;
+	case 's':
+		mMoveVec.z = -1.f;
+		break;
 	case 'a':
-		mMoveVec.x = -1.f;
+		mMoveVec.x = 1.f;
 		break;
 	case 'd':
-		mMoveVec.x = 1.f;
+		mMoveVec.x = -1.f;
 		break;
 	case 'v':
 		mValve = true;
