@@ -56,10 +56,11 @@ class ofApp : public ofBaseApp{
 		ofParameter<std::string> mHudMode;
 		ofParameter<size_t> mHudWorkGroup;
 		ofParameter<std::string> mHudParticles;
-		ofParameter<bool> mHudPause;
-		ofParameter<bool> mHudStep;
+		ofParameter<float> mHudTime;
 
 		ofParameterGroup mHudSimulationGroup;
+		ofParameter<bool> mHudPause;
+		ofParameter<bool> mHudStep;
 		ofParameter<float> mHudInteractionRadius;
 		ofParameter<float> mHudPressureMultiplier;
 		ofParameter<float> mHudViscosity;

@@ -532,14 +532,14 @@ void ParticleSystem::iUpdateCPU(float dt)
 	maxSpeed = 1.f / maxSpeed;
 	ofVec3f boundingBox = mDimension;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
 		ofVec3f particlePosition = mParticlePosition[i];
 		ofVec3f particleVelocity = mParticleVelocity[i];
 		
 		// fluid simulation
-		ofVec3f particlePressure = iCalculatePressureVector(i, particlePosition, particleVelocity);
+		ofVec3f particlePressure = iCalculatePressureVector(i, particlePosition, particleVelocity, dt);
 		// *** fs
 
 		// remove the system position offset
@@ -609,8 +609,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 				ofVec3f n = Particle::directions[closest];
 
 				// source -> https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector#13266
-				//particleVelocity = (particleVelocity - (2 * particleVelocity.dot(n) * n)) + (n * 0.1f);
-				particleVelocity = n;
+				particleVelocity = particleVelocity - (2 * particleVelocity.dot(n) * n);
 				particleVelocity *= fluidDamp;
 				
 				collisionCnt = 0;
@@ -628,16 +627,16 @@ void ParticleSystem::iUpdateCPU(float dt)
 	}
 }
 
-ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel)
+ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt)
 {
 	float interactionRadius = mSimData.interactionRadius;
-	interactionRadius *= interactionRadius;
 	//float amplitude = 1.f;
 	ofVec3f particlePosition = pos;
 	float density = 0.f;
 	float viscosity = mSimData.viscosity;
 	float restPressure = mSimData.restPressure;
 	float pressureMultiplier = mSimData.pressureMultiplier;
+	ofVec3f debug;
 
 	ofVec3f pressureVec, viscosityVec;
 	for (uint i = 0; i < mNumberOfParticles; ++i)
@@ -646,46 +645,43 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 			continue;
 
 		ofVec3f dirVec = particlePosition - mParticlePosition[i];
-		//float dist = dirVec.length();
-		float dist = dirVec.lengthSquared();
+		float dist = dirVec.length();
 
 		if (dist > interactionRadius)
 			continue;
 
 		ofVec3f dirVecN = dirVec.getNormalized();
 		float moveDir = (vel - mParticleVelocity[i]).dot(dirVecN);
-		float distRel = 1.f - (sqrtf(dist / interactionRadius));
+		float distRel = 1.f - (dist / interactionRadius);
+
+		debug.x += moveDir;
+		debug.y += distRel;
+		float sqx = distRel * distRel;
 
 		// viscosity
 		if (true || moveDir > 0)
 		{
 			//ofVec3f impulse = (1.f - distRel) * (mSimData.viscosity * moveDir + mSimData.restPressure * moveDir * moveDir) * dirVecN;
-			ofVec3f impulse = distRel * (viscosity * moveDir) * dirVecN;
-			viscosityVec -= impulse * 0.5f;//goes back to the caller-particle
+			float factor = sqx * distRel * (viscosity * moveDir);
+			ofVec3f impulse = factor * dirVecN;
+			viscosityVec -= impulse;
 		}
 		// *** v
 
 		// pressure 
-		float sqx = distRel * distRel;
-		//float pressure = 1.f - pressureMultiplier * (sqx * oneminusx - sqx);
 		float pressure = sqx * pressureMultiplier;
 		// *** p
 
-		// viscosity
-		//float viscosity = mSimData.restPressure * (sqx);
-		// *** s
-
 		density += 1.f;
 
-		//float pressure = 1.f - (dist / interactionRadius);
-		//float pressure = amplitude * expf(-dist / interactionRadius);
-		//pressureVec += pressure * vectorMath::normalize(dirVec);
 		pressureVec += (pressure - restPressure) * dirVecN;
 	}
 
-	//pressureVec = pressureVec.length() * ((density / mSimData.restPressure) - 0.5f) * pressureVec.getNormalized();
+	viscosityVec.limit(150.f);//TODO: remove this hard limitation and solve the root of the problem
 
-	return pressureVec + viscosityVec;
+	ofVec3f result = pressureVec + viscosityVec;
+
+	return result;
 }
 
 void ParticleSystem::iUpdateCompute(float dt)

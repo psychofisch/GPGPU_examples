@@ -70,6 +70,7 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
 	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
 	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
+	mHudControlGroup.add(mHudTime.set("Time", 1.0f, 0.f, 5.f));
 
 	mHudSimulationGroup.setName("Simulation Settings");
 	mHudControlGroup.add(mHudPause.set("Pause", false));
@@ -143,8 +144,10 @@ void ofApp::update(){
 	if (!mHudPause || mHudStep)
 	{
 		float dt = deltaTime;
+		dt *= mHudTime;
+
 		if (mHudStep)
-			dt = 0.008f;
+			dt = 0.033f;
 
 		// collision preparation
 		std::vector<MinMaxData> minMax(mLevelCollider.size());

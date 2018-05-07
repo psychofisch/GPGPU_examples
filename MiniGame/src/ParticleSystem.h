@@ -215,6 +215,6 @@ private:
 	void iUpdateOCL(float dt);
 	void iUpdateCUDA(float dt);
 	void iUpdateThrust(float dt);
-	ofVec3f iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel);
+	ofVec3f iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt);
 };
 

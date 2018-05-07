@@ -1,20 +1,21 @@
 <group>
 	<Debug_Information>
-		<FPS>910</FPS>
+		<FPS>253</FPS>
 	</Debug_Information>
 	<Program_Information>
 		<Mode>CPU</Mode>
-		<Particles>0/50000</Particles>
+		<Particles>500/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
 		<Step>0</Step>
+	<Time>1.00128</Time>
 	</Program_Information>
 	<Simulation_Settings>
-		<Interaction_Radius>0.142857</Interaction_Radius>
-		<Pressure_Multiplier>3.36735</Pressure_Multiplier>
-		<Viscosity>12.2449</Viscosity>
-		<Rest_Pressure>0.265306</Rest_Pressure>
+		<Interaction_Radius>0.306122</Interaction_Radius>
+		<Pressure_Multiplier>2.7551</Pressure_Multiplier>
+		<Viscosity>25</Viscosity>
+		<Rest_Pressure>0.270408</Rest_Pressure>
 	</Simulation_Settings>
 <group/>
 </group>
