@@ -630,13 +630,11 @@ void ParticleSystem::iUpdateCPU(float dt)
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt)
 {
 	float interactionRadius = mSimData.interactionRadius;
-	//float amplitude = 1.f;
 	ofVec3f particlePosition = pos;
-	float density = 0.f;
+	//float density = 0.f;
 	float viscosity = mSimData.viscosity;
 	float restPressure = mSimData.restPressure;
 	float pressureMultiplier = mSimData.pressureMultiplier;
-	ofVec3f debug;
 
 	ofVec3f pressureVec, viscosityVec;
 	for (uint i = 0; i < mNumberOfParticles; ++i)
@@ -654,8 +652,6 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 		float moveDir = (vel - mParticleVelocity[i]).dot(dirVecN);
 		float distRel = 1.f - (dist / interactionRadius);
 
-		debug.x += moveDir;
-		debug.y += distRel;
 		float sqx = distRel * distRel;
 
 		// viscosity
@@ -672,12 +668,27 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 		float pressure = sqx * pressureMultiplier;
 		// *** p
 
-		density += 1.f;
+		//density += 1.f;
 
 		pressureVec += (pressure - restPressure) * dirVecN;
 	}
 
-	viscosityVec.limit(150.f);//TODO: remove this hard limitation and solve the root of the problem
+	//if (index == 0)
+	//	std::cout << viscosityVec.length() << ";" << viscosityVec.getLimited(100.f).length() << ";";
+
+	//compress viscosity TODO: fix the root of this problem and not just limit it manually
+	float threshold = 50.f;
+	float visL = viscosityVec.length();
+	if (visL > threshold)
+	{
+		visL = threshold + ((visL - threshold)*0.125f);//8:1 compression
+		viscosityVec.scale(visL);
+	}
+	viscosityVec.limit(100.f);
+	//*** lv
+
+	//if (index == 0)
+	//	std::cout << visL << std::endl;
 
 	ofVec3f result = pressureVec + viscosityVec;
 
