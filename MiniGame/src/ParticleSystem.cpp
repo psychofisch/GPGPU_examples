@@ -527,6 +527,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 {
 	float maxSpeed = 500.f;
 	float fluidDamp = 0.f;
+	float particleSize = mSimData.interactionRadius * 0.1f;
 
 	//optimization
 	maxSpeed = 1.f / maxSpeed;
@@ -550,7 +551,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		//particleVelocity += (mGravity) * dt;
 		// ***g
 
-		ofVec3f newpos = (particlePosition) + particleVelocity * dt;
+		ofVec3f newpos = particlePosition + particleVelocity * dt + particleVelocity.getNormalized() * particleSize;
 
 		// bounding box collision
 		for (int i = 0; i < 3; ++i)
@@ -559,10 +560,10 @@ void ParticleSystem::iUpdateCPU(float dt)
 				|| (newpos[i] < 0.f && particleVelocity[i] < 0.f) // min boundary
 				)
 			{
-				if (newpos[i] < 0.f)
-					particlePosition[i] = 0.f;
+				/*if (newpos[i] < particleSize)//TODO: consider readding this, not sure if this had any side-effects
+					particlePosition[i] = particleSize;
 				else
-					particlePosition[i] = boundingBox[i];
+					particlePosition[i] = boundingBox[i] - particleSize;*/
 
 				particleVelocity[i] *= -fluidDamp;
 			}
@@ -658,7 +659,7 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 		if (true || moveDir > 0)
 		{
 			//ofVec3f impulse = (1.f - distRel) * (mSimData.viscosity * moveDir + mSimData.restPressure * moveDir * moveDir) * dirVecN;
-			float factor = sqx * distRel * (viscosity * moveDir);
+			float factor = sqx * (viscosity * moveDir);
 			ofVec3f impulse = factor * dirVecN;
 			viscosityVec -= impulse;
 		}
