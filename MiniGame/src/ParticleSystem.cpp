@@ -532,8 +532,13 @@ void ParticleSystem::iUpdateCPU(float dt)
 	//optimization
 	maxSpeed = 1.f / maxSpeed;
 	ofVec3f boundingBox = mDimension;
+	MinMaxData worldAABB;
+	worldAABB.min = ofVec3f(particleSize);
+	worldAABB.max = ofVec3f(mDimension - particleSize);
+	/*worldAABB.min = ofVec3f(0.f);
+	worldAABB.max = ofVec3f(mDimension);*/
 
-//#pragma omp parallel for
+#pragma omp parallel for
 	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
 		ofVec3f particlePosition = mParticlePosition[i];
@@ -551,74 +556,69 @@ void ParticleSystem::iUpdateCPU(float dt)
 		//particleVelocity += (mGravity) * dt;
 		// ***g
 
-		ofVec3f newpos = particlePosition + particleVelocity * dt + particleVelocity.getNormalized() * particleSize;
-
-		// bounding box collision
-		for (int i = 0; i < 3; ++i)
-		{
-			if ((newpos[i] > boundingBox[i] && particleVelocity[i] > 0.f) // max boundary
-				|| (newpos[i] < 0.f && particleVelocity[i] < 0.f) // min boundary
-				)
-			{
-				/*if (newpos[i] < particleSize)//TODO: consider readding this, not sure if this had any side-effects
-					particlePosition[i] = particleSize;
-				else
-					particlePosition[i] = boundingBox[i] - particleSize;*/
-
-				particleVelocity[i] *= -fluidDamp;
-			}
-		}
-		//*** bbc
+		ofVec3f deltaVelocity = particleVelocity * dt;
+		ofVec3f sizeOffset = particleVelocity.getNormalized() * particleSize;
+		ofVec3f newPos = particlePosition + deltaVelocity;
 
 		// static collision
-		int collisionCnt = 3; //support 3 collisions at once
+		int collisionCnt = 3; //support multiple collisions
 		for (size_t i = 0; i < mStaticCollision.size() && collisionCnt > 0; i++)
 		{
-			const ofVec3f currentMin = mStaticCollision[i].min;
-			const ofVec3f currentMax = mStaticCollision[i].max;
-			//ofVec3f otherMin, otherMax;
-			int result = -1;
+			MinMaxData currentAABB = mStaticCollision[i];
+			ofVec3f intersection;
+			float fraction;
+			bool result;
 
-			if (((newpos.x < currentMax.x && newpos.x > currentMin.x))
-				&&
-				((newpos.z < currentMax.z && newpos.z > currentMin.z))
-				&&
-				((newpos.y < currentMax.y && newpos.y > currentMin.y))
-				)
-			{
-				ofVec3f aabbCenter = currentMin + ((currentMax - currentMin)*0.5f);
-				ofVec3f whichSide = (aabbCenter - newpos).normalized();
-				int closest = 666;
-				float current = -66.6;
-				for (int i = 0; i < 6; ++i)
-				{
-					float angle = whichSide.dot(Particle::directions[i]);
-					if (angle > current)
-					{
-						current = angle;
-						closest = i;
-					}
-				}
+			result = LineAABBIntersection(currentAABB, particlePosition, newPos + sizeOffset, intersection, fraction);
 
-				if (closest == 666)
-				{
-					std::cout << "W00T!?\n";
-					__debugbreak();
-				}
+			if (result == false)
+				continue;
 
-				//ofVec3f reflection;
-				ofVec3f n = Particle::directions[closest];
+			if (intersection.x == currentAABB.max.x || intersection.x == currentAABB.min.x)
+				particleVelocity.x *= -1.f;
+			else if (intersection.y == currentAABB.max.y || intersection.y == currentAABB.min.y)
+				particleVelocity.y *= -1.f;
+			else if (intersection.z == currentAABB.max.z || intersection.z == currentAABB.min.z)
+				particleVelocity.z *= -1.f;
+			//else
+			//	std::cout << "W00T!?\n";//DEBUG
 
-				// source -> https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector#13266
-				particleVelocity = particleVelocity - (2 * particleVelocity.dot(n) * n);
-				particleVelocity *= fluidDamp;
-				
-				collisionCnt = 0;
-				//result = j;
-				//break;// OPT: do not delete this (30% performance loss)
-			}
+			//particlePosition = intersection;
+			newPos = intersection;
+			break;
+
+			//	//ofVec3f reflection;
+			//	ofVec3f n = Particle::directions[closest];
+
+			//	// source -> https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector#13266
+			//	particleVelocity = particleVelocity - (2 * particleVelocity.dot(n) * n);
+			//	particleVelocity *= fluidDamp;
+			//	
+			//	collisionCnt = 0;
+			//	//result = j;
+			//	//break;// OPT: do not delete this (30% performance loss)
 		}
 		// *** sc
+
+		// bounding box collision
+		ofVec3f tmpVel = particleVelocity;
+		for (int i = 0; i < 3; ++i)
+		{
+			if ((newPos[i] > worldAABB.max[i] && tmpVel[i] > 0.f) // max boundary
+				|| (newPos[i] < worldAABB.min[i] && tmpVel[i] < 0.f) // min boundary
+				)
+			{
+				/*if (newPos[i] < worldAABB.min[i])
+					newPos[i] = worldAABB.min[i];
+				else
+					newPos[i] = worldAABB.max[i];*/
+
+				tmpVel[i] *= -fluidDamp;
+			}
+		}
+
+		particleVelocity = tmpVel;
+		//*** bbc
 
 		//particleVelocity += dt * particleVelocity * -0.01f;//damping
 		particlePosition += particleVelocity * dt;
