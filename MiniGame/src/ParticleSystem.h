@@ -68,6 +68,7 @@ namespace Particle
 		ofBufferObject positionBuffer;
 		ofBufferObject positionOutBuffer;
 		ofBufferObject velocityBuffer;
+		ofBufferObject staticCollisionBuffer;
 	};
 
 	//definitions for OpenCL

@@ -43,6 +43,7 @@ class ofApp : public ofBaseApp{
 		bool mValve;
 		std::vector<Cube> mLevelCollider;
 		Cube mEndZone;
+		ofVec3f mSunDirection;
 		ofShader mLevelShader;
 
 		ofxXmlSettings mXmlSettings;

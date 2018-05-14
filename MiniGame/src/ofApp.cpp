@@ -109,6 +109,8 @@ void ofApp::setup(){
 	mParticleSystem->setEndZone(mEndZone.getGlobalMinMax());
 
 	mLevelShader.load("simple.vert", "simple.frag");
+
+	mSunDirection = ofVec3f(1.0f, 2.0f, 0.f).getNormalized();
 }
 
 //--------------------------------------------------------------
@@ -198,6 +200,8 @@ void ofApp::draw(){
 	mLevelShader.begin();
 	mLevelShader.setUniform3f("systemPos", mParticleSystem->getPosition());
 	mLevelShader.setUniform1i("endZone", 0);
+	mLevelShader.setUniform3f("cameraPos", mMainCamera.getPosition());
+	mLevelShader.setUniform3f("sunDir", mSunDirection);
 	for (size_t i = 0; i < mLevelCollider.size(); ++i)
 	{
 		//mLevelCollider[i].draw();
@@ -205,7 +209,7 @@ void ofApp::draw(){
 	}
 
 	mLevelShader.setUniform1i("endZone", 1);
-	mEndZone.drawWireframe();
+	mEndZone.draw();
 
 	mLevelShader.end();
 	// *** dl

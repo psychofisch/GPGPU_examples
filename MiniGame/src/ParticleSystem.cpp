@@ -280,6 +280,14 @@ void ParticleSystem::addPosition(ofVec3f p)
 void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 {
 	mStaticCollision = collision;
+
+	if (mAvailableModes[ComputeMode::COMPUTE_SHADER])
+	{
+		if (mComputeData.staticCollisionBuffer.size() < collision.size() * sizeof(MinMaxData))
+			mComputeData.staticCollisionBuffer.allocate(collision, GL_DYNAMIC_DRAW);
+		else
+			mComputeData.staticCollisionBuffer.updateData(collision);
+	}
 }
 
 void ParticleSystem::setGravity(ofVec3f g)
@@ -412,8 +420,8 @@ void ParticleSystem::draw()
 		return;
 	
 	// *** DESIRED METHOD but does not render correctly in Compute Shader and OpenCL mode
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	mParticleShader.begin();
 
@@ -442,7 +450,7 @@ void ParticleSystem::draw()
 
 	mParticleShader.end();
 
-	//glDisable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 	// ***
 
 	HANDLE_GL_ERROR();
@@ -591,7 +599,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 
 			//particlePosition = intersection;
 			newPos = intersection;
-			break;
+			break;// DEBUG! this prevents multiple collisions!
 
 			//	//ofVec3f reflection;
 			//	ofVec3f n = Particle::directions[closest];
@@ -633,6 +641,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		mParticlePosition[i] = particlePosition + mPosition; // add the system position offset
 	}
 
+	// remove particles if they are in an endzone
 	uint itemsRemoved = 0;
 	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
@@ -730,13 +739,14 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.positionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
 	mComputeData.positionOutBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 	mComputeData.velocityBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 2);
+	mComputeData.staticCollisionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 3);
 
 	mComputeData.computeShader.begin();
 	mComputeData.computeShader.setUniform1f("dt", dt);
 	mComputeData.computeShader.setUniform1f("interactionRadius", mSimData.interactionRadius);
-	mComputeData.computeShader.setUniform1f("rho0", mSimData.pressureMultiplier);
-	mComputeData.computeShader.setUniform1f("spring", mSimData.viscosity);
-	mComputeData.computeShader.setUniform1f("springNear", mSimData.restPressure);
+	mComputeData.computeShader.setUniform1f("pressureMultiplier", mSimData.pressureMultiplier);
+	mComputeData.computeShader.setUniform1f("viscosity", mSimData.viscosity);
+	mComputeData.computeShader.setUniform1f("restPressure", mSimData.restPressure);
 	mComputeData.computeShader.setUniform3f("gravity", mGravity);
 	mComputeData.computeShader.setUniform3f("position", mPosition);
 	mComputeData.computeShader.setUniform1i("numberOfParticles", mNumberOfParticles);//TODO: conversion from uint to int
