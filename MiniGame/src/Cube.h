@@ -12,7 +12,7 @@ public:
 	Cube();
 	~Cube();
 
-	ofColor mColor;
+	//ofColor mColor;
 
 	// this method needs to be called everytime the objects gets rotated (TODO: overload rotate-functions?)
 	void recalculateMinMax();

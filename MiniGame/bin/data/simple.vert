@@ -18,6 +18,7 @@ uniform mat4 modelViewProjectionMatrix;
 
 // custom uniforms
 uniform vec3 systemPos;
+uniform int endZone;
 
 out vec4 color;
 
@@ -25,6 +26,9 @@ void main()
 {	
 	vec4 vPos = vec4(systemPos, 0.0) + position;
 
-	color = vec4(1.0);	
+	if(endZone == 0)
+		color = vec4(1.0);
+	else if(endZone == 1)
+		color = vec4(1.0, 0, 0, 1.0);
 	gl_Position = modelViewProjectionMatrix * vPos;
 }

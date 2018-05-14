@@ -103,6 +103,11 @@ void ofApp::setup(){
 		mLevelCollider[i].recalculateMinMax();
 	}
 
+	mEndZone.set(0.1f);
+	mEndZone.recalculateMinMax();
+	mEndZone.setPosition(ofVec3f(0.9f, 0.f, 0.f) + mEndZone.getSize() * 0.5f);
+	mParticleSystem->setEndZone(mEndZone.getGlobalMinMax());
+
 	mLevelShader.load("simple.vert", "simple.frag");
 }
 
@@ -192,11 +197,16 @@ void ofApp::draw(){
 	// draw level
 	mLevelShader.begin();
 	mLevelShader.setUniform3f("systemPos", mParticleSystem->getPosition());
+	mLevelShader.setUniform1i("endZone", 0);
 	for (size_t i = 0; i < mLevelCollider.size(); ++i)
 	{
 		//mLevelCollider[i].draw();
 		mLevelCollider[i].drawWireframe();
 	}
+
+	mLevelShader.setUniform1i("endZone", 1);
+	mEndZone.drawWireframe();
+
 	mLevelShader.end();
 	// *** dl
 
