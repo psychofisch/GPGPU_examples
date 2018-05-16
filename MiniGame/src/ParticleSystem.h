@@ -34,6 +34,7 @@
 #include "ParticleDefinitions.h"
 #include "ThrustHelper.h"
 #include "CollisionDefinitions.h"
+#include "CudaHelper.h"
 
 namespace Particle
 {
@@ -78,6 +79,7 @@ namespace Particle
 		cl::Buffer positionBuffer;
 		cl::Buffer positionOutBuffer;
 		cl::Buffer velocityBuffer;
+		cl::Buffer staticCollisionBuffer;
 	};
 
 	struct CUDAta
@@ -86,6 +88,8 @@ namespace Particle
 		float4 *position;
 		float4 *positionOut;
 		float4 *velocity;
+		MinMaxData *staticCollisionBuffer;
+		size_t allocatedColliders;
 	};
 }
 
@@ -94,11 +98,13 @@ extern "C" void cudaParticleUpdate(
 	float4* positions,
 	float4* positionOut,
 	float4* velocity,
+	MinMaxData* staticColliders,
 	const float dt,
 	const float3 gravity,
 	const float3 position,
 	const float3 dimension,
 	const uint numberOfParticles,
+	const uint numberOfColliders,
 	SimulationData simData);
 
 //class definition

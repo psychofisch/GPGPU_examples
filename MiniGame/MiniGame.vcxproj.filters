@@ -311,6 +311,9 @@
     <ClInclude Include="src\Cube.h">
       <Filter>src\Helper</Filter>
     </ClInclude>
+    <ClInclude Include="src\CudaHelper.h">
+      <Filter>src\Helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />

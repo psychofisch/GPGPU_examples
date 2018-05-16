@@ -125,6 +125,9 @@ void ParticleSystem::setupCUDA(ofxXmlSettings & settings)
 	checkCudaErrors(cudaMalloc(&mCUData.velocity, sizeof(ofVec4f) * mCapacity));
 	checkCudaErrors(cudaMalloc(&mCUData.positionOut, sizeof(ofVec4f) * mCapacity));
 	
+	// init
+	mCUData.allocatedColliders = 0;
+
 	// "checkCudaErrors" will quit the program in case of a problem, so it is safe to assume that if the program reached this point CUDA will work
 	mAvailableModes[ComputeMode::CUDA] = settings.getValue("CUDA:ENABLED", true);
 
@@ -287,6 +290,24 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 			mComputeData.staticCollisionBuffer.allocate(collision, GL_DYNAMIC_DRAW);
 		else
 			mComputeData.staticCollisionBuffer.updateData(collision);
+	}
+
+	size_t tmpSize = sizeof(MinMaxDataCuda) * collision.size();
+	if (mAvailableModes[ComputeMode::CUDA])
+	{
+		if (mCUData.allocatedColliders == 0)
+		{
+			mCUData.allocatedColliders = tmpSize;
+			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, mCUData.allocatedColliders));
+		}
+		else if (mCUData.allocatedColliders < tmpSize)
+		{
+			CUDAERRORS(cudaFree(mCUData.staticCollisionBuffer));
+			mCUData.allocatedColliders = tmpSize;
+			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, mCUData.allocatedColliders));
+		}
+		else
+			cudaMemcpy(mCUData.staticCollisionBuffer, mStaticCollision.data(), mCUData.allocatedColliders, cudaMemcpyHostToDevice);
 	}
 }
 
@@ -534,6 +555,26 @@ void ParticleSystem::update(float dt)
 		std::cout << /*mNumberOfParticles << ";" <<*/ cycle << std::endl;
 		mMeasureTime = false;
 	}
+
+	// remove particles if they are in an endzone
+	// TODO: only works in CPU mode! (missing CPU<->GPU sync)
+	uint itemsRemoved = 0;
+	for (int i = 0; uint(i) < mNumberOfParticles && false; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
+	{
+		ofVec3f particlePosition = mParticlePosition[i];
+		ofVec3f particleVelocity = mParticleVelocity[i];
+		// check if particle is in endzone
+		if (particlePosition.x > mEndZone.min.x && particlePosition.x < mEndZone.max.x
+			&& particlePosition.y > mEndZone.min.y && particlePosition.y < mEndZone.max.y
+			&& particlePosition.z > mEndZone.min.z && particlePosition.z < mEndZone.max.z)
+		{
+			mParticlePosition[i] = mParticlePosition[mNumberOfParticles - itemsRemoved - 1u];
+			mParticleVelocity[i] = mParticleVelocity[mNumberOfParticles - itemsRemoved - 1u];
+			itemsRemoved++;
+		}
+		// *** endzone
+	}
+	mNumberOfParticles -= itemsRemoved;
 }
 
 void ParticleSystem::iUpdateCPU(float dt)
@@ -640,25 +681,6 @@ void ParticleSystem::iUpdateCPU(float dt)
 		mParticleVelocity[i] = particleVelocity;
 		mParticlePosition[i] = particlePosition + mPosition; // add the system position offset
 	}
-
-	// remove particles if they are in an endzone
-	uint itemsRemoved = 0;
-	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
-	{
-		ofVec3f particlePosition = mParticlePosition[i];
-		ofVec3f particleVelocity = mParticleVelocity[i];
-		// check if particle is in endzone
-		if (particlePosition.x > mEndZone.min.x && particlePosition.x < mEndZone.max.x
-			&& particlePosition.y > mEndZone.min.y && particlePosition.y < mEndZone.max.y
-			&& particlePosition.z > mEndZone.min.z && particlePosition.z < mEndZone.max.z)
-		{
-			mParticlePosition[i] = mParticlePosition[mNumberOfParticles - itemsRemoved - 1u];
-			mParticleVelocity[i] = mParticleVelocity[mNumberOfParticles - itemsRemoved - 1u];
-			itemsRemoved++;
-		}
-		// *** endzone
-	}
-	mNumberOfParticles -= itemsRemoved;
 }
 
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt)
@@ -846,14 +868,14 @@ void ParticleSystem::iUpdateCUDA(float dt)
 	float3 cudaPosition = make_float3(mPosition.x, mPosition.y, mPosition.z);
 
 	// call the kernel
-	cudaParticleUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, dt, cudaGravity, cudaDimension, cudaPosition, mNumberOfParticles, mSimData);
+	cudaParticleUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, mCUData.staticCollisionBuffer, dt, cudaGravity, cudaDimension, cudaPosition, mNumberOfParticles, mCUData.allocatedColliders, mSimData);
 	
 	// sync the result back to the CPU
 	// note: swapping pointers instead of copying only boosted the performance by 2fps@20,000 particles on a GTX1060
-	float4* tmp = mCUData.position;
+	/*float4* tmp = mCUData.position;
 	mCUData.position = mCUData.positionOut;
-	mCUData.positionOut = tmp;
-	//CUDAERRORS(cudaMemcpy(mCUData.position, mCUData.positionOut, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyDeviceToDevice));
+	mCUData.positionOut = tmp;*/
+	CUDAERRORS(cudaMemcpy(mCUData.position, mCUData.positionOut, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyDeviceToDevice));
 	CUDAERRORS(cudaMemcpy(mParticlePosition, mCUData.position, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyDeviceToHost));
 }
 

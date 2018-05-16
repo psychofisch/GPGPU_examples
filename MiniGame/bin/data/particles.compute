@@ -53,7 +53,7 @@ void main(){
 	float fluidDamp = 0.0;
 	float particleSize = interactionRadius * 0.1f;
 	vec3 worldAABBmin = vec3(particleSize);
-	vec3 worldAABBmax = vec3(mDimension - particleSize);
+	vec3 worldAABBmax = mDimension - particleSize;
 
 	vec3 particlePosition = positionBuffer[index].xyz;
 	vec3 particleVelocity = velocityBuffer[index].xyz;

@@ -1,33 +1,24 @@
 #pragma once
 
-#include <ofVec4f.h>
-
+// CUDA runtime
 #include <cuda_runtime.h>
-#include <helper_cuda.h>
 
-extern "C" void particleUpdate(
-	float4* positions,
-	float4* velocity,
-	const float dt,
-	const float smoothingWidth,
-	const float4 gravity,
-	const float4 dimension,
-	const unsigned int numberOfParticles);
-
-class cudaHelper
+struct MinMaxDataCuda
 {
-public:
-	cudaHelper();
-	~cudaHelper();
+	float4 min, max;
 
-	cudaError setupCUDA(int argc, const char ** argv);
-	void cudaUpdate(
-		float4* positions,
-		float4* velocity,
-		const float dt,
-		const float smoothingWidth,
-		const ofVec4f gravity,
-		const ofVec4f dimension,
-		const unsigned int numberOfParticles);
+	/*MinMaxData operator+(float4 p_)
+	{
+	MinMaxData tmp;
+	tmp.min = this->min + p_;
+	tmp.max = this->max + p_;
+	return tmp;
+	}
+
+	MinMaxData operator=(const MinMaxData& other)
+	{
+	this->min = other.min;
+	this->max = other.max;
+	return *this;
+	}*/
 };
-

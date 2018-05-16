@@ -1,15 +1,15 @@
 <group>
 	<Debug_Information>
-		<FPS>126</FPS>
+		<FPS>270</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
-		<Particles>5500/50000</Particles>
+		<Mode>CUDA</Mode>
+		<Particles>3500/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
 		<Step>0</Step>
-	<Time>0.994898</Time>
+	<Time>1.00128</Time>
 	</Program_Information>
 	<Simulation_Settings>
 		<Interaction_Radius>0.193878</Interaction_Radius>

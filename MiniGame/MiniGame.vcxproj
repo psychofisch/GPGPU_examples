@@ -206,6 +206,7 @@
     <ClInclude Include="src\CollisionDefinitions.h" />
     <ClInclude Include="src\CollisionSystem.h" />
     <ClInclude Include="src\Cube.h" />
+    <ClInclude Include="src\CudaHelper.h" />
     <ClInclude Include="src\oclHelper.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.h" />
