@@ -180,6 +180,7 @@
   <ItemGroup>
     <ClCompile Include="src\CollisionSystem.cpp" />
     <ClCompile Include="src\Cube.cpp" />
+    <ClCompile Include="src\Level.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\oclHelper.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
@@ -207,6 +208,7 @@
     <ClInclude Include="src\CollisionSystem.h" />
     <ClInclude Include="src\Cube.h" />
     <ClInclude Include="src\CudaHelper.h" />
+    <ClInclude Include="src\Level.h" />
     <ClInclude Include="src\oclHelper.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.h" />

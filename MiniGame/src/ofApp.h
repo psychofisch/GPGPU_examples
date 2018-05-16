@@ -6,6 +6,7 @@
 
 #include "ParticleSystem.h"
 #include "CollisionSystem.h"
+#include "Level.h"
 
 class ofApp : public ofBaseApp{
 
@@ -41,10 +42,9 @@ class ofApp : public ofBaseApp{
 		float mMouseSens;
 		ofVec3f mMoveVec;
 		bool mValve;
-		std::vector<Cube> mLevelCollider;
-		Cube mEndZone;
 		ofVec3f mSunDirection;
 		ofShader mLevelShader;
+		Level mLevel;
 
 		ofxXmlSettings mXmlSettings;
 

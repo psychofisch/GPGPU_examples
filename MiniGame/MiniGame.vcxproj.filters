@@ -70,6 +70,9 @@
     <ClCompile Include="src\Cube.cpp">
       <Filter>src\Helper</Filter>
     </ClCompile>
+    <ClCompile Include="src\Level.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -313,6 +316,9 @@
     </ClInclude>
     <ClInclude Include="src\CudaHelper.h">
       <Filter>src\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Level.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

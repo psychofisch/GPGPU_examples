@@ -90,27 +90,28 @@ void ofApp::setup(){
 
 	std::cout << "OpenGL " << ofGetGLRenderer()->getGLVersionMajor() << "." << ofGetGLRenderer()->getGLVersionMinor() << std::endl;
 
-	// level collision setup
+	// level setup
+	mLevel.setParticleSystem(mParticleSystem);
+
 	Cube tmpCube;
 	tmpCube.set(.25f);
 	
 	tmpCube.set(0.1f, 0.3f, 0.9f);
 	tmpCube.setPosition(ofVec3f(0.3f, -0.01f, -0.01f) + (tmpCube.getSize() * 0.5f));
-	mLevelCollider.push_back(tmpCube);
+	mLevel.addLevelCollider(tmpCube);
 
-	for (size_t i = 0; i < mLevelCollider.size(); i++)
-	{
-		mLevelCollider[i].recalculateMinMax();
-	}
+	mLevel.setEndzone(ofVec3f(0.9f, 0.f, 0.f), ofVec3f(0.1f));
 
-	mEndZone.set(0.1f);
-	mEndZone.recalculateMinMax();
-	mEndZone.setPosition(ofVec3f(0.9f, 0.f, 0.f) + mEndZone.getSize() * 0.5f);
-	mParticleSystem->setEndZone(mEndZone.getGlobalMinMax());
+	mLevel.setStartzone(ofVec3f(0.f, 0.25f, 0.f), ofVec3f(0.2f), mXmlSettings.getValue("GENERAL:DROPSIZE", 100));
 
 	mLevelShader.load("simple.vert", "simple.frag");
+	mLevel.setLevelShader(&mLevelShader);
 
 	mSunDirection = ofVec3f(1.0f, 2.0f, 0.f).getNormalized();
+	mLevel.setSunDirection(&mSunDirection);
+
+	mLevel.setReady(true);
+	// *** ls
 }
 
 //--------------------------------------------------------------
@@ -157,12 +158,7 @@ void ofApp::update(){
 			dt = 0.033f;
 
 		// collision preparation
-		std::vector<MinMaxData> minMax(mLevelCollider.size());
-		for (size_t i = 0; i < mLevelCollider.size(); i++)
-		{
-			minMax[i] = mLevelCollider[i].getLocalMinMax() + mLevelCollider[i].getPosition();
-		}
-		mParticleSystem->setStaticCollision(minMax);
+		mLevel.update(dt);
 
 		// update particles
 		mParticleSystem->update(dt);
@@ -196,23 +192,10 @@ void ofApp::draw(){
 	mParticleSystem->draw();
 	// *** dp
 
-	// draw level
-	mLevelShader.begin();
-	mLevelShader.setUniform3f("systemPos", mParticleSystem->getPosition());
-	mLevelShader.setUniform1i("endZone", 0);
-	mLevelShader.setUniform3f("cameraPos", mMainCamera.getPosition());
-	mLevelShader.setUniform3f("sunDir", mSunDirection);
-	for (size_t i = 0; i < mLevelCollider.size(); ++i)
-	{
-		//mLevelCollider[i].draw();
-		mLevelCollider[i].drawWireframe();
-	}
-
-	mLevelShader.setUniform1i("endZone", 1);
-	mEndZone.draw();
-
-	mLevelShader.end();
-	// *** dl
+	// draw game
+	mLevel.draw(mMainCamera.getPosition(), ofPolyRenderMode::OF_MESH_FILL);
+	mParticleSystem->draw();
+	// *** dg
 
 	mMainCamera.end();
 	//mLight.disable();
@@ -282,9 +265,10 @@ void ofApp::keyReleased(int key){
 			break;
 		case 'e':
 		{
-			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
+			mLevel.start();
+			//ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
 			//mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
-			mParticleSystem->addCube(ofVec3f(0, 0.5f, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
+			//mParticleSystem->addCube(ofVec3f(0, 0.5f, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 		}
 			break;
 		case 'v':
