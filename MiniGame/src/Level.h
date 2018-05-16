@@ -21,6 +21,8 @@ public:
 	Level();
 	~Level();
 
+	enum GameState {UnReady, Ready, Running, Paused, Finished, TimeOver};
+
 	// build level functions
 	void addLevelCollider(const Cube& _c);
 	void setReady(bool _r);
@@ -29,6 +31,7 @@ public:
 	void setStartzone(ofVec3f _position, ofVec3f _size, uint _numberOfSpawnParticles);
 	void setLevelShader(ofShader* _s);
 	void setSunDirection(ofVec3f* _sd);
+	void setTimeToFinish(float _seconds);
 
 	// getters
 	const std::vector<Cube>& getLevelColliders() const;
@@ -36,7 +39,9 @@ public:
 	bool isRunning();
 	bool isPaused();
 	uint getScore();
+	uint getSpawnedParticles();
 	float getCurrentTime();
+	Level::GameState getGameState();
 
 	// use level functions
 	void resetLevel();
@@ -57,10 +62,11 @@ private:
 	float mSecondsToFinishLevel,
 		  mCurrentTimeSec;
 	ofVec3f* mSunDirection;
-	bool mIsReady,
-		mDirtyColliders,
-		mIsRunning,
-		mIsPaused;
+	bool //mIsReady,
+		mDirtyColliders;
+		//mIsRunning,
+		//mIsPaused;
+	GameState mState;
 	ofTimer mTimer;
 };
 

@@ -3,8 +3,9 @@
 Level::Level()
 	:mExternalParticleSystem(nullptr),
 	mCurrentScore(0),
-	mIsReady(false),
-	mIsRunning(false)
+	mState(GameState::UnReady)
+	//mIsReady(false),
+	//mIsRunning(false)
 {
 }
 
@@ -24,23 +25,34 @@ void Level::setReady(bool _b)
 {
 	assert("Zero particles to spawn!" && mNumberOfSpawnParticles > 0);
 	assert("No particle system set!" && mExternalParticleSystem != nullptr);
+	assert("No end time set!" && mSecondsToFinishLevel > 0.f);
 
-	mIsReady = _b;
+	mState = GameState::Ready;
+	//mIsReady = _b;
 }
 
 bool Level::isReady()
 {
-	return mIsReady;
+	if (mState == GameState::Ready)
+		return true;
+	else
+		return false;
 }
 
 bool Level::isRunning()
 {
-	return mIsRunning;
+	if (mState == GameState::Running)
+		return true;
+	else
+		return false;
 }
 
 bool Level::isPaused()
 {
-	return mIsPaused;
+	if (mState == GameState::Paused)
+		return true;
+	else
+		return false;
 }
 
 uint Level::getScore()
@@ -48,9 +60,19 @@ uint Level::getScore()
 	return mCurrentScore;
 }
 
+uint Level::getSpawnedParticles()
+{
+	return mNumberOfSpawnParticles;
+}
+
 float Level::getCurrentTime()
 {
 	return mCurrentTimeSec;
+}
+
+Level::GameState Level::getGameState()
+{
+	return mState;
 }
 
 void Level::setParticleSystem(ParticleSystem * _ps)
@@ -63,6 +85,9 @@ void Level::setEndzone(ofVec3f _position, ofVec3f _size)
 	mEndzone.setPosition(_position);
 	mEndzone.set(_size.x, _size.y, _size.z);
 	mEndzone.recalculateMinMax();
+
+	assert("No particle system set!" && mExternalParticleSystem != nullptr);
+	mExternalParticleSystem->setEndZone(mEndzone.getGlobalMinMax());
 }
 
 void Level::setStartzone(ofVec3f _position, ofVec3f _size, uint _numberOfSpawnParticles)
@@ -82,6 +107,11 @@ void Level::setSunDirection(ofVec3f * _sd)
 	mSunDirection = _sd;
 }
 
+void Level::setTimeToFinish(float _seconds)
+{
+	mSecondsToFinishLevel = _seconds;
+}
+
 const std::vector<Cube>& Level::getLevelColliders() const
 {
 	return mLevelCollider;
@@ -90,9 +120,9 @@ const std::vector<Cube>& Level::getLevelColliders() const
 void Level::resetLevel()
 {
 	mCurrentScore = 0;
-	mIsRunning = false;
-	mIsPaused = false;
+	mCurrentTimeSec = 0.f;
 	mExternalParticleSystem->setNumberOfParticles(0);
+	mState = GameState::Ready;
 }
 
 void Level::draw(ofVec3f& _cameraPos, ofPolyRenderMode _rm)
@@ -131,34 +161,48 @@ void Level::update(float dt)
 		mDirtyColliders = false;
 	}
 
+	if (mExternalParticleSystem->getNumberOfParticles() > 0)
+	{
+		uint removed = mExternalParticleSystem->removeInEndzone();
+		mCurrentScore += removed;
+	}
+	else
+	{
+		mState = GameState::Finished;
+		this->end();
+	}
+
 	mCurrentTimeSec += dt;
 	if (mCurrentTimeSec >= mSecondsToFinishLevel)
 	{
+		mState = GameState::TimeOver;
 		this->end();
 	}
 }
 
 void Level::start()
 {
-	if (mIsRunning == false && isReady())
+	if (mState == GameState::Ready && isReady())
 	{
-		mIsRunning = true;
+		mState = GameState::Running;
 		ofVec3f tmpSize = mStartzone.getSize();
 		//mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
-		mExternalParticleSystem->addCube(ofVec3f(0, 0.5f, 0), tmpSize, mNumberOfSpawnParticles);
+		mExternalParticleSystem->addCube(mStartzone.getPosition(), mStartzone.getSize(), mNumberOfSpawnParticles);
 		
 	}
 }
 
 void Level::end()
 {
-	mIsRunning = false;
-	mIsPaused = false;
+	
 }
 
 void Level::pause(bool _p)
 {
-	mIsPaused = _p;
+	if (mState == GameState::Running && _p == true)
+		mState = GameState::Paused;
+	else if(mState == GameState::Paused && _p == false)
+		mState = GameState::Running;
 }
 
 bool Endzone::isActive()

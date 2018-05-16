@@ -31,10 +31,7 @@ class ofApp : public ofBaseApp{
 
 	private:
 		of3dPrimitive mTestBox;
-		//ofEasyCam mMainCamera;
 		ofCamera mMainCamera;
-		ofLight mLight;
-		//ofMesh mParticleMesh;
 		ParticleSystem *mParticleSystem;
 		int mRotationAxis;
 		ofQuaternion mGlobalRotation;
@@ -47,6 +44,10 @@ class ofApp : public ofBaseApp{
 		Level mLevel;
 
 		ofxXmlSettings mXmlSettings;
+
+		ofTrueTypeFont mMainFont;
+		float mTextDuration;
+		string mMainString;
 
 		ofxPanel mHud;
 

@@ -174,6 +174,8 @@ public:
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	// draws the particle VBO
 	void draw();
+	// removes all particles that are in the endzone and returns how many particles got removed
+	uint removeInEndzone();
 
 	//Simulation
 

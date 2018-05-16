@@ -18,6 +18,7 @@ void ofApp::setup(){
 	// graphic setup
 	ofGetWindowPtr()->setWindowTitle(mXmlSettings.getValue("GENERAL:TITLE", "Minigame"));
 
+	ofSetFrameRate(144);
 	ofSetVerticalSync(false);
 
 	ofBackground(69, 69, 69);
@@ -30,9 +31,6 @@ void ofApp::setup(){
 	mMainCamera.lookAt(ofVec3f(0.f));
 	mMainCamera.setNearClip(0.01f);
 	mMainCamera.setFarClip(50.f);
-
-	mLight.setPointLight();
-	mLight.setPosition(ofVec3f(0.f));
 
 	// particle setup
 	int maxParticles = mXmlSettings.getValue("GENERAL:MAXPARTICLES", 5000);
@@ -90,6 +88,8 @@ void ofApp::setup(){
 
 	std::cout << "OpenGL " << ofGetGLRenderer()->getGLVersionMajor() << "." << ofGetGLRenderer()->getGLVersionMinor() << std::endl;
 
+	mMainFont.loadFont("Roboto-Regular.ttf", 64, true, true, true);
+
 	// level setup
 	mLevel.setParticleSystem(mParticleSystem);
 
@@ -102,13 +102,15 @@ void ofApp::setup(){
 
 	mLevel.setEndzone(ofVec3f(0.9f, 0.f, 0.f), ofVec3f(0.1f));
 
-	mLevel.setStartzone(ofVec3f(0.f, 0.25f, 0.f), ofVec3f(0.2f), mXmlSettings.getValue("GENERAL:DROPSIZE", 100));
+	mLevel.setStartzone(ofVec3f(0.5f, 0.25f, 0.5f), ofVec3f(0.2f), mXmlSettings.getValue("GENERAL:DROPSIZE", 100));
 
 	mLevelShader.load("simple.vert", "simple.frag");
 	mLevel.setLevelShader(&mLevelShader);
 
 	mSunDirection = ofVec3f(1.0f, 2.0f, 0.f).getNormalized();
 	mLevel.setSunDirection(&mSunDirection);
+
+	mLevel.setTimeToFinish(5.f);
 
 	mLevel.setReady(true);
 	// *** ls
@@ -148,6 +150,7 @@ void ofApp::update(){
 	ofVec3f gravity = Particle::gravity.y * mMoveVec.normalized();
 	mParticleSystem->setGravity(gravity);
 	 
+	Level::GameState prevState = mLevel.getGameState();
 
 	if (!mHudPause || mHudStep)
 	{
@@ -169,6 +172,37 @@ void ofApp::update(){
 	//mParticleSystem->update(0.016f);
 	//mParticleMesh.haveVertsChanged();
 	//mTestBox.rotate(spinY, 0, 1, 0);
+
+	// HUD stuff
+	if (prevState == Level::GameState::Running)
+	{
+		Level::GameState state = mLevel.getGameState();
+		if (state == Level::GameState::Finished)
+		{
+			uint score = mLevel.getScore();
+			uint particles = mLevel.getSpawnedParticles();
+
+			mTextDuration = HUGE_VALF;
+			mMainString = "GAME FINISHED\nScore = " + ofToString(score) + "/" + ofToString(particles);
+		}
+		else if (state == Level::GameState::TimeOver)
+		{
+			uint score = mLevel.getScore();
+			uint particles = mLevel.getSpawnedParticles();
+
+			mTextDuration = HUGE_VALF;
+			mMainString = "TIMES UP\nScore = " + ofToString(score) + "/" + ofToString(particles);
+		}
+	}
+	else if(prevState == Level::GameState::Ready)
+	{
+		mTextDuration = 0.f;
+	}
+
+	if (mTextDuration > 0.f)
+		mTextDuration -= deltaTime;
+	if(mTextDuration < 0.f)
+		mTextDuration = 0.f;
 }
 
 //--------------------------------------------------------------
@@ -176,21 +210,16 @@ void ofApp::draw(){
 	ofEnableDepthTest();
 
 	mMainCamera.lookAt(ofVec3f(0));
-	//ofEnableLighting();
-	//mLight.enable();
 	mMainCamera.begin();
-
-	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
 	
-	// draw particles
+	// prerequisites
 	ofVec3f axis;
 	float angle;
 	mGlobalRotation.getRotate(angle, axis);
 	ofRotate(angle, axis.x, axis.y, axis.z);
 	ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
 	mTestBox.drawAxes(1.f);
-	mParticleSystem->draw();
-	// *** dp
+	// *** p
 
 	// draw game
 	mLevel.draw(mMainCamera.getPosition(), ofPolyRenderMode::OF_MESH_FILL);
@@ -198,12 +227,19 @@ void ofApp::draw(){
 	// *** dg
 
 	mMainCamera.end();
-	//mLight.disable();
-	ofDisableLighting();
 
 	ofDisableDepthTest();
 
+	// draw HUD
 	mHud.draw();
+
+	ofFill();
+	float opacity = std::min(mTextDuration, 1.0f);
+	if (opacity > 0.f)
+	{
+		ofSetColor(ofColor::aliceBlue, int(opacity * 255));
+		mMainFont.drawString(mMainString, ofGetWindowWidth() * 0.3f, ofGetWindowHeight() * 0.2f);
+	}
 }
 
 //--------------------------------------------------------------
@@ -249,7 +285,8 @@ void ofApp::keyReleased(int key){
 			std::cout << "Box: " << mTestBox.getPosition() << std::endl;
 			break;
 		case 'r':
-			mParticleSystem->setNumberOfParticles(0);
+			//mParticleSystem->setNumberOfParticles(0);
+			mLevel.resetLevel();
 			break;
 		case 'n':
 			mGlobalRotation.normalize();
@@ -265,7 +302,15 @@ void ofApp::keyReleased(int key){
 			break;
 		case 'e':
 		{
+			Level::GameState prev = mLevel.getGameState();
+
 			mLevel.start();
+
+			if (prev == Level::GameState::Ready && mLevel.isRunning())
+			{
+				mMainString = "START";
+				mTextDuration = 1.0f;
+			}
 			//ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
 			//mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 			//mParticleSystem->addCube(ofVec3f(0, 0.5f, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));

@@ -477,6 +477,31 @@ void ParticleSystem::draw()
 	HANDLE_GL_ERROR();
 }
 
+uint ParticleSystem::removeInEndzone()
+{
+	// remove particles if they are in an endzone
+	// TODO: only works in CPU mode! (missing CPU<->GPU sync)
+	uint itemsRemoved = 0;
+	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
+	{
+		ofVec3f particlePosition = mParticlePosition[i];
+		ofVec3f particleVelocity = mParticleVelocity[i];
+		// check if particle is in endzone
+		if (particlePosition.x > mEndZone.min.x && particlePosition.x < mEndZone.max.x
+			&& particlePosition.y > mEndZone.min.y && particlePosition.y < mEndZone.max.y
+			&& particlePosition.z > mEndZone.min.z && particlePosition.z < mEndZone.max.z)
+		{
+			mParticlePosition[i] = mParticlePosition[mNumberOfParticles - itemsRemoved - 1u];
+			mParticleVelocity[i] = mParticleVelocity[mNumberOfParticles - itemsRemoved - 1u];
+			itemsRemoved++;
+		}
+		// *** endzone
+	}
+	mNumberOfParticles -= itemsRemoved;
+
+	return itemsRemoved;
+}
+
 ofVec3f ParticleSystem::getDimensions() const
 {
 	return mDimension;
@@ -555,26 +580,6 @@ void ParticleSystem::update(float dt)
 		std::cout << /*mNumberOfParticles << ";" <<*/ cycle << std::endl;
 		mMeasureTime = false;
 	}
-
-	// remove particles if they are in an endzone
-	// TODO: only works in CPU mode! (missing CPU<->GPU sync)
-	uint itemsRemoved = 0;
-	for (int i = 0; uint(i) < mNumberOfParticles && false; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
-	{
-		ofVec3f particlePosition = mParticlePosition[i];
-		ofVec3f particleVelocity = mParticleVelocity[i];
-		// check if particle is in endzone
-		if (particlePosition.x > mEndZone.min.x && particlePosition.x < mEndZone.max.x
-			&& particlePosition.y > mEndZone.min.y && particlePosition.y < mEndZone.max.y
-			&& particlePosition.z > mEndZone.min.z && particlePosition.z < mEndZone.max.z)
-		{
-			mParticlePosition[i] = mParticlePosition[mNumberOfParticles - itemsRemoved - 1u];
-			mParticleVelocity[i] = mParticleVelocity[mNumberOfParticles - itemsRemoved - 1u];
-			itemsRemoved++;
-		}
-		// *** endzone
-	}
-	mNumberOfParticles -= itemsRemoved;
 }
 
 void ParticleSystem::iUpdateCPU(float dt)
