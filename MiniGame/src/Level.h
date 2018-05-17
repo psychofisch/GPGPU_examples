@@ -41,6 +41,7 @@ public:
 	uint getScore();
 	uint getSpawnedParticles();
 	float getCurrentTime();
+	float getLevelTime();
 	Level::GameState getGameState();
 
 	// use level functions
@@ -50,6 +51,9 @@ public:
 	void start();
 	void end();
 	void pause(bool _p);
+
+	// static
+	static std::string convertGamestateToString(Level::GameState _state);
 
 private:
 	std::vector<Cube> mLevelCollider;

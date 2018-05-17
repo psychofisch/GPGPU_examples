@@ -70,6 +70,11 @@ float Level::getCurrentTime()
 	return mCurrentTimeSec;
 }
 
+float Level::getLevelTime()
+{
+	return mSecondsToFinishLevel;
+}
+
 Level::GameState Level::getGameState()
 {
 	return mState;
@@ -127,18 +132,24 @@ void Level::resetLevel()
 
 void Level::draw(ofVec3f& _cameraPos, ofPolyRenderMode _rm)
 {
+	ofFloatColor test;
+
 	mLevelShader->begin();
 	mLevelShader->setUniform3f("systemPos", ofVec3f(0.f));
 	mLevelShader->setUniform1i("endZone", 0);
 	mLevelShader->setUniform3f("cameraPos", _cameraPos);
 	mLevelShader->setUniform3f("sunDir", *mSunDirection);
+	mLevelShader->setUniform1f("alpha", 1.f);
+	mLevelShader->setUniform1i("world", 1);
+	mLevelShader->setUniform4f("objColor", ofFloatColor::aliceBlue);
 
 	for (size_t i = 0; i < mLevelCollider.size(); ++i)
 	{
 		mLevelCollider[i].draw(_rm);
 	}
 
-	mLevelShader->setUniform1i("endZone", 1);
+	mLevelShader->setUniform4f("objColor", ofFloatColor::red);
+	mLevelShader->setUniform1f("alpha", 0.5f);
 	mEndzone.draw();
 
 	mLevelShader->end();
@@ -203,6 +214,31 @@ void Level::pause(bool _p)
 		mState = GameState::Paused;
 	else if(mState == GameState::Paused && _p == false)
 		mState = GameState::Running;
+}
+
+std::string Level::convertGamestateToString(Level::GameState _state)
+{
+	std::string text;
+
+	switch (_state)
+	{
+	case Level::UnReady:text = "Unready";
+		break;
+	case Level::Ready:text = "Ready";
+		break;
+	case Level::Running:text = "Running";
+		break;
+	case Level::Paused:text = "Paused";
+		break;
+	case Level::Finished:text = "Finished";
+		break;
+	case Level::TimeOver:text = "TimeOver";
+		break;
+	default:text = "Unknown";
+		break;
+	}
+
+	return text;
 }
 
 bool Endzone::isActive()

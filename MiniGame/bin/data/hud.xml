@@ -4,7 +4,7 @@
 	</Debug_Information>
 	<Program_Information>
 		<Mode>CPU</Mode>
-		<Particles>263/50000</Particles>
+		<Particles>0/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
@@ -16,6 +16,13 @@
 		<Pressure_Multiplier>2.44898</Pressure_Multiplier>
 		<Viscosity>14.2857</Viscosity>
 		<Rest_Pressure>0.209184</Rest_Pressure>
+	<Pause>0</Pause>
+		<Step>0</Step>
 	</Simulation_Settings>
 <group/>
+<Game_Info>
+		<Gamestate>Finished</Gamestate>
+		<Time>0.0287418</Time>
+		<Help>Press R to reset level</Help>
+	</Game_Info>
 </group>

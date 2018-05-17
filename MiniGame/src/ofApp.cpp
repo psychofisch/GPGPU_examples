@@ -23,14 +23,14 @@ void ofApp::setup(){
 
 	ofBackground(69, 69, 69);
 
-	//mTestBox.setResolution(1);
-	//mTestBox.setScale(1.f);
-	mTestBox.setPosition(ofVec3f(0.f));
-
 	mMainCamera.setPosition(0, 0, 2);
 	mMainCamera.lookAt(ofVec3f(0.f));
 	mMainCamera.setNearClip(0.01f);
 	mMainCamera.setFarClip(50.f);
+	mMainCamera.setFov(50.f);
+
+	mWorld.set(1.0f);
+	mWorld.setPosition(ofVec3f(0.5f));
 
 	// particle setup
 	int maxParticles = mXmlSettings.getValue("GENERAL:MAXPARTICLES", 5000);
@@ -71,17 +71,23 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudTime.set("Time", 1.0f, 0.f, 5.f));
 
 	mHudSimulationGroup.setName("Simulation Settings");
-	mHudControlGroup.add(mHudPause.set("Pause", false));
-	mHudControlGroup.add(mHudStep.set("Step", false));
+	mHudSimulationGroup.add(mHudPause.set("Pause", false));
+	mHudSimulationGroup.add(mHudStep.set("Step", false));
 	mHudSimulationGroup.add(mHudInteractionRadius.set("Interaction Radius", 0.1f, 0.00000001f, 1.f));
 	mHudSimulationGroup.add(mHudPressureMultiplier.set("Pressure Multiplier", 0.5f, 0.0f, 10.f));
 	mHudSimulationGroup.add(mHudViscosity.set("Viscosity", 1.0f, 0.0f, 100.f));
 	mHudSimulationGroup.add(mHudRestPressure.set("Rest Pressure", .1f, 0.0f, 1.f));
 
+	mHudGameGroup.setName("Game Info");
+	mHudGameGroup.add(mHudGameGameState.set("Gamestate", "???"));
+	mHudGameGroup.add(mHudGameTime.set("Time", -1.f));
+	mHudGameGroup.add(mHudGameHelp.set("Help", HELP_START));
+
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
 	mHud.add(mHudControlGroup);
 	mHud.add(mHudSimulationGroup);
+	mHud.add(mHudGameGroup);
 	mHud.loadFromFile("hud.xml");
 
 	mHudMode = iHudGetModeString(mParticleSystem->getMode());
@@ -95,14 +101,17 @@ void ofApp::setup(){
 
 	Cube tmpCube;
 	tmpCube.set(.25f);
-	
-	tmpCube.set(0.1f, 0.3f, 0.9f);
-	tmpCube.setPosition(ofVec3f(0.3f, -0.01f, -0.01f) + (tmpCube.getSize() * 0.5f));
+
+	tmpCube.set(0.1f, 0.3f, 0.8f);
+	tmpCube.setPosition(ofVec3f(0.4f, -0.01f, -0.01f) + (tmpCube.getSize() * 0.5f));
 	mLevel.addLevelCollider(tmpCube);
 
-	mLevel.setEndzone(ofVec3f(0.9f, 0.f, 0.f), ofVec3f(0.1f));
+	tmpCube.setPosition(ofVec3f(0.699f, -0.01f, 0.21f) + (tmpCube.getSize() * 0.5f));
+	mLevel.addLevelCollider(tmpCube);
 
-	mLevel.setStartzone(ofVec3f(0.5f, 0.25f, 0.5f), ofVec3f(0.2f), mXmlSettings.getValue("GENERAL:DROPSIZE", 100));
+	mLevel.setEndzone(ofVec3f(0.9f, 0.1f, 0.9f), ofVec3f(0.2f));
+
+	mLevel.setStartzone(ofVec3f(0.f, 0.8f, 0.f), ofVec3f(0.2f), mXmlSettings.getValue("GENERAL:DROPSIZE", 100));
 
 	mLevelShader.load("simple.vert", "simple.frag");
 	mLevel.setLevelShader(&mLevelShader);
@@ -174,24 +183,37 @@ void ofApp::update(){
 	//mTestBox.rotate(spinY, 0, 1, 0);
 
 	// HUD stuff
+	Level::GameState state = mLevel.getGameState();
+	
+	if (prevState != state)
+	{
+		mHudGameGameState = Level::convertGamestateToString(state);
+	}
+
+	if (state == Level::GameState::Running)
+	{
+		float max = mLevel.getLevelTime();
+		mHudGameTime.setMax(max);
+		mHudGameTime = max - mLevel.getCurrentTime();
+	}
+
 	if (prevState == Level::GameState::Running)
 	{
-		Level::GameState state = mLevel.getGameState();
-		if (state == Level::GameState::Finished)
+		if (state == Level::GameState::Finished || state == Level::GameState::TimeOver)
 		{
+			std::string pre;
+			if (state == Level::GameState::TimeOver)
+			{
+				pre = "TIMES UP";
+			}
+			else
+				pre = "FINISHED";
+
 			uint score = mLevel.getScore();
 			uint particles = mLevel.getSpawnedParticles();
 
 			mTextDuration = HUGE_VALF;
-			mMainString = "GAME FINISHED\nScore = " + ofToString(score) + "/" + ofToString(particles);
-		}
-		else if (state == Level::GameState::TimeOver)
-		{
-			uint score = mLevel.getScore();
-			uint particles = mLevel.getSpawnedParticles();
-
-			mTextDuration = HUGE_VALF;
-			mMainString = "TIMES UP\nScore = " + ofToString(score) + "/" + ofToString(particles);
+			mMainString = pre + "\nScore = " + ofToString(score) + "/" + ofToString(particles);
 		}
 	}
 	else if(prevState == Level::GameState::Ready)
@@ -217,13 +239,29 @@ void ofApp::draw(){
 	float angle;
 	mGlobalRotation.getRotate(angle, axis);
 	ofRotate(angle, axis.x, axis.y, axis.z);
-	ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
-	mTestBox.drawAxes(1.f);
+	ofTranslate(-mParticleSystem->getDimensions() * ofVec3f(0.5f, 0.25f, 0.5f));
 	// *** p
 
 	// draw game
-	mLevel.draw(mMainCamera.getPosition(), ofPolyRenderMode::OF_MESH_FILL);
 	mParticleSystem->draw();
+
+	mLevel.draw(mMainCamera.getPosition(), ofPolyRenderMode::OF_MESH_FILL);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	mLevelShader.begin();
+	mLevelShader.setUniform3f("systemPos", ofVec3f(0.f));
+	mLevelShader.setUniform1i("endZone", 0);
+	mLevelShader.setUniform3f("cameraPos", mMainCamera.getPosition());
+	mLevelShader.setUniform3f("sunDir", mSunDirection);
+	mLevelShader.setUniform1i("world", -1);
+	mLevelShader.setUniform4f("objColor", ofFloatColor::blueSteel);
+	mLevelShader.setUniform1f("alpha", 1.f);
+
+	mWorld.draw();
+
+	mLevelShader.end();
+	glDisable(GL_CULL_FACE);
 	// *** dg
 
 	mMainCamera.end();
@@ -249,16 +287,16 @@ void ofApp::keyPressed(int key){
 	case OF_KEY_ESC: quit();
 		break;
 	case 'w':
-		mMoveVec.z = 1.f;
+		mMoveVec.z = .5f;
 		break;
 	case 's':
-		mMoveVec.z = -1.f;
+		mMoveVec.z = -.5f;
 		break;
 	case 'a':
-		mMoveVec.x = 1.f;
+		mMoveVec.x = .5f;
 		break;
 	case 'd':
-		mMoveVec.x = -1.f;
+		mMoveVec.x = -.5f;
 		break;
 	case 'v':
 		mValve = true;
@@ -282,11 +320,11 @@ void ofApp::keyReleased(int key){
 			break;
 		case 'h':
 			std::cout << "Camera:" << mMainCamera.getPosition() << std::endl;
-			std::cout << "Box: " << mTestBox.getPosition() << std::endl;
 			break;
 		case 'r':
 			//mParticleSystem->setNumberOfParticles(0);
 			mLevel.resetLevel();
+			mHudGameHelp = HELP_START;
 			break;
 		case 'n':
 			mGlobalRotation.normalize();
@@ -310,6 +348,7 @@ void ofApp::keyReleased(int key){
 			{
 				mMainString = "START";
 				mTextDuration = 1.0f;
+				mHudGameHelp = HELP_RESET;
 			}
 			//ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
 			//mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));

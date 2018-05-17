@@ -487,9 +487,9 @@ uint ParticleSystem::removeInEndzone()
 		ofVec3f particlePosition = mParticlePosition[i];
 		ofVec3f particleVelocity = mParticleVelocity[i];
 		// check if particle is in endzone
-		if (particlePosition.x > mEndZone.min.x && particlePosition.x < mEndZone.max.x
-			&& particlePosition.y > mEndZone.min.y && particlePosition.y < mEndZone.max.y
-			&& particlePosition.z > mEndZone.min.z && particlePosition.z < mEndZone.max.z)
+		if (particlePosition.x >= mEndZone.min.x && particlePosition.x <= mEndZone.max.x
+			&& particlePosition.y >= mEndZone.min.y && particlePosition.y <= mEndZone.max.y
+			&& particlePosition.z >= mEndZone.min.z && particlePosition.z <= mEndZone.max.z)
 		{
 			mParticlePosition[i] = mParticlePosition[mNumberOfParticles - itemsRemoved - 1u];
 			mParticleVelocity[i] = mParticleVelocity[mNumberOfParticles - itemsRemoved - 1u];

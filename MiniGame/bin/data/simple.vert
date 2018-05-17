@@ -13,8 +13,10 @@ uniform mat4 modelViewProjectionMatrix;
 
 // custom uniforms
 uniform vec3 systemPos;
-uniform int endZone;
+uniform int world;
+uniform float alpha;
 uniform vec3 sunDir;
+uniform vec4 objColor;
 
 out vec3 positionF;
 out vec3 normalF;
@@ -27,9 +29,8 @@ void main()
 	positionF = vPos.xyz;
 	normalF = normal;
 	
-	if(endZone == 0)
-		color = vec4(1.0);
-	else if(endZone == 1)
-		color = vec4(1.0, 0, 0, 0.5);
+	normalF *= world;
+	
+	color = vec4(objColor.rgb, alpha);
 	gl_Position = modelViewProjectionMatrix * vPos;
 }

@@ -8,6 +8,9 @@
 #include "CollisionSystem.h"
 #include "Level.h"
 
+#define HELP_START "Press E to start level"
+#define HELP_RESET "Press R to reset level"
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -30,7 +33,6 @@ class ofApp : public ofBaseApp{
 		void quit();
 
 	private:
-		of3dPrimitive mTestBox;
 		ofCamera mMainCamera;
 		ParticleSystem *mParticleSystem;
 		int mRotationAxis;
@@ -42,6 +44,7 @@ class ofApp : public ofBaseApp{
 		ofVec3f mSunDirection;
 		ofShader mLevelShader;
 		Level mLevel;
+		ofBoxPrimitive mWorld;
 
 		ofxXmlSettings mXmlSettings;
 
@@ -68,6 +71,11 @@ class ofApp : public ofBaseApp{
 		ofParameter<float> mHudPressureMultiplier;
 		ofParameter<float> mHudViscosity;
 		ofParameter<float> mHudRestPressure;
+
+		ofParameterGroup mHudGameGroup;
+		ofParameter<std::string> mHudGameGameState;
+		ofParameter<std::string> mHudGameHelp;
+		ofParameter<float> mHudGameTime;
 
 		std::string iHudGetModeString(ParticleSystem::ComputeMode m);
 };
