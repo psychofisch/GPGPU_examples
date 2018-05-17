@@ -196,6 +196,10 @@ void ofApp::update(){
 		mHudGameTime.setMax(max);
 		mHudGameTime = max - mLevel.getCurrentTime();
 	}
+	else if (state == Level::GameState::Ready)
+	{
+		mHudGameHelp = HELP_START;
+	}
 
 	if (prevState == Level::GameState::Running)
 	{

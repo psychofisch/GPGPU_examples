@@ -26,7 +26,7 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mParticlesVBO.setVertexBuffer(mParticlesBuffer, 3, sizeof(ofVec4f));
 
 	ofSpherePrimitive sphere;
-	sphere.set(1.f, 5, ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
+	sphere.set(1.f, 3, ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
 	//sphere.enableNormals();
 	mParticleModel = sphere.getMesh();
 
@@ -290,7 +290,7 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 			mComputeData.staticCollisionBuffer.updateData(collision);
 	}
 
-	size_t tmpSize = sizeof(MinMaxDataCuda) * collision.size();
+	size_t tmpSize = collision.size();
 	if (mAvailableModes[ComputeMode::CUDA])
 	{
 		if (mCUData.allocatedColliders == 0)
@@ -304,8 +304,8 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 			mCUData.allocatedColliders = tmpSize;
 			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, mCUData.allocatedColliders));
 		}
-		else
-			cudaMemcpy(mCUData.staticCollisionBuffer, mStaticCollision.data(), mCUData.allocatedColliders, cudaMemcpyHostToDevice);
+
+		CUDAERRORS(cudaMemcpy(mCUData.staticCollisionBuffer, mStaticCollision.data(), mCUData.allocatedColliders, cudaMemcpyHostToDevice));
 	}
 }
 
@@ -408,6 +408,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 		particleCap = particleAmount;
 
 	// sync the particles to the corresponding buffers
+	//iSyncParticlePositionsToActiveMode(true);
 	if (mMode == ComputeMode::COMPUTE_SHADER/* || mMode == ComputeMode::CUDA*/)
 	{
 		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mParticlePosition + mNumberOfParticles);
@@ -438,9 +439,8 @@ void ParticleSystem::draw(const ofVec3f& _camera, const ofVec3f& _sunDir, ofPoly
 	if (mNumberOfParticles == 0)
 		return;
 	
-	// *** DESIRED METHOD but does not render correctly in Compute Shader and OpenCL mode
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	glCullFace(GL_FRONT);// LOGIC: Why front faces? It works but does OF create spheres with inverted normals?
 
 	mParticleShader.begin();
 
@@ -497,7 +497,24 @@ uint ParticleSystem::removeInEndzone()
 		}
 		// *** endzone
 	}
+
 	mNumberOfParticles -= itemsRemoved;
+
+	if (itemsRemoved > 0 && mMode != ComputeMode::CPU)
+	{
+		if (mMode == ComputeMode::COMPUTE_SHADER)
+		{
+			mComputeData.positionBuffer.updateData(0, sizeof(ofVec4f) * mNumberOfParticles, mParticlePosition);
+		}
+		else if (mMode == ComputeMode::OPENCL)
+		{
+			mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.positionBuffer, CL_TRUE, 0, sizeof(ofVec4f) * mNumberOfParticles, mParticlePosition);
+		}
+		else if (mMode == ComputeMode::CUDA)
+		{
+			CUDAERRORS(cudaMemcpy(mCUData.position, mParticlePosition, sizeof(ofVec4f) * mNumberOfParticles, cudaMemcpyHostToDevice));
+		}
+	}
 
 	return itemsRemoved;
 }
