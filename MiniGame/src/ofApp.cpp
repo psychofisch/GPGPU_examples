@@ -23,7 +23,7 @@ void ofApp::setup(){
 
 	ofBackground(69, 69, 69);
 
-	mMainCamera.setPosition(0, 0, 2);
+	mMainCamera.setPosition(1, 2, 1);
 	mMainCamera.lookAt(ofVec3f(0.f));
 	mMainCamera.setNearClip(0.01f);
 	mMainCamera.setFarClip(50.f);
@@ -243,7 +243,7 @@ void ofApp::draw(){
 	// *** p
 
 	// draw game
-	mParticleSystem->draw();
+	mParticleSystem->draw(mMainCamera.getPosition(), mSunDirection, ofPolyRenderMode::OF_MESH_FILL);
 
 	mLevel.draw(mMainCamera.getPosition(), ofPolyRenderMode::OF_MESH_FILL);
 
@@ -255,7 +255,7 @@ void ofApp::draw(){
 	mLevelShader.setUniform3f("cameraPos", mMainCamera.getPosition());
 	mLevelShader.setUniform3f("sunDir", mSunDirection);
 	mLevelShader.setUniform1i("world", -1);
-	mLevelShader.setUniform4f("objColor", ofFloatColor::blueSteel);
+	mLevelShader.setUniform4f("objColor", ofFloatColor::wheat);
 	mLevelShader.setUniform1f("alpha", 1.f);
 
 	mWorld.draw();

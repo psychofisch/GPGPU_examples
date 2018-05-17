@@ -132,8 +132,6 @@ void Level::resetLevel()
 
 void Level::draw(ofVec3f& _cameraPos, ofPolyRenderMode _rm)
 {
-	ofFloatColor test;
-
 	mLevelShader->begin();
 	mLevelShader->setUniform3f("systemPos", ofVec3f(0.f));
 	mLevelShader->setUniform1i("endZone", 0);

@@ -26,11 +26,9 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mParticlesVBO.setVertexBuffer(mParticlesBuffer, 3, sizeof(ofVec4f));
 
 	ofSpherePrimitive sphere;
-	sphere.set(1.f, 3, ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
+	sphere.set(1.f, 5, ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
+	//sphere.enableNormals();
 	mParticleModel = sphere.getMesh();
-	mParticleModel.enableColors();
-	mParticleModel.enableNormals();
-	mParticleModel.enableTextures();
 
 	mParticleTmp.set(0.01f, 3);
 
@@ -435,14 +433,14 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	HANDLE_GL_ERROR();
 }
 
-void ParticleSystem::draw()
+void ParticleSystem::draw(const ofVec3f& _camera, const ofVec3f& _sunDir, ofPolyRenderMode _rm)
 {
 	if (mNumberOfParticles == 0)
 		return;
 	
 	// *** DESIRED METHOD but does not render correctly in Compute Shader and OpenCL mode
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	glCullFace(GL_FRONT);
 
 	mParticleShader.begin();
 
@@ -460,6 +458,8 @@ void ParticleSystem::draw()
 	mParticleShader.setUniform1i("mode", 1);
 	mParticleShader.setUniformMatrix4f("scale", identity);
 	mParticleShader.setUniform1i("particles", mNumberOfParticles);
+	mParticleShader.setUniform3f("cameraPos", _camera);
+	mParticleShader.setUniform3f("sunDir", _sunDir);
 
 	// draw particles
 	mParticleModel.drawInstanced(OF_MESH_FILL, mNumberOfParticles);
