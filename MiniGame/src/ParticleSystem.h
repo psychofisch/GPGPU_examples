@@ -142,6 +142,7 @@ public:
 	ComputeMode getMode() const;
 	Particle::CUDAta& getCudata();
 	ofVec3f getPosition() const;
+	ofVec3f getGravity() const;
 
 	// simple setters
 

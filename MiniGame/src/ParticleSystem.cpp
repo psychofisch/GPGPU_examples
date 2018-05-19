@@ -26,7 +26,7 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	mParticlesVBO.setVertexBuffer(mParticlesBuffer, 3, sizeof(ofVec4f));
 
 	ofSpherePrimitive sphere;
-	sphere.set(1.f, 3, ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
+	sphere.set(1.f, 5, ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
 	//sphere.enableNormals();
 	mParticleModel = sphere.getMesh();
 
@@ -547,6 +547,11 @@ Particle::CUDAta& ParticleSystem::getCudata()
 ofVec3f ParticleSystem::getPosition() const
 {
 	return mPosition;
+}
+
+ofVec3f ParticleSystem::getGravity() const
+{
+	return mGravity;
 }
 
 void ParticleSystem::measureNextUpdate()

@@ -243,6 +243,7 @@ void ofApp::draw(){
 	float angle;
 	mGlobalRotation.getRotate(angle, axis);
 	ofRotate(angle, axis.x, axis.y, axis.z);
+
 	ofTranslate(-mParticleSystem->getDimensions() * ofVec3f(0.5f, 0.25f, 0.5f));
 	// *** p
 
@@ -266,11 +267,22 @@ void ofApp::draw(){
 
 	mLevelShader.end();
 	glDisable(GL_CULL_FACE);
+
+	ofDisableDepthTest();
+
+	ofFill();
+	ofVec3f pos(0.5f, 0.7f, 0.5f);
+	float arrowLength = 0.2f;
+	ofSetColor(ofColor::fireBrick, 128);
+	ofDrawArrow(pos, pos + mParticleSystem->getGravity().normalized() * arrowLength, 0.02f);
+	
+	ofSetColor(ofColor::darkGrey, 64);
+	ofDrawArrow(pos, pos + ofVec3f(0, -arrowLength, 0), 0.01f);
 	// *** dg
 
 	mMainCamera.end();
 
-	ofDisableDepthTest();
+	
 
 	// draw HUD
 	mHud.draw();
@@ -400,9 +412,11 @@ void ofApp::mouseDragged(int x, int y, int button){
 		if (mRotationAxis & 0b010)
 		{
 			//ofQuaternion xRotation(sens * mMouseSens * (y - mMouse.y), ofVec3f(-1, 0, 0));
-			ofQuaternion yRotation(sens * mMouseSens * (x - mMouse.x), ofVec3f(0, 1, 0));
+			float angle = sens * mMouseSens * (x - mMouse.x);
+			ofQuaternion yRotation(angle, ofVec3f(0, 1, 0));
 			mGlobalRotation *= yRotation;
 			
+			mSunDirection.rotate(-angle, ofVec3f(0, 1, 0));
 			//mParticleSystem->setRotation(mGlobalRotation);
 
 			mHudRotation = mGlobalRotation;
