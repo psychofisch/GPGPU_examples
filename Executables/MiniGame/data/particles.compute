@@ -6,6 +6,11 @@ FluidParticles inspired by https://knork.org/doubleRelaxation.html
 
 #version 440
 
+struct MinMaxData
+{
+	vec4 min, max;
+};
+
 layout (std140, binding = 0) buffer PositionBuffer{
 	vec4 positionBuffer[];
 };
@@ -18,18 +23,25 @@ layout (std140, binding = 2) buffer VelocityBuffer{
 	vec4 velocityBuffer[];
 };
 
+layout (std140, binding = 3) buffer StaticCollisionBuffer {
+	MinMaxData staticCollisionBuffer[];
+};
+
 uniform float dt;
 //uniform SimulationData simData;
 uniform float interactionRadius;
-uniform float rho0;
-uniform float spring;
-uniform float springNear;
+uniform float pressureMultiplier;
+uniform float viscosity;
+uniform float restPressure;
 uniform vec3 gravity;
 uniform vec3 position;
 uniform int numberOfParticles;
+uniform int numberOfColliders;
 uniform vec3 mDimension;
 
-vec4 calculatePressure(uint index, vec3 pos, vec3 vel);
+vec3 calculatePressure(uint index, vec3 pos, vec3 vel);
+bool ClipLine(int d, const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout float f_low, inout float f_high);
+bool LineAABBIntersection(const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout vec3 vecIntersection, inout float flFraction);
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
 void main(){
@@ -38,46 +50,99 @@ void main(){
 	if(index >= numberOfParticles)
 		return;
 
+	float fluidDamp = 0.0;
+	float particleSize = interactionRadius * 0.1f;
+	vec3 worldAABBmin = vec3(particleSize);
+	vec3 worldAABBmax = mDimension - particleSize;
+
 	vec3 particlePosition = positionBuffer[index].xyz;
 	vec3 particleVelocity = velocityBuffer[index].xyz;
 	
 	// fluid simulation
-	vec4 particlePressure = calculatePressure(index, particlePosition, particleVelocity);
+	vec3 particlePressure = calculatePressure(index, particlePosition, particleVelocity);
 	// *** fs
 
 	particlePosition -= position;
 
 	// gravity
-	particleVelocity += (gravity + particlePressure.xyz) * dt;
+	particleVelocity += (gravity + particlePressure) * dt;
 	// ***g
 
-	// static collision
-	for (int i = 0; i < 3; ++i)
-	{
-		if ((particlePosition[i] + particleVelocity[i] * dt > mDimension[i] && particleVelocity[i] > 0.f) || (particlePosition[i] + particleVelocity[i] * dt < 0.f && particleVelocity[i] < 0.f))
-		{
-			if (particlePosition[i] + particleVelocity[i] * dt < 0.f)
-				particlePosition[i] = 0.f;
-			else
-				particlePosition[i] = mDimension[i];
+	vec3 deltaVelocity = particleVelocity * dt;
+	vec3 sizeOffset = normalize(particleVelocity) * particleSize;
+	vec3 newPos = particlePosition + deltaVelocity;
 
-			particleVelocity[i] *= -.3f;	
-		}
+	// static collision
+	int collisionCnt = 3; //support multiple collisions
+	for (int i = 0; i < staticCollisionBuffer.length() && collisionCnt > 0; i++)
+	{
+		MinMaxData currentAABB = staticCollisionBuffer[i];
+		vec3 intersection;
+		float fraction;
+		bool result;
+
+		result = LineAABBIntersection(currentAABB, particlePosition, newPos + sizeOffset, intersection, fraction);
+
+		if (result == false)
+			continue;
+
+		if (intersection.x == currentAABB.max.x || intersection.x == currentAABB.min.x)
+			particleVelocity.x *= -1.0;
+		else if (intersection.y == currentAABB.max.y || intersection.y == currentAABB.min.y)
+			particleVelocity.y *= -1.0;
+		else if (intersection.z == currentAABB.max.z || intersection.z == currentAABB.min.z)
+			particleVelocity.z *= -1.0;
+		//else
+		//	std::cout << "W00T!?\n";//DEBUG
+
+		//particlePosition = intersection;
+		newPos = intersection;
+		break;// DEBUG! this prevents multiple collisions!
+
+			  //	//ofVec3f reflection;
+			  //	ofVec3f n = Particle::directions[closest];
+
+			  //	// source -> https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector#13266
+			  //	particleVelocity = particleVelocity - (2 * particleVelocity.dot(n) * n);
+			  //	particleVelocity *= fluidDamp;
+			  //	
+			  //	collisionCnt = 0;
+			  //	//result = j;
+			  //	//break;// OPT: do not delete this (30% performance loss)
 	}
 	// *** sc
+
+	// bounding box collision
+	vec3 tmpVel = particleVelocity;
+	for (int i = 0; i < 3; ++i)
+	{
+		if ((newPos[i] >= worldAABBmax[i] && tmpVel[i] > 0.0) // max boundary
+			|| (newPos[i] <= worldAABBmin[i] && tmpVel[i] < 0.0) // min boundary
+			)
+		{
+			/*if (newPos[i] < worldAABB.min[i])
+			newPos[i] = worldAABB.min[i];
+			else
+			newPos[i] = worldAABB.max[i];*/
+
+			tmpVel[i] *= -fluidDamp;
+		}
+	}
+
+	particleVelocity = tmpVel;
+	//*** bbc
 
 	//particleVelocity -= dt * particleVelocity * 0.1f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionOutBuffer[index] = vec4(particlePosition + position, 0.f);
-	velocityBuffer[index] = vec4(particleVelocity, particlePressure.w);
+	positionOutBuffer[index] = vec4(particlePosition + position, 0.0);
+	velocityBuffer[index] = vec4(particleVelocity, 0.0);
 }
 
-vec4 calculatePressure(uint index, vec3 pos, vec3 vel)
+vec3 calculatePressure(uint index, vec3 pos, vec3 vel)
 {
-	vec4 pressureVec = vec4(0.f, 0.f, 0.f, 0.f);
-	vec4 viscosityVec = vec4(0.f, 0.f, 0.f, 0.f);
-	float pressure = 0.f;
+	vec3 pressureVec, viscosityVec;
+	pressureVec = viscosityVec = vec3(0.0);
 	for (int i = 0; i < numberOfParticles; i++)
 	{
 		if (index == i)
@@ -86,31 +151,106 @@ vec4 calculatePressure(uint index, vec3 pos, vec3 vel)
 		vec3 dirVec = pos - positionBuffer[i].xyz;
 		float dist = length(dirVec);
 
-		if (dist > interactionRadius * 1.0f || dist < 0.00001f)
-		//if (dist > interactionRadius * 1.0f)
+		if (dist > interactionRadius)
 			continue;
 
 		vec3 dirVecN = normalize(dirVec);
 		float moveDir = dot(vel - velocityBuffer[i].xyz, dirVecN);
-		float distRel = dist / interactionRadius;
+		float distRel = 1.0 - dist / interactionRadius;
+
+		float sqx = distRel * distRel;
 
 		// viscosity
-		if (moveDir > 0)
+		if (true || moveDir > 0)
 		{
-			vec3 impulse = (1.f - distRel) * (spring * moveDir + springNear * moveDir * moveDir) * dirVecN;
-			viscosityVec.xyz -= impulse * 0.5f;//goes back to the caller-particle
-			//viscosityVec.w = 666.0f;
+			//vec3 impulse = (1.0 - distRel) * (viscosity * moveDir + restPressure * moveDir * moveDir) * dirVecN;
+			//viscosityVec.xyz -= impulse * 0.5;//goes back to the caller-particle
+			float factor = sqx * (viscosity * moveDir);
+			vec3 impulse = factor * dirVecN;
+			viscosityVec -= impulse;
 		}
 		// *** v
 
-		float oneminusx = 1.f - distRel;
-		float sqx = oneminusx * oneminusx;
-		float pressure = 1.f - rho0 * (sqx * oneminusx - sqx);
-		//float pressure = 1.f - (dist/interactionRadius);
-		//float pressure = amplitude * exp(-dist / interactionRadius);
+		float pressure = sqx * pressureMultiplier;
 		
-		pressureVec += vec4(pressure * dirVecN, 0.f);
+		pressureVec += (pressure - restPressure) * dirVecN;
 	}
 	
+	//compress viscosity TODO: fix the root of this problem and not just limit it manually
+	float threshold = 50.0;
+	float visL = length(viscosityVec);
+	if (visL > threshold)
+	{
+		visL = threshold + ((visL - threshold)*0.125f);//8:1 compression
+
+		if(visL > 100.0)
+			viscosityVec = normalize(viscosityVec) * 100.0;
+		else
+			viscosityVec = normalize(viscosityVec) * visL;
+		//viscosityVec.scale(visL);
+	}
+	//*** lv
+
 	return pressureVec + viscosityVec;
+}
+
+bool ClipLine(int d, const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout float f_low, inout float f_high)
+{
+	// f_low and f_high are the results from all clipping so far. We'll write our results back out to those parameters.
+
+	// f_dim_low and f_dim_high are the results we're calculating for this current dimension.
+	float f_dim_low, f_dim_high;
+
+	// Find the point of intersection in this dimension only as a fraction of the total vector http://youtu.be/USjbg5QXk3g?t=3m12s
+	f_dim_low = (aabbBox.min[d] - v0[d]) / (v1[d] - v0[d]);
+	f_dim_high = (aabbBox.max[d] - v0[d]) / (v1[d] - v0[d]);
+
+	// Make sure low is less than high
+	if (f_dim_high < f_dim_low)
+	{
+		float tmp = f_dim_high;
+		f_dim_high = f_dim_low;
+		f_dim_low = tmp;
+	}
+
+	// If this dimension's high is less than the low we got then we definitely missed. http://youtu.be/USjbg5QXk3g?t=7m16s
+	if (f_dim_high < f_low)
+		return false;
+
+	// Likewise if the low is less than the high.
+	if (f_dim_low > f_high)
+		return false;
+
+	// Add the clip from this dimension to the previous results http://youtu.be/USjbg5QXk3g?t=5m32s
+	f_low = max(f_dim_low, f_low);
+	f_high = min(f_dim_high, f_high);
+
+	if (f_low > f_high)
+		return false;
+
+	return true;
+}
+
+// Find the intersection of a line from v0 to v1 and an axis-aligned bounding box http://www.youtube.com/watch?v=USjbg5QXk3g
+bool LineAABBIntersection(const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout vec3 vecIntersection, inout float flFraction)
+{
+	float f_low = 0;
+	float f_high = 1;
+
+	if (!ClipLine(0, aabbBox, v0, v1, f_low, f_high))
+		return false;
+
+	if (!ClipLine(1, aabbBox, v0, v1, f_low, f_high))
+		return false;
+
+	if (!ClipLine(2, aabbBox, v0, v1, f_low, f_high))
+		return false;
+
+	// The formula for I: http://youtu.be/USjbg5QXk3g?t=6m24s
+	vec3 b = v1 - v0;
+	vecIntersection = v0 + b * f_low;
+
+	flFraction = f_low;
+
+	return true;
 }
