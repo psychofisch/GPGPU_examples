@@ -606,6 +606,8 @@ void ParticleSystem::update(float dt)
 
 void ParticleSystem::iUpdateCPU(float dt)
 {
+	//Particles inspired by https://knork.org/doubleRelaxation.html
+
 	float maxSpeed = 500.f;
 	float fluidDamp = 0.f;
 	float particleSize = mSimData.interactionRadius * 0.1f;
@@ -657,11 +659,11 @@ void ParticleSystem::iUpdateCPU(float dt)
 				continue;
 
 			if (intersection.x == currentAABB.max.x || intersection.x == currentAABB.min.x)
-				particleVelocity.x *= -1.f;
+				particleVelocity.x *= -fluidDamp;
 			else if (intersection.y == currentAABB.max.y || intersection.y == currentAABB.min.y)
-				particleVelocity.y *= -1.f;
+				particleVelocity.y *= -fluidDamp;
 			else if (intersection.z == currentAABB.max.z || intersection.z == currentAABB.min.z)
-				particleVelocity.z *= -1.f;
+				particleVelocity.z *= -fluidDamp;
 			//else
 			//	std::cout << "W00T!?\n";//DEBUG
 
@@ -718,6 +720,9 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 	float viscosity = mSimData.viscosity;
 	float restPressure = mSimData.restPressure;
 	float pressureMultiplier = mSimData.pressureMultiplier;
+	float influence = 0.f;
+
+	float debug_maxParticleVelocity = 0.f;
 
 	ofVec3f pressureVec, viscosityVec;
 	for (uint i = 0; i < mNumberOfParticles; ++i)
@@ -732,10 +737,21 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 			continue;
 
 		ofVec3f dirVecN = dirVec.getNormalized();
-		float moveDir = (vel - mParticleVelocity[i]).dot(dirVecN);
+		ofVec3f otherParticleVel = mParticleVelocity[i];
+		float moveDir = (vel - otherParticleVel).dot(dirVecN);
 		float distRel = 1.f - (dist / interactionRadius);
 
+		{
+			float tmpL = otherParticleVel.lengthSquared();
+			if (debug_maxParticleVelocity < tmpL)
+			{
+				debug_maxParticleVelocity = tmpL;
+			}
+		}
+
 		float sqx = distRel * distRel;
+
+		influence += 1.0f;
 
 		// viscosity
 		if (true || moveDir > 0)
@@ -762,12 +778,18 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 	//compress viscosity TODO: fix the root of this problem and not just limit it manually
 	float threshold = 50.f;
 	float visL = viscosityVec.length();
-	if (visL > threshold)
+
+	if (influence > 0.f)
 	{
-		visL = threshold + ((visL - threshold)*0.125f);//8:1 compression
-		viscosityVec.scale(visL);
+		viscosityVec = viscosityVec / influence;
 	}
-	viscosityVec.limit(100.f);
+
+	//if (false && visL > threshold)
+	//{
+	//	visL = threshold + ((visL - threshold)*0.125f);//8:1 compression
+	//	viscosityVec.scale(visL);
+	//}
+	//viscosityVec.limit(100.f);
 	//*** lv
 
 	//if (index == 0)

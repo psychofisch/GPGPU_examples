@@ -75,7 +75,7 @@ void ofApp::setup(){
 	mHudSimulationGroup.add(mHudStep.set("Step", false));
 	mHudSimulationGroup.add(mHudInteractionRadius.set("Interaction Radius", 0.1f, 0.00000001f, 1.f));
 	mHudSimulationGroup.add(mHudPressureMultiplier.set("Pressure Multiplier", 0.5f, 0.0f, 10.f));
-	mHudSimulationGroup.add(mHudViscosity.set("Viscosity", 1.0f, 0.0f, 100.f));
+	mHudSimulationGroup.add(mHudViscosity.set("Viscosity", 1.0f, 0.0f, 1000.f));
 	mHudSimulationGroup.add(mHudRestPressure.set("Rest Pressure", .1f, 0.0f, 1.f));
 
 	mHudGameGroup.setName("Game Info");
