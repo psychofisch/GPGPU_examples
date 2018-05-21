@@ -3,8 +3,8 @@
 		<FPS>144</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>CPU</Mode>
-		<Particles>2/50000</Particles>
+		<Mode>Compute Shader</Mode>
+		<Particles>159/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
@@ -13,16 +13,16 @@
 	</Program_Information>
 	<Simulation_Settings>
 		<Interaction_Radius>0.200255</Interaction_Radius>
-		<Pressure_Multiplier>3.16327</Pressure_Multiplier>
-		<Viscosity>1122.45</Viscosity>
-		<Rest_Pressure>0.270408</Rest_Pressure>
+		<Pressure_Multiplier>2.65306</Pressure_Multiplier>
+		<Viscosity>760.204</Viscosity>
+		<Rest_Pressure>0.188776</Rest_Pressure>
 	<Pause>0</Pause>
 		<Step>0</Step>
 	</Simulation_Settings>
 <group/>
 <Game_Info>
 		<Gamestate>TimeOver</Gamestate>
-		<Time>0.00573111</Time>
+		<Time>0.000711918</Time>
 		<Help>Press R to reset level</Help>
 	</Game_Info>
 </group>

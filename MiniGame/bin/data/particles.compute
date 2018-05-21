@@ -143,6 +143,8 @@ vec3 calculatePressure(uint index, vec3 pos, vec3 vel)
 {
 	vec3 pressureVec, viscosityVec;
 	pressureVec = viscosityVec = vec3(0.0);
+	float influence = 0.f;
+
 	for (int i = 0; i < numberOfParticles; i++)
 	{
 		if (index == i)
@@ -159,6 +161,8 @@ vec3 calculatePressure(uint index, vec3 pos, vec3 vel)
 		float distRel = 1.0 - dist / interactionRadius;
 
 		float sqx = distRel * distRel;
+
+		influence += 1.0f;
 
 		// viscosity
 		if (true || moveDir > 0)
@@ -177,18 +181,27 @@ vec3 calculatePressure(uint index, vec3 pos, vec3 vel)
 	}
 	
 	//compress viscosity TODO: fix the root of this problem and not just limit it manually
-	float threshold = 50.0;
-	float visL = length(viscosityVec);
-	if (visL > threshold)
-	{
-		visL = threshold + ((visL - threshold)*0.125f);//8:1 compression
+	//float threshold = 50.f;
 
-		if(visL > 100.0)
-			viscosityVec = normalize(viscosityVec) * 100.0;
-		else
-			viscosityVec = normalize(viscosityVec) * visL;
-		//viscosityVec.scale(visL);
+	if (influence > 0.f)
+	{
+		viscosityVec = viscosityVec / influence;
 	}
+
+	float visL = length(viscosityVec);
+	if (visL > 100.0)
+		viscosityVec = normalize(viscosityVec) * 100.0;
+
+	//if (visL > threshold)
+	//{
+	//	visL = threshold + ((visL - threshold)*0.125f);//8:1 compression
+
+	//	if(visL > 100.0)
+	//		viscosityVec = normalize(viscosityVec) * 100.0;
+	//	else
+	//		viscosityVec = normalize(viscosityVec) * visL;
+	//	//viscosityVec.scale(visL);
+	//}
 	//*** lv
 
 	return pressureVec + viscosityVec;
