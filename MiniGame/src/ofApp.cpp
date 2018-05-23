@@ -44,7 +44,6 @@ void ofApp::setup(){
 	mParticleSystem->setupAll(mXmlSettings);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 	mParticleSystem->setDimensions(ofVec3f(1.f, 1.f, 1.f));
-	Particle::CUDAta tmpCUDA = mParticleSystem->getCudata();
 	mParticleSystem->createParticleShader(mXmlSettings.getValue("GENERAL:VERT", "shader.vert"), mXmlSettings.getValue("GENERAL:FRAG", "shader.frag"));
 	//mParticleSystem->addDamBreak(200);
 	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);

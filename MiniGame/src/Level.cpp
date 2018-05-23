@@ -155,9 +155,6 @@ void Level::draw(ofVec3f& _cameraPos, ofPolyRenderMode _rm)
 
 void Level::update(float dt)
 {
-	if (!this->isRunning())
-		return;
-
 	if (mDirtyColliders)
 	{
 		std::vector<MinMaxData> minMax(mLevelCollider.size());
@@ -169,6 +166,9 @@ void Level::update(float dt)
 
 		mDirtyColliders = false;
 	}
+
+	if (!this->isRunning())
+		return;
 
 	if (mExternalParticleSystem->getNumberOfParticles() > 0)
 	{

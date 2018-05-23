@@ -296,16 +296,16 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 		if (mCUData.allocatedColliders == 0)
 		{
 			mCUData.allocatedColliders = tmpSize;
-			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, mCUData.allocatedColliders));
+			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, sizeof(MinMaxData) * mCUData.allocatedColliders));
 		}
 		else if (mCUData.allocatedColliders < tmpSize)
 		{
 			CUDAERRORS(cudaFree(mCUData.staticCollisionBuffer));
 			mCUData.allocatedColliders = tmpSize;
-			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, mCUData.allocatedColliders));
+			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, sizeof(MinMaxData) * mCUData.allocatedColliders));
 		}
 
-		CUDAERRORS(cudaMemcpy(mCUData.staticCollisionBuffer, mStaticCollision.data(), mCUData.allocatedColliders, cudaMemcpyHostToDevice));
+		CUDAERRORS(cudaMemcpy(mCUData.staticCollisionBuffer, mStaticCollision.data(), sizeof(MinMaxData) * mCUData.allocatedColliders, cudaMemcpyHostToDevice));
 	}
 }
 

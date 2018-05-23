@@ -173,6 +173,8 @@ __device__ float3 calculatePressure(const float4* __restrict__ position, const f
 {
 	float3 pressureVec = make_float3(0.f);
 	float3 viscosityVec = pressureVec;
+	float influence = 0.f;
+
 	for (uint i = 0; i < numberOfParticles; i++)
 	{
 		if (index == i)
@@ -190,6 +192,8 @@ __device__ float3 calculatePressure(const float4* __restrict__ position, const f
 
 		float sqx = distRel * distRel;
 
+		influence += 1.0f;
+
 		// viscosity
 		if (true || moveDir > 0)
 		{
@@ -205,18 +209,14 @@ __device__ float3 calculatePressure(const float4* __restrict__ position, const f
 	}
 
 	//compress viscosity TODO: fix the root of this problem and not just limit it manually
-	float threshold = 50.0;
-	float visL = length(viscosityVec);
-	if (visL > threshold)
+	//float threshold = 50.0;
+	if (influence > 0.f)
 	{
-		visL = threshold + ((visL - threshold)*0.125f);//8:1 compression
-
-		if (visL > 100.0)
-			viscosityVec = normalize(viscosityVec) * 100.0;
-		else
-			viscosityVec = normalize(viscosityVec) * visL;
-		//viscosityVec.scale(visL);
+		viscosityVec = viscosityVec / influence;
 	}
+
+	if (length(viscosityVec) > 100.0)
+		viscosityVec = normalize(viscosityVec) * 100.0;
 	//*** lv
 
 	return pressureVec + viscosityVec;
