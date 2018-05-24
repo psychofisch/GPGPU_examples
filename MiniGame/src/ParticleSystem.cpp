@@ -331,10 +331,6 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.staticCollisionBuffer, CL_TRUE, 0, sizeof(MinMaxData) * colliderSize, mStaticCollision.data());
 		//err = cl::enqueueWriteBuffer(mOCLData.staticCollisionBuffer, CL_TRUE, 0, sizeof(MinMaxData) * colliderSize, mStaticCollision.data());
 		oclHelper::handle_clerror(err, __LINE__);
-
-		MinMaxData tmp[2];
-		err = mOCLHelper.getCommandQueue().enqueueReadBuffer(mOCLData.staticCollisionBuffer, CL_TRUE, 0, sizeof(MinMaxData) * 2, tmp);
-		oclHelper::handle_clerror(err, __LINE__);
 	}
 }
 
@@ -853,7 +849,7 @@ void ParticleSystem::iUpdateCompute(float dt)
 	// sync the result back to the CPU
 	ofVec4f* positionsFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);//TODO: use mapRange
 	std::copy(positionsFromGPU, positionsFromGPU + mNumberOfParticles, mParticlePosition);
-	mComputeData.positionBuffer.unmap();//*//keep this snippet here for copy-pasta if something fails
+	mComputeData.positionBuffer.unmap();
 
 	mComputeData.positionBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 0);
 	mComputeData.positionOutBuffer.unbindBase(GL_SHADER_STORAGE_BUFFER, 1);

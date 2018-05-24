@@ -139,17 +139,17 @@ __kernel void particleUpdate(
 
 	// bounding box collision
 	//TODO: write some kind of for-loop
-	if ((particlePosition.x + particleVelocity.x * dt > dimension.x && particleVelocity.x > 0.f) || (particlePosition.x + particleVelocity.x * dt < 0.f && particleVelocity.x < 0.f))
+	if ((newPos.x > worldAABBmax.x && particleVelocity.x > 0.f) || (newPos.x < worldAABBmin.x && particleVelocity.x < 0.f))
 	{
 		particleVelocity.x *= -fluidDamp;
 	}
 	
-	if ((particlePosition.y + particleVelocity.y * dt > dimension.y && particleVelocity.y > 0.f) || (particlePosition.y + particleVelocity.y * dt < 0.f && particleVelocity.y < 0.f))
+	if ((newPos.y > worldAABBmax.y && particleVelocity.y > 0.f) || (newPos.y < worldAABBmin.x && particleVelocity.y < 0.f))
 	{
 		particleVelocity.y *= -fluidDamp;
 	}
 	
-	if ((particlePosition.z + particleVelocity.z * dt > dimension.z && particleVelocity.z > 0.f) || (particlePosition.z + particleVelocity.z * dt < 0.f && particleVelocity.z < 0.f))
+	if ((newPos.z > worldAABBmax.z && particleVelocity.z > 0.f) || (newPos.z < worldAABBmin.z && particleVelocity.z < 0.f))
 	{
 		particleVelocity.z *= -fluidDamp;
 	}
