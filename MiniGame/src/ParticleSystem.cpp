@@ -160,6 +160,8 @@ void ParticleSystem::setupOCL(ofxXmlSettings & settings)
 			mOCLData.maxWorkGroupSize /= 2;//testing showed best performance at half the max ThreadCount
 			oclHelper::handle_clerror(err, __LINE__);
 
+			mOCLData.allocatedColliders = 0;
+
 			mAvailableModes[ComputeMode::OPENCL] = settings.getValue("OCL:ENABLED", true);
 		}
 		else
@@ -282,30 +284,57 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 {
 	mStaticCollision = collision;
 
+	size_t colliderSize = collision.size();
+
+	// Compute Shader
 	if (mAvailableModes[ComputeMode::COMPUTE_SHADER])
 	{
-		if (mComputeData.staticCollisionBuffer.size() < collision.size() * sizeof(MinMaxData))
+		if (mComputeData.staticCollisionBuffer.size() < colliderSize * sizeof(MinMaxData))
 			mComputeData.staticCollisionBuffer.allocate(collision, GL_DYNAMIC_DRAW);
 		else
 			mComputeData.staticCollisionBuffer.updateData(collision);
 	}
-
-	size_t tmpSize = collision.size();
+	
+	// CUDA
 	if (mAvailableModes[ComputeMode::CUDA])
 	{
 		if (mCUData.allocatedColliders == 0)
 		{
-			mCUData.allocatedColliders = tmpSize;
+			mCUData.allocatedColliders = colliderSize;
 			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, sizeof(MinMaxData) * mCUData.allocatedColliders));
 		}
-		else if (mCUData.allocatedColliders < tmpSize)
+		else if (mCUData.allocatedColliders < colliderSize)
 		{
 			CUDAERRORS(cudaFree(mCUData.staticCollisionBuffer));
-			mCUData.allocatedColliders = tmpSize;
+			mCUData.allocatedColliders = colliderSize;
 			CUDAERRORS(cudaMalloc(&mCUData.staticCollisionBuffer, sizeof(MinMaxData) * mCUData.allocatedColliders));
 		}
 
 		CUDAERRORS(cudaMemcpy(mCUData.staticCollisionBuffer, mStaticCollision.data(), sizeof(MinMaxData) * mCUData.allocatedColliders, cudaMemcpyHostToDevice));
+	}
+
+	// Open CL
+	if (mAvailableModes[ComputeMode::OPENCL])
+	{
+		cl::Context context = mOCLHelper.getCLContext();
+		cl_int err;
+		//size_t tmpSize = mOCLData.staticCollisionBuffer.getInfo<CL_MEM_SIZE>(&err);
+		size_t tmpSize = mOCLData.allocatedColliders;
+		//oclHelper::handle_clerror(err, __LINE__);
+		if (tmpSize < colliderSize * sizeof(MinMaxData) || tmpSize == 0)
+		{
+			mOCLData.staticCollisionBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(MinMaxData) * colliderSize, 0, &err);
+			oclHelper::handle_clerror(err, __LINE__);
+			mOCLData.allocatedColliders = colliderSize;
+		}
+
+		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.staticCollisionBuffer, CL_TRUE, 0, sizeof(MinMaxData) * colliderSize, mStaticCollision.data());
+		//err = cl::enqueueWriteBuffer(mOCLData.staticCollisionBuffer, CL_TRUE, 0, sizeof(MinMaxData) * colliderSize, mStaticCollision.data());
+		oclHelper::handle_clerror(err, __LINE__);
+
+		MinMaxData tmp[2];
+		err = mOCLHelper.getCommandQueue().enqueueReadBuffer(mOCLData.staticCollisionBuffer, CL_TRUE, 0, sizeof(MinMaxData) * 2, tmp);
+		oclHelper::handle_clerror(err, __LINE__);
 	}
 }
 
@@ -857,12 +886,14 @@ void ParticleSystem::iUpdateOCL(float dt)
 	kernel.setArg(0, mOCLData.positionBuffer);
 	kernel.setArg(1, mOCLData.positionOutBuffer);
 	kernel.setArg(2, mOCLData.velocityBuffer);
-	kernel.setArg(3, dt);
-	kernel.setArg(4, ofVec4f(mGravity));
-	kernel.setArg(5, ofVec4f(mPosition));
-	kernel.setArg(6, ofVec4f(mDimension));
-	kernel.setArg(7, mNumberOfParticles);
-	kernel.setArg(8, mSimData);
+	kernel.setArg(3, mOCLData.staticCollisionBuffer);
+	kernel.setArg(4, dt);
+	kernel.setArg(5, ofVec4f(mGravity));
+	kernel.setArg(6, ofVec4f(mPosition));
+	kernel.setArg(7, ofVec4f(mDimension));
+	kernel.setArg(8, mNumberOfParticles);
+	kernel.setArg(9, mOCLData.allocatedColliders);
+	kernel.setArg(10, mSimData);
 
 	// calculate the global and local size
 	cl::NDRange local;

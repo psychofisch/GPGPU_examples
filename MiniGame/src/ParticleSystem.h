@@ -62,7 +62,7 @@ namespace Particle
 									ofVec3f(0, 0, -1.f) };
 	const ofVec3f gravity = ofVec3f(0, -9.81f, 0);
 
-//definitions for Compute Shader
+	//definitions for Compute Shader
 	struct ComputeShaderData
 	{
 		ofShader computeShader;
@@ -80,8 +80,10 @@ namespace Particle
 		cl::Buffer positionOutBuffer;
 		cl::Buffer velocityBuffer;
 		cl::Buffer staticCollisionBuffer;
+		uint allocatedColliders;
 	};
 
+	//definitions for CUDA
 	struct CUDAta
 	{
 		size_t maxWorkGroupSize;
@@ -93,7 +95,7 @@ namespace Particle
 	};
 }
 
-//definitions for CUDA
+// external CUDA function in the particles.cu file
 extern "C" void cudaParticleUpdate(
 	float4* positions,
 	float4* positionOut,

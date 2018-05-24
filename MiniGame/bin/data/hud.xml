@@ -3,8 +3,8 @@
 		<FPS>144</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>CUDA</Mode>
-		<Particles>415/50000</Particles>
+		<Mode>OpenCL</Mode>
+		<Particles>998/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
@@ -22,7 +22,7 @@
 <group/>
 <Game_Info>
 		<Gamestate>TimeOver</Gamestate>
-		<Time>0.000543118</Time>
+		<Time>0.00465679</Time>
 		<Help>Press R to reset level</Help>
 	</Game_Info>
 </group>
