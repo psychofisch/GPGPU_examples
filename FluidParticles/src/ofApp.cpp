@@ -1,7 +1,7 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
-void ofApp::setup(){
+void ofApp::setup() {
 	std::cout << "setting up...\n";
 
 	if (mXmlSettings.loadFile("settings.xml")) {
@@ -15,41 +15,45 @@ void ofApp::setup(){
 		mXmlSettings.loadFile("settings.xml");
 	}
 
+	// graphic setup
+	ofGetWindowPtr()->setWindowTitle(mXmlSettings.getValue("GENERAL:TITLE", "Minigame"));
+
+	ofSetFrameRate(144);
 	ofSetVerticalSync(false);
 
 	ofBackground(69, 69, 69);
 
-	mTestBox.setResolution(1);
-	mTestBox.setScale(1.f);
-	mTestBox.setPosition(ofVec3f(0.f));
-
-	mMainCamera.setPosition(0, 0, 2);
+	mMainCamera.setPosition(1, 2, 1);
 	mMainCamera.lookAt(ofVec3f(0.f));
 	mMainCamera.setNearClip(0.01f);
 	mMainCamera.setFarClip(50.f);
+	mMainCamera.setFov(50.f);
 
-	mLight.setPointLight();
-	mLight.setPosition(ofVec3f(0.f));
+	mWorld.set(1.0f);
+	mWorld.setPosition(ofVec3f(0.5f));
 
-	ofBoxPrimitive testRect;
-
+	// particle setup
 	int maxParticles = mXmlSettings.getValue("GENERAL:MAXPARTICLES", 5000);
 	if (maxParticles <= 0)
 	{
 		std::cout << "WARNING: GENERAL:MAXPARTICLES was \"<= 0\" again.\n";
 		maxParticles = 5000;
 	}
+
 	mParticleSystem = new ParticleSystem(maxParticles);
 	mParticleSystem->setupAll(mXmlSettings);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
-	mParticleSystem->setDimensions(ofVec3f(1.f));
-	CUDAta tmpCUDA = mParticleSystem->getCudata();
+	mParticleSystem->setDimensions(ofVec3f(1.f, 1.f, 1.f));
+	mParticleSystem->createParticleShader(mXmlSettings.getValue("GENERAL:VERT", "shader.vert"), mXmlSettings.getValue("GENERAL:FRAG", "shader.frag"));
 	//mParticleSystem->addDamBreak(200);
 	//mParticleSystem->addCube(ofVec3f(0), mParticleSystem->getDimensions(), 200);
 	//mParticleSystem->addRandom();
 
 	mValve = false;
 
+	mMoveVec.y = 1.f;
+
+	// control and HUD setup
 	mRotationAxis = 0b000;
 
 	mMouse = ofVec2f(-1, -1);
@@ -63,28 +67,62 @@ void ofApp::setup(){
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
 	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
 	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
-	mHudControlGroup.add(mHudColor.set("Particle Color", ofColor(100, 100, 140)));
+	mHudControlGroup.add(mHudTime.set("Time", 1.0f, 0.f, 5.f));
 
 	mHudSimulationGroup.setName("Simulation Settings");
-	mHudControlGroup.add(mHudPause.set("Pause", false));
-	mHudControlGroup.add(mHudStep.set("Step", false));
-	mHudSimulationGroup.add(mHudSmoothingWidth.set("Smoothing Width", 0.1f, 0.00000001f, 1.f));
-	mHudSimulationGroup.add(mHudRestDensity.set("Rest Density", 3.5f, 0.0f, 50.f));
-	mHudSimulationGroup.add(mHudSpring.set("Spring", 1.0f, 0.0f, 10.f));
-	mHudSimulationGroup.add(mHudSpringNear.set("Spring Near", 1.0f, 0.0f, 10.f));
+	mHudSimulationGroup.add(mHudPause.set("Pause", false));
+	mHudSimulationGroup.add(mHudStep.set("Step", false));
+	mHudSimulationGroup.add(mHudInteractionRadius.set("Interaction Radius", 0.1f, 0.00000001f, 1.f));
+	mHudSimulationGroup.add(mHudPressureMultiplier.set("Pressure Multiplier", 0.5f, 0.0f, 10.f));
+	mHudSimulationGroup.add(mHudViscosity.set("Viscosity", 1.0f, 0.0f, 1000.f));
+	mHudSimulationGroup.add(mHudRestPressure.set("Rest Pressure", .1f, 0.0f, 1.f));
+
+	mHudGameGroup.setName("Game Info");
+	mHudGameGroup.add(mHudGameGameState.set("Gamestate", "???"));
+	mHudGameGroup.add(mHudGameTime.set("Time", -1.f));
+	mHudGameGroup.add(mHudGameHelp.set("Help", "???"));
 
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
 	mHud.add(mHudControlGroup);
 	mHud.add(mHudSimulationGroup);
+	mHud.add(mHudGameGroup);
 	mHud.loadFromFile("hud.xml");
 
 	mHudMode = iHudGetModeString(mParticleSystem->getMode());
+
+	std::cout << "OpenGL " << ofGetGLRenderer()->getGLVersionMajor() << "." << ofGetGLRenderer()->getGLVersionMinor() << std::endl;
+
+	mMainFont.loadFont("Roboto-Regular.ttf", 64, true, true, true);
+
+	// level setup
+	Cube tmpCube;
+	tmpCube.set(.25f);
+
+	tmpCube.set(0.1f, 0.3f, 0.8f);
+	tmpCube.setPosition(ofVec3f(0.4f, -0.01f, -0.01f) + (tmpCube.getSize() * 0.5f));
+	mCollider.push_back(tmpCube);
+
+	tmpCube.setPosition(ofVec3f(0.699f, -0.01f, 0.21f) + (tmpCube.getSize() * 0.5f));
+	mCollider.push_back(tmpCube);
+
+	std::vector<MinMaxData> minMax(mCollider.size());
+	for (size_t i = 0; i < mCollider.size(); i++)
+	{
+		mCollider[i].recalculateMinMax();
+		minMax[i] = mCollider[i].getLocalMinMax() + mCollider[i].getPosition();
+	}
+	mParticleSystem->setStaticCollision(minMax);
+
+	mWorldShader.load("simple.vert", "simple.frag");
+
+	mSunDirection = ofVec3f(1.0f, 2.0f, 0.f).getNormalized();
+	// *** ls
 }
 
 //--------------------------------------------------------------
-void ofApp::update(){
-	float deltaTime =  std::min(0.1, ofGetLastFrameTime());
+void ofApp::update() {
+	float deltaTime = std::min(0.1, ofGetLastFrameTime());
 	//std::cout << deltaTime << std::endl;
 
 	mHudFps = std::round(ofGetFrameRate());
@@ -92,13 +130,13 @@ void ofApp::update(){
 	//mHudFps = ofToString(ofGetFrameRate(),0) + "\t" + ofToString(mParticleSystem->getNumberOfParticles()) + "/" + ofToString(mParticleSystem->getCapacity());
 
 	SimulationData simD;
-	simD.interactionRadius = mHudSmoothingWidth;
-	simD.rho0 = mHudRestDensity;
-	simD.spring = mHudSpring;
-	simD.springNear = mHudSpringNear;
+	simD.interactionRadius = mHudInteractionRadius;
+	simD.pressureMultiplier = mHudPressureMultiplier;
+	simD.viscosity = mHudViscosity;
+	simD.restPressure = mHudRestPressure;
 	mParticleSystem->setSimulationData(simD);
-	//mParticleSystem->setSmoothingWidth(mHudSmoothingWidth);
-	//mParticleSystem->setRestDensity(mHudRestDensity);
+	//mParticleSystem->setSmoothingWidth(mHudInteractionRadius);
+	//mParticleSystem->setRestDensity(mHudPressureMultiplier);
 	//mParticleSystem->getCudata().maxWorkGroupSize = mHudWorkGroup;
 
 	float spinX = sin(ofGetElapsedTimef()*.35f);
@@ -110,76 +148,123 @@ void ofApp::update(){
 		mParticleSystem->addCube(tmpSize * ofVec3f(0.5f, 1.0f, 0.5f), tmpSize * 0.1f, 2, true);
 	}
 
-	ofVec3f moveVec = mMoveVec * deltaTime;
-	mParticleSystem->addPosition(moveVec);
-	mTestBox.move(moveVec);
+	//ofVec3f moveVec = mMoveVec /** deltaTime*/;
+	//mParticleSystem->addPosition(moveVec);
+	//mTestBox.move(moveVec);
+	ofVec3f gravity = Particle::gravity.y * mMoveVec.normalized();
+	mParticleSystem->setGravity(gravity);
 
 	if (!mHudPause || mHudStep)
 	{
 		float dt = deltaTime;
+		dt *= mHudTime;
+
 		if (mHudStep)
-			dt = 0.008f;
+			dt = 0.033f;
+
+		// update particles
 		mParticleSystem->update(dt);
+
+		// reset this bool if step mode is activated (no unnecessary branching)
 		mHudStep = false;
 	}
 	//mParticleSystem->update(0.016f);
 	//mParticleMesh.haveVertsChanged();
 	//mTestBox.rotate(spinY, 0, 1, 0);
+
+	// HUD stuff
 }
 
 //--------------------------------------------------------------
-void ofApp::draw(){
+void ofApp::draw() {
 	ofEnableDepthTest();
 
-	mMainCamera.lookAt(ofVec3f(0.f));
-	//ofEnableLighting();
-	//mLight.enable();
+	mMainCamera.lookAt(ofVec3f(0));
 	mMainCamera.begin();
 
-	//mTestBox.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
-	
-	ofPushMatrix();
+	// prerequisites
 	ofVec3f axis;
 	float angle;
 	mGlobalRotation.getRotate(angle, axis);
 	ofRotate(angle, axis.x, axis.y, axis.z);
-	ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
-	ofPushStyle();
-	ofSetColor(mHudColor);
-	glPointSize(2.f);
-	mTestBox.drawAxes(1.f);
-	//mParticleMesh.drawVertices();
-	//mParticlesVBO.draw(GL_POINTS, 0, mParticleSystem->getNumberOfParticles());
-	mParticleSystem->draw();
-	ofPopStyle();
-	ofPopMatrix();
 
-	mMainCamera.end();
-	//mLight.disable();
-	//ofDisableLighting();
+	ofTranslate(-mParticleSystem->getDimensions() * ofVec3f(0.5f, 0.25f, 0.5f));
+	// *** p
+
+	// draw game
+	ofPolyRenderMode renderMode = ofPolyRenderMode::OF_MESH_FILL;
+	mParticleSystem->draw(mMainCamera.getPosition(), mSunDirection, renderMode);
+
+	mWorldShader.begin();
+	mWorldShader.setUniform3f("systemPos", ofVec3f(0.f));
+	mWorldShader.setUniform1i("endZone", 0);
+	mWorldShader.setUniform3f("cameraPos", mMainCamera.getPosition());
+	mWorldShader.setUniform3f("sunDir", mSunDirection);
+	mWorldShader.setUniform1f("alpha", 1.f);
+	mWorldShader.setUniform1i("world", 1);
+	mWorldShader.setUniform4f("objColor", ofFloatColor::aliceBlue);
+
+	//mLevel.draw(mMainCamera.getPosition(), renderMode);
+	for (size_t i = 0; i < mCollider.size(); ++i)
+	{
+		mCollider[i].draw(renderMode);
+	}
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	mWorldShader.setUniform1i("world", -1);
+	mWorldShader.setUniform4f("objColor", ofFloatColor::wheat);
+
+	mWorld.draw(renderMode);
+
+	mWorldShader.end();
+	glDisable(GL_CULL_FACE);
 
 	ofDisableDepthTest();
 
+	ofFill();
+	ofVec3f pos(0.5f, 0.7f, 0.5f);
+	float arrowLength = 0.2f;
+	ofSetColor(ofColor::fireBrick, 128);
+	ofDrawArrow(pos, pos + mParticleSystem->getGravity().normalized() * arrowLength, 0.02f);
+
+	ofSetColor(ofColor::darkGrey, 64);
+	ofDrawArrow(pos, pos + ofVec3f(0, -arrowLength, 0), 0.01f);
+	// *** dg
+
+	mMainCamera.end();
+
+
+
+	// draw HUD
 	mHud.draw();
+
+	ofFill();
+	float opacity = std::min(mTextDuration, 1.0f);
+	if (opacity > 0.f)
+	{
+		ofSetColor(ofColor::aliceBlue, int(opacity * 255));
+		mMainFont.drawString(mMainString, ofGetWindowWidth() * 0.3f, ofGetWindowHeight() * 0.2f);
+	}
 }
 
 //--------------------------------------------------------------
-void ofApp::keyPressed(int key){
+void ofApp::keyPressed(int key) {
 	switch (key)
 	{
 	case OF_KEY_ESC: quit();
 		break;
 	case 'w':
-		mMoveVec.z = -1.f;
+		mMoveVec.z = .5f;
 		break;
 	case 's':
-		mMoveVec.z = 1.f;
+		mMoveVec.z = -.5f;
 		break;
 	case 'a':
-		mMoveVec.x = -1.f;
+		mMoveVec.x = .5f;
 		break;
 	case 'd':
-		mMoveVec.x = 1.f;
+		mMoveVec.x = -.5f;
 		break;
 	case 'v':
 		mValve = true;
@@ -190,67 +275,69 @@ void ofApp::keyPressed(int key){
 }
 
 //--------------------------------------------------------------
-void ofApp::keyReleased(int key){
+void ofApp::keyReleased(int key) {
 	switch (key)
 	{
-		case 'w': //fallthrough
-		case 's':
-			mMoveVec.z = 0.f;
-			break;
-		case 'a': //fallthrough
-		case 'd':
-			mMoveVec.x = 0.f;
-			break;
-		case 'h':
-			std::cout << "Camera:" << mMainCamera.getPosition() << std::endl;
-			std::cout << "Box: " << mTestBox.getPosition() << std::endl;
-			break;
-		case 'r':
-			mParticleSystem->setNumberOfParticles(0);
-			break;
-		case 'n':
-			mGlobalRotation.normalize();
-			mParticleSystem->setRotation(mGlobalRotation);
-			mHudRotation = mGlobalRotation;
-			break;
-		case 't':
-			//std::cout << mParticleSystem->debug_testIfParticlesOutside() << "\n";
-			mParticleSystem->measureNextUpdate();
-			break; 
-		case 'u':
-			mParticleSystem->update(0.16f);
-			break;
-		case 'e':
-		{
-			ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-			mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
-		}
-			break;
-		case 'v':
-			mValve = false;
-			/*{
-				ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-				mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 500, true);
-			}*/
-			break;
-		case 'm':
-		{
-			ParticleSystem::ComputeMode currentMode = mParticleSystem->nextMode(mParticleSystem->getMode());
-			mParticleSystem->setMode(currentMode);
-			mHudMode = iHudGetModeString(currentMode);
-		}
-			break;
-		default: std::cout << "this key hasn't been assigned\n";
-			break;
+	case 'w': //fallthrough
+	case 's':
+		mMoveVec.z = 0.f;
+		break;
+	case 'a': //fallthrough
+	case 'd':
+		mMoveVec.x = 0.f;
+		break;
+	case 'h':
+		std::cout << "Camera:" << mMainCamera.getPosition() << std::endl;
+		break;
+	case 'r':
+		mParticleSystem->setNumberOfParticles(0);
+		break;
+	case 'n':
+		mGlobalRotation.normalize();
+		mParticleSystem->setRotation(mGlobalRotation);
+		mHudRotation = mGlobalRotation;
+		break;
+	case 't':
+		//std::cout << mParticleSystem->debug_testIfParticlesOutside() << "\n";
+		mParticleSystem->measureNextUpdate();
+		break;
+	case 'u':
+		mParticleSystem->update(0.16f);
+		break;
+	case 'e':
+	{
+		ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
+		//mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
+		mParticleSystem->addCube(ofVec3f(0, 0.5f, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
+	}
+	break;
+	case 'v':
+		mValve = false;
+		/*{
+		ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
+		mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 500, true);
+		}*/
+		break;
+	case 'm':
+	{
+		ParticleSystem::ComputeMode currentMode = mParticleSystem->nextMode(mParticleSystem->getMode());
+		mParticleSystem->setMode(currentMode);
+		mHudMode = iHudGetModeString(currentMode);
+	}
+	break;
+	case 'y':	mParticleSystem->toggleGenericSwitch();
+		break;
+	default: std::cout << "this key hasn't been assigned\n";
+		break;
 	}
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
+void ofApp::mouseMoved(int x, int y) {
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
+void ofApp::mouseDragged(int x, int y, int button) {
 	const float sens = 1.f;
 
 	if (mRotationAxis > 0 && mMouse.x > 0.f)
@@ -265,9 +352,11 @@ void ofApp::mouseDragged(int x, int y, int button){
 		if (mRotationAxis & 0b010)
 		{
 			//ofQuaternion xRotation(sens * mMouseSens * (y - mMouse.y), ofVec3f(-1, 0, 0));
-			ofQuaternion yRotation(sens * mMouseSens * (x - mMouse.x), ofVec3f(0, 1, 0));
+			float angle = sens * mMouseSens * (x - mMouse.x);
+			ofQuaternion yRotation(angle, ofVec3f(0, 1, 0));
 			mGlobalRotation *= yRotation;
-			
+
+			mSunDirection.rotate(-angle, ofVec3f(0, 1, 0));
 			//mParticleSystem->setRotation(mGlobalRotation);
 
 			mHudRotation = mGlobalRotation;
@@ -287,13 +376,13 @@ void ofApp::mouseDragged(int x, int y, int button){
 }
 
 //--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
+void ofApp::mousePressed(int x, int y, int button) {
 	switch (button)
 	{
 	case OF_MOUSE_BUTTON_LEFT:
 		mRotationAxis = mRotationAxis | 0b010;
 		break;
-	case OF_MOUSE_BUTTON_RIGHT: 
+	case OF_MOUSE_BUTTON_RIGHT:
 		mRotationAxis = mRotationAxis | 0b100;
 		break;
 	case OF_MOUSE_BUTTON_MIDDLE:
@@ -307,7 +396,7 @@ void ofApp::mousePressed(int x, int y, int button){
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
+void ofApp::mouseReleased(int x, int y, int button) {
 	switch (button)
 	{
 	case OF_MOUSE_BUTTON_LEFT:
@@ -325,27 +414,27 @@ void ofApp::mouseReleased(int x, int y, int button){
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y){
+void ofApp::mouseEntered(int x, int y) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y){
+void ofApp::mouseExited(int x, int y) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
+void ofApp::windowResized(int w, int h) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
+void ofApp::gotMessage(ofMessage msg) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
+void ofApp::dragEvent(ofDragInfo dragInfo) {
 
 }
 
@@ -357,7 +446,7 @@ void ofApp::quit()
 	/*uint tmpCapacity = mParticleSystem->getCapacity();
 	if (tmpCapacity > INT_MAX)
 	{
-		tmpCapacity = INT_MAX;
+	tmpCapacity = INT_MAX;
 	}
 	mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(tmpCapacity));//BUG: this doesn't work
 	//mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(100000u));//^BUG: this does work?!?!*/
@@ -382,8 +471,8 @@ std::string ofApp::iHudGetModeString(ParticleSystem::ComputeMode m)
 		return "OpenCL";
 	else if (m == ParticleSystem::ComputeMode::CUDA)
 		return "CUDA";
-	else if (m == ParticleSystem::ComputeMode::THRUST)
-		return "Thrust";
+	/*else if (m == ParticleSystem::ComputeMode::THRUST)
+		return "Thrust";*/
 	else
 		return "UNKNOWN";
 }

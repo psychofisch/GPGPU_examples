@@ -64,6 +64,12 @@
     <ClCompile Include="src\Stopwatch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Level.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Cube.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -282,6 +288,18 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ThrustHelper.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollisionDefinitions.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Level.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Cube.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cudaHelper.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

@@ -14,43 +14,51 @@ ThrustHelper::PressureFunctor::PressureFunctor(float3 pos_, float3 vel_, Simulat
 	simData(simData_)
 {}
 
-__host__ __device__ float4 ThrustHelper::PressureFunctor::operator()(float4 outerPos, float4 outerVel)
+__host__ __device__ float3 ThrustHelper::PressureFunctor::operator()(float4 outerPos, float4 outerVel)
 {
-	float3 oPos = make_float3(outerPos);
-	float3 oVel = make_float3(outerVel);
+	float3 pressureVec = make_float3(0.f);
+	float3 viscosityVec = pressureVec;
+	float influence = 0.f;
 
-	float3 result = make_float3(0.f);
-	float3 pressureVec, viscosityVec;
-
-	if (oPos == pos)
-		return make_float4(result);
-
-	float3 dirVec = pos - oPos;
+	float3 dirVec = pos - make_float3(outerPos);
 	float dist = length(dirVec);//TODO: maybe use half_length
 
-	if (dist > simData.interactionRadius * 1.0f || dist < 0.00001f)
-		return make_float4(result);
+	if (dist > simData.interactionRadius)
+		return make_float3(0.f);
 
 	float3 dirVecN = normalize(dirVec);
-	float moveDir = dot(vel - oVel, dirVecN);
-	float distRel = dist / simData.interactionRadius;
+	float moveDir = dot(vel - make_float3(outerVel), dirVecN);
+	float distRel = 1.0f - dist / simData.interactionRadius;
+
+	float sqx = distRel * distRel;
+
+	influence += 1.0f;
 
 	// viscosity
-	if (moveDir > 0)
+	if (true || moveDir > 0)
 	{
-		float3 impulse = (1.f - distRel) * (simData.spring * moveDir + simData.springNear * moveDir * moveDir) * dirVecN;
-		viscosityVec = (impulse * 0.5f);//goes back to the caller-particle
-										//viscosityVec.w = 666.0f;
+		float factor = sqx * (simData.viscosity * moveDir);
+		float3 impulse = factor * dirVecN;
+		viscosityVec -= impulse;
 	}
 	// *** v
 
-	float oneminusx = 1.f - distRel;
-	float sqx = oneminusx * oneminusx;
-	float pressure = 1.f - simData.rho0 * (sqx * oneminusx - sqx);
+	float pressure = sqx * simData.pressureMultiplier;
 
-	pressureVec = pressure * dirVecN;
+	pressureVec += (pressure - simData.restPressure) * dirVecN;
 
-	return make_float4(pressureVec + viscosityVec);
+	//compress viscosity TODO: fix the root of this problem and not just limit it manually
+	//float threshold = 50.0;
+	if (influence > 0.f)
+	{
+		viscosityVec = viscosityVec / influence;
+	}
+
+	if (length(viscosityVec) > 100.0)
+		viscosityVec = normalize(viscosityVec) * 100.0;
+	//*** lv
+
+	return pressureVec + viscosityVec;
 }
 
 ThrustHelper::SimulationFunctor::SimulationFunctor(float dt_, float3 dim_, float3 g_, SimulationData simData_)

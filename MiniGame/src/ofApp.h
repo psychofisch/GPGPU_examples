@@ -5,7 +5,6 @@
 #include "ofxXmlSettings.h"
 
 #include "ParticleSystem.h"
-#include "CollisionSystem.h"
 #include "Level.h"
 
 #define HELP_START "Press E to start level"

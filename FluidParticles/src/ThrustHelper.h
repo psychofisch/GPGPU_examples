@@ -32,7 +32,7 @@ namespace ThrustHelper
 		SimulationData simData;
 
 		PressureFunctor(float3 pos_, float3 vel_, SimulationData simData_);
-		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel);
+		__host__ __device__ float3 operator()(float4 outerPos, float4 outerVel);
 	};
 
 	struct SimulationFunctor : public thrust::binary_function < float4, float4, float4 > {

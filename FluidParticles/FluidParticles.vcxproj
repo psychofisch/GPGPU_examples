@@ -178,6 +178,8 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Cube.cpp" />
+    <ClCompile Include="src\Level.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\oclHelper.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
@@ -201,6 +203,10 @@
     <ClCompile Include="src\Stopwatch.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CollisionDefinitions.h" />
+    <ClInclude Include="src\Cube.h" />
+    <ClInclude Include="src\cudaHelper.h" />
+    <ClInclude Include="src\Level.h" />
     <ClInclude Include="src\oclHelper.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.h" />
@@ -258,7 +264,10 @@
     <ClInclude Include="src\ParticleDefinitions.h" />
     <ClInclude Include="src\ParticleSystem.h" />
     <ClInclude Include="src\Stopwatch.h" />
-    <ClInclude Include="src\ThrustHelper.h" />
+    <ClInclude Include="src\ThrustHelper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
@@ -286,7 +295,10 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\particles.cu" />
-    <CudaCompile Include="src\ThrustHelper.cu" />
+    <CudaCompile Include="src\ThrustHelper.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
