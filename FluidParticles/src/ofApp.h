@@ -60,6 +60,7 @@ private:
 	ofParameter<size_t> mHudWorkGroup;
 	ofParameter<std::string> mHudParticles;
 	ofParameter<float> mHudTime;
+	ofParameter<bool> mHudSaveOnExit;
 
 	ofParameterGroup mHudSimulationGroup;
 	ofParameter<bool> mHudPause;

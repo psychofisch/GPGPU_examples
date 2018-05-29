@@ -843,10 +843,10 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles) / 512), 1, 1);
 	mComputeData.computeShader.end();//forces the program to wait until the calculation is finished 
 
-									 // copy the new positions to the position Buffer
+	// copy the new positions to the position Buffer
 	mComputeData.positionOutBuffer.copyTo(mComputeData.positionBuffer);//TODO: swap instead of copy buffers
 
-																	   // sync the result back to the CPU
+	// sync the result back to the CPU
 	ofVec4f* positionsFromGPU = mComputeData.positionBuffer.map<ofVec4f>(GL_READ_ONLY);//TODO: use mapRange
 	std::copy(positionsFromGPU, positionsFromGPU + mNumberOfParticles, mParticlePosition);
 	mComputeData.positionBuffer.unmap();

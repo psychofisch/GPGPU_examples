@@ -68,6 +68,7 @@ void ofApp::setup() {
 	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
 	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
 	mHudControlGroup.add(mHudTime.set("Time", 1.0f, 0.f, 5.f));
+	mHudControlGroup.add(mHudSaveOnExit.set("Save On Exit", false));
 
 	mHudSimulationGroup.setName("Simulation Settings");
 	mHudSimulationGroup.add(mHudPause.set("Pause", false));
@@ -442,21 +443,23 @@ void ofApp::quit()
 {
 	delete mParticleSystem;
 
-	std::cout << "saving settings...";
-	/*uint tmpCapacity = mParticleSystem->getCapacity();
-	if (tmpCapacity > INT_MAX)
+	if (mHudSaveOnExit)
 	{
-	tmpCapacity = INT_MAX;
+		std::cout << "saving settings...";
+		/*uint tmpCapacity = mParticleSystem->getCapacity();
+		if (tmpCapacity > INT_MAX)
+		{
+		tmpCapacity = INT_MAX;
+		}
+		mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(tmpCapacity));//BUG: this doesn't work
+		//mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(100000u));//^BUG: this does work?!?!*/
+		mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
+		//mXmlSettings.setValue("SIM:SWIDTH", mHud);
+		mXmlSettings.saveFile("settings.xml");
+
+		mHud.saveToFile("hud.xml");
+		std::cout << "done\n";
 	}
-	mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(tmpCapacity));//BUG: this doesn't work
-	//mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(100000u));//^BUG: this does work?!?!*/
-	mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
-	//mXmlSettings.setValue("SIM:SWIDTH", mHud);
-	mXmlSettings.saveFile("settings.xml");
-
-	mHud.saveToFile("hud.xml");
-	std::cout << "done\n";
-
 	std::cout << "quitting...bye =)\n";
 	this->exit();
 }
