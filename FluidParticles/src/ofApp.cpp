@@ -18,7 +18,7 @@ void ofApp::setup() {
 	// graphic setup
 	ofGetWindowPtr()->setWindowTitle(mXmlSettings.getValue("GENERAL:TITLE", "Minigame"));
 
-	ofSetFrameRate(144);
+	//ofSetFrameRate(144);
 	ofSetVerticalSync(false);
 
 	ofBackground(69, 69, 69);

@@ -591,10 +591,12 @@ void ParticleSystem::update(float dt)
 	if (mNumberOfParticles == 0)
 		return;
 
-	uint64_t cycle;
+	//uint64_t cycle;
 	if (mMeasureTime)
-		//mClock.start();
-		cycle = __rdtsc();
+	{
+		mClock.start();
+		//cycle = __rdtsc();
+	}
 
 	// each update computes the new particle positions and stores them into mParticlePosition (on the CPU)
 	switch (mMode)
@@ -621,10 +623,10 @@ void ParticleSystem::update(float dt)
 
 	if (mMeasureTime)
 	{
-		//double time = mClock.getDuration(mClock.stop());
-		//std::cout << time << std::endl;
-		cycle = __rdtsc() - cycle;
-		std::cout << /*mNumberOfParticles << ";" <<*/ cycle << std::endl;
+		double time = mClock.getDuration(mClock.stop());
+		std::cout << time << std::endl;
+		//cycle = __rdtsc() - cycle;
+		//std::cout << /*mNumberOfParticles << ";" <<*/ float(cycle) / (3791000000.f) << std::endl;
 		mMeasureTime = false;
 	}
 }

@@ -1,10 +1,10 @@
 <group>
 	<Debug_Information>
-		<FPS>124</FPS>
+		<FPS>34</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>CPU</Mode>
-		<Particles>1000/50000</Particles>
+		<Mode>CUDA</Mode>
+		<Particles>22000/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
@@ -13,7 +13,7 @@
 	<Save_On_Exit>1</Save_On_Exit>
 	</Program_Information>
 	<Simulation_Settings>
-		<Interaction_Radius>1</Interaction_Radius>
+		<Interaction_Radius>0.142857</Interaction_Radius>
 		<Pressure_Multiplier>2.65306</Pressure_Multiplier>
 		<Viscosity>698.98</Viscosity>
 		<Rest_Pressure>0.188776</Rest_Pressure>
