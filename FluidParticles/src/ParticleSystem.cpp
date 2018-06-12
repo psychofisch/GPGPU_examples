@@ -95,6 +95,8 @@ void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 		mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticlePosition, GL_DYNAMIC_DRAW);
 		mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticleVelocity, GL_DYNAMIC_DRAW);
 
+		mComputeData.workGroupSize = settings.getValue("COMPUTE:WORKGROUPSIZE", 512);
+
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
 	}
 	else
@@ -842,7 +844,7 @@ void ParticleSystem::iUpdateCompute(float dt)
 
 	// call the kernel
 	// local size: hard-coded "512", because it is also hard-coded in the kernel source code
-	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles) / 512), 1, 1);
+	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles) / mComputeData.workGroupSize), 1, 1);
 	mComputeData.computeShader.end();//forces the program to wait until the calculation is finished 
 
 	// copy the new positions to the position Buffer

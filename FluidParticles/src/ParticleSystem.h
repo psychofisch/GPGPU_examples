@@ -64,6 +64,7 @@ namespace Particle
 		ofBufferObject positionOutBuffer;
 		ofBufferObject velocityBuffer;
 		ofBufferObject staticCollisionBuffer;
+		size_t workGroupSize;
 	};
 
 	//definitions for OpenCL
@@ -192,8 +193,9 @@ public:
 
 private:
 	uint mNumberOfParticles,
-		mCapacity,
+		//mCapacity,
 		mThreshold;
+	const uint mCapacity;
 	ComputeMode mMode;
 	ofVboMesh mParticleModel;
 	ofSpherePrimitive mParticleTmp;
