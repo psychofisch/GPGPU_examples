@@ -21,6 +21,9 @@ This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9
 │   └───FluidParticles
 │   │   └   ...
 │   │
+│   └───MiniGame
+│   │   └   ...
+│   │
 │   └───NvidiaCUDA
 │   │   │   inc
 │   │   └   src
@@ -78,7 +81,7 @@ The file ```GPGPU_examples/CollisionDetection/bin/data/settings.xml``` holds all
 │   │   │   DEVICEID → int, specify deviceID
 │   │
 │   └───THRUST
-│   │   │   ENABLED → int, enables/disables mode
+│   │   │   ENABLED → int, enables/disables mode (currently not implemented)
 ```
 
 All settings in ```GPGPU_examples/CollisionDetection/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
@@ -130,6 +133,56 @@ The file ```GPGPU_examples/FluidParticles/bin/data/settings.xml``` holds all ava
 ```
 
 All settings in ```GPGPU_examples/FluidParticles/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
+
+## MiniGame
+#### Controls
+| Key        | Function         
+| ---------- |-------------|
+| left mouse | rotate around y axis |
+| right mouse | move camera up and down |
+| E | start game |
+| M | switch between CPU and the different GPU modes (if more than 1000 particles are present in the scene "CPU" mode becomes unavailable -> performance) |
+| R | reset game |
+| Esc | close application |
+
+#### Settings
+The file ```GPGPU_examples/MiniGame/bin/data/settings.xml``` holds all available settings for the program that can not be changed via the HUD.  
+```
+┌───settings.xml
+│   └───GENERAL
+│   │   │   TITLE → string, set the game title
+│   │   │   MAXPARTICLES → int, maximum number of particles
+│   │   │   DROPSIZE → int, number of particles dropped
+│   │   │   VERT → string, path to the vertex shader of the particles
+│   │   │   FRAG → string, path to the fragment shader of the particles
+│   │
+│   └───CONTROLS
+│   │   │   MOUSESENS → float, mouse sensitivity
+│   │
+│   └───CPU
+│   │   │   ENABLED → int, enables/disables mode
+│   │   │   THRESHOLD → int, skip CPU mode if #particles > threshold
+│   │
+│   └───COMPUTE
+│   │   │   ENABLED → int, enables/disables mode
+│   │   │   SOURCE → string, path to source file
+│   │
+│   └───CUDA
+│   │   │   ENABLED → int, enables/disables mode
+│   │   │   ARGC → int, number of cmd line arguments
+│   │   │   ARGV → string, cmd line arguments
+│   │
+│   └───OCL
+│   │   │   ENABLED → int, enables/disables mode
+│   │   │   SOURCE → string, path to source file
+│   │   │   PLATFORMID → int, specify platformID
+│   │   │   DEVICEID → int, specify deviceID
+│   │
+│   └───THRUST
+│   │   │   ENABLED → int, enables/disables mode
+```
+
+All settings in ```GPGPU_examples/MiniGame/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
 
 # Known Issues
 * Collision: While developing my whole system crashed sometimes when switching into CUDA mode. I'm still not sure what is causing this, because I can't reproduce it. BEWARE!

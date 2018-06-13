@@ -314,7 +314,7 @@ void ofApp::keyPressed(int key){
 		mMoveVec.x = -.5f;
 		break;
 	case 'v':
-		mValve = true;
+		//mValve = true;
 		break;
 	default:
 		break;
@@ -371,7 +371,7 @@ void ofApp::keyReleased(int key){
 		}
 			break;
 		case 'v':
-			mValve = false;
+			//mValve = false;
 			/*{
 				ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
 				mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 500, true);
