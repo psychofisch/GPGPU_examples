@@ -1,9 +1,9 @@
 <group>
 	<Debug_Information>
-		<FPS>144</FPS>
+		<FPS>143</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
+		<Mode>CPU</Mode>
 		<Particles>1000/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
@@ -22,7 +22,7 @@
 <group/>
 <Game_Info>
 		<Gamestate>TimeOver</Gamestate>
-		<Time>0.00071907</Time>
+		<Time>1.51108</Time>
 		<Help>Press R to reset level</Help>
 	</Game_Info>
 </group>

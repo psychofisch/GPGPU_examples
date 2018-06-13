@@ -15,6 +15,26 @@
 namespace ThrustHelper
 {
 	// storage of the device vectors
+	struct MinMaxDataThrust
+	{
+		float4 min, max;
+
+		/*MinMaxData operator+(ofVec3f p_)
+		{
+			MinMaxData tmp;
+			tmp.min = this->min + p_;
+			tmp.max = this->max + p_;
+			return tmp;
+		}
+
+		MinMaxData operator=(const MinMaxData& other)
+		{
+			this->min = other.min;
+			this->max = other.max;
+			return *this;
+		}*/
+	};
+
 	struct ThrustData
 	{
 		thrust::device_vector<MinMaxDataThrust> minMaxBuffer;
