@@ -157,8 +157,6 @@ public:
 	void setStaticCollision(std::vector<MinMaxData>& collision);
 	// set gravity
 	void setGravity(ofVec3f g);
-	// define the end zone
-	//void setEndZone(MinMaxData c);
 
 	// other methods
 
@@ -216,7 +214,6 @@ private:
 	std::vector<MinMaxData> mStaticCollision;
 	bool mMeasureTime,
 		mGenericSwitch;
-	//MinMaxData mEndZone;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);

@@ -60,16 +60,13 @@ private:
 	Endzone mEndzone;
 	Cube mStartzone;
 	ParticleSystem *mExternalParticleSystem;
-	ofShader* mLevelShader;
+	ofShader *mLevelShader;
 	uint mCurrentScore,
 		mNumberOfSpawnParticles;
 	float mSecondsToFinishLevel,
 		  mCurrentTimeSec;
 	ofVec3f* mSunDirection;
-	bool //mIsReady,
-		mDirtyColliders;
-		//mIsRunning,
-		//mIsPaused;
+	bool mDirtyColliders;
 	GameState mState;
 	ofTimer mTimer;
 };
