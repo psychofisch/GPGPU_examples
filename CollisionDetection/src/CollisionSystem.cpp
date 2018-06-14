@@ -279,11 +279,13 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vect
 
 		std::cout << "CUDA: allocating memory for " << mCudata.currentArraySize << " cubes.\n";
 
-		checkCudaErrors(cudaMallocManaged(&mCudata.minMaxBuffer, sizeof(float4) * 2 * mCudata.currentArraySize));
-		checkCudaErrors(cudaMallocManaged(&mCudata.collisionBuffer, sizeof(int) * mCudata.currentArraySize));
+		// allocate memory on the GPU
+		// do not use "cudaMallocManaged" and "cudaDeviceSynchronize" -> extremely slow!
+		checkCudaErrors(cudaMalloc(&mCudata.minMaxBuffer, sizeof(float4) * 2 * mCudata.currentArraySize));
+		checkCudaErrors(cudaMalloc(&mCudata.collisionBuffer, sizeof(int) * mCudata.currentArraySize));
 	}
 
-	float4* minMax = mCudata.minMaxBuffer;
+	std::vector<float4> minMax(mCudata.currentArraySize * 2);
 	// read bounding boxes
 	for (int i = 0; i < cubes.size(); ++i)
 	{
@@ -292,15 +294,14 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vect
 		minMax[(i * 2) +1] = make_float4(currentCube.max);
 	}
 
-	cudaDeviceSynchronize();
+	// copy the minMax data to the GPU
+	checkCudaErrors(cudaMemcpy(mCudata.minMaxBuffer, minMax.data(), sizeof(float4) * 2 *  mCudata.currentArraySize, cudaMemcpyHostToDevice));
 
 	// calculate the collisions
 	cudaGetCollisions(mCudata.minMaxBuffer, mCudata.collisionBuffer, mCudata.currentArraySize);
 
-	cudaDeviceSynchronize();
-
 	// copy the collision data from the local host buffer to the provided vector
-	memcpy(&collisions[0], mCudata.collisionBuffer, sizeof(int) * collisions.size());
+	checkCudaErrors(cudaMemcpy(&collisions[0], mCudata.collisionBuffer, sizeof(int) * mCudata.currentArraySize, cudaMemcpyDeviceToHost));
 }
 
 void CollisionSystem::iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
