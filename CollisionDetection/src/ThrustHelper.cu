@@ -5,19 +5,20 @@ ThrustHelper::CollisionFunctor::CollisionFunctor(uint aoc_, MinMaxDataThrust* mm
 	minMaxRaw(mmd_)
 {}
 
-__host__ __device__ int ThrustHelper::CollisionFunctor::operator()(MinMaxDataThrust minMax)
+__host__ __device__ int ThrustHelper::CollisionFunctor::operator()(MinMaxDataThrust minMax, int index)
 {
 	int result = -1;
-	float3 currentMin = minMax.min;
-	float3 currentMax = minMax.max;
-	int i = minMax.id;
+	float3 currentMin = make_float3(minMax.min);
+	float3 currentMax = make_float3(minMax.max);
+	int i = index;
+
 	for (uint j = 0; j < amountOfCubes; j++)
 	{
 		if (i == j)
 			continue;
 
-		float3 otherMin = minMaxRaw[j].min;
-		float3 otherMax = minMaxRaw[j].max;
+		float3 otherMin = make_float3(minMaxRaw[j].min);
+		float3 otherMax = make_float3(minMaxRaw[j].max);
 
 		if (((  otherMin.x < currentMax.x && otherMin.x > currentMin.x)
 			|| (otherMax.x < currentMax.x && otherMax.x > currentMin.x)
@@ -61,13 +62,21 @@ void ThrustHelper::thrustGetCollisions(
 	MinMaxDataThrust* minMaxDevice = thrust::raw_pointer_cast(tdata.minMaxBuffer.data());
 	
 	// calculate simulation with Thrust
-	thrust::transform(
+	/*thrust::transform(
 		tdata.minMaxBuffer.begin(),
 		tdata.minMaxBuffer.end(),
 		tdata.collisions.begin(),
 		CollisionFunctor(amountOfCubes, minMaxDevice)
-	);
+	);*/
 	
+	thrust::transform(
+		tdata.minMaxBuffer.begin(),
+		tdata.minMaxBuffer.end(),
+		thrust::make_counting_iterator(0),
+		tdata.collisions.begin(),
+		CollisionFunctor(amountOfCubes, minMaxDevice)
+	);
+
 	// copy the device collision buffer to the host
 	thrust::copy(tdata.collisions.begin(), tdata.collisions.end(), collisionBuffer);
 }

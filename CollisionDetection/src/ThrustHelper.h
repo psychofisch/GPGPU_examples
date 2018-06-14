@@ -18,21 +18,6 @@ namespace ThrustHelper
 	struct MinMaxDataThrust
 	{
 		float4 min, max;
-
-		/*MinMaxData operator+(ofVec3f p_)
-		{
-			MinMaxData tmp;
-			tmp.min = this->min + p_;
-			tmp.max = this->max + p_;
-			return tmp;
-		}
-
-		MinMaxData operator=(const MinMaxData& other)
-		{
-			this->min = other.min;
-			this->max = other.max;
-			return *this;
-		}*/
 	};
 
 	struct ThrustData
@@ -42,12 +27,12 @@ namespace ThrustHelper
 	};
 
 	// define a struct to hold the function that is used by Thrust
-	struct CollisionFunctor : public thrust::unary_function < MinMaxDataThrust, int > {
+	struct CollisionFunctor : public thrust::binary_function < MinMaxDataThrust, int, int > {
 		uint amountOfCubes;
 		MinMaxDataThrust* minMaxRaw;
 
 		CollisionFunctor(uint aoc_, MinMaxDataThrust* mmd_);
-		__host__ __device__ int operator()(MinMaxDataThrust minMax);
+		__host__ __device__ int operator()(MinMaxDataThrust minMax, int index);
 	};
 
 	// this function is called from outside to call the Thrust implementation

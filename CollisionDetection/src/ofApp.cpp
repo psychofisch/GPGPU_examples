@@ -393,8 +393,8 @@ std::string ofApp::iHudGetModeString(CollisionSystem::ComputeMode m)
 		return "OpenCL";
 	else if (m == CollisionSystem::ComputeMode::CUDA)
 		return "CUDA";
-	/*else if (m == CollisionSystem::ComputeMode::THRUST)
-		return "Thrust";*/
+	else if (m == CollisionSystem::ComputeMode::THRUST)
+		return "Thrust";
 	else
 		return "UNKNOWN";
 }

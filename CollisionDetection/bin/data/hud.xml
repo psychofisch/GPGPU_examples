@@ -1,9 +1,9 @@
 <group>
 	<Debug_Information>
-		<FPS>147</FPS>
+		<FPS>292</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>CPU</Mode>
+		<Mode>Thrust</Mode>
 		<Particles>120/20000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>

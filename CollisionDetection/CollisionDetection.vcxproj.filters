@@ -55,9 +55,6 @@
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxmlparser.cpp">
       <Filter>addons\ofxXmlSettings\libs</Filter>
     </ClCompile>
-    <ClCompile Include="src\ParticleSystem.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\oclHelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -275,9 +272,6 @@
     <ClInclude Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxml.h">
       <Filter>addons\ofxXmlSettings\libs</Filter>
     </ClInclude>
-    <ClInclude Include="src\ParticleSystem.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\oclHelper.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -304,17 +298,9 @@
     <ResourceCompile Include="icon.rc" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="bin\data\particles.compute">
-      <Filter>src</Filter>
-    </FxCompile>
     <FxCompile Include="bin\data\collision.compute">
       <Filter>src</Filter>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="bin\data\particles.cl">
-      <Filter>src</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\ThrustHelper.cu">

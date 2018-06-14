@@ -13,7 +13,7 @@
 // own includes
 #include "CollisionDefinitions.h"
 #include "Cube.h"
-//#include "ThrustHelper.h"
+#include "ThrustHelper.h"
 
 // general definitions
 #ifdef _DEBUG
@@ -64,7 +64,7 @@ public:
 		COMPUTE_SHADER,
 		CUDA,
 		OPENCL,
-		//THRUST,
+		THRUST,
 		COMPUTEMODES_SIZE // these values are used as array indices, dont delete this!
 	};
 
@@ -77,7 +77,7 @@ public:
 	void setupCompute(ofxXmlSettings& settings);
 	void setupCUDA(ofxXmlSettings& settings);
 	void setupOCL(ofxXmlSettings& settings);
-	//void setupThrust(ofxXmlSettings& settings);
+	void setupThrust(ofxXmlSettings& settings);
 
 	ComputeMode getMode() const;
 	//only returns the next available mode but does not set it
@@ -95,12 +95,12 @@ private:
 	CUDAta mCudata;
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
-	//ThrustHelper::ThrustData mThrustData;
+	ThrustHelper::ThrustData mThrustData;
 	bool mCPUThreshold;
 
 	void iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
-	//void iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 };

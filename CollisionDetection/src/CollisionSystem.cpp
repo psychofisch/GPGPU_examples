@@ -31,7 +31,7 @@ void CollisionSystem::setupAll(ofxXmlSettings & settings)
 	setupCompute(settings);
 	setupCUDA(settings);
 	setupOCL(settings);
-	//setupThrust(settings);
+	setupThrust(settings);
 }
 
 void CollisionSystem::setupCPU(ofxXmlSettings & settings)
@@ -109,21 +109,10 @@ void CollisionSystem::setupOCL(ofxXmlSettings & settings)
 	}
 }
 
-//void CollisionSystem::setupThrust(ofxXmlSettings & settings)
-//{
-//	mAvailableModes[THRUST] = settings.getValue("THRUST:ENABLED", true);
-//}
-
-//void CollisionSystem::setupThrust(ofxXmlSettings & settings)
-//{
-//	/*mThrustData.position = thrust::device_malloc<float4>(mCapacity);
-//	mThrustData.positionOut = thrust::device_malloc<float4>(mCapacity);
-//	mThrustData.velocity = thrust::device_malloc<float4>(mCapacity);*/
-//
-//	mThrustData = ThrustHelper::setup(mNumberOfParticles);
-//
-//	mAvailableModes[ComputeMode::THRUST] = true;
-//}
+void CollisionSystem::setupThrust(ofxXmlSettings & settings)
+{
+	mAvailableModes[THRUST] = settings.getValue("THRUST:ENABLED", true);
+}
 
 CollisionSystem::ComputeMode CollisionSystem::getMode() const
 {
@@ -161,8 +150,8 @@ void CollisionSystem::getCollisions(std::vector<Cube>& cubes, OUT std::vector<in
 			break;
 		case OPENCL: iGetCollisionsOCL(cubes, collisions);
 			break;
-		/*case THRUST: iGetCollisionsThrust(cubes, collisions);
-			break;*/
+		case THRUST: iGetCollisionsThrust(cubes, collisions);
+			break;
 		default:
 			break;
 	}
@@ -386,23 +375,22 @@ void CollisionSystem::iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vecto
 	oclHelper::handle_clerror(err, __LINE__);
 }
 
-//void CollisionSystem::iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
-//{
-//	if (cubes.size() != collisions.size())
-//	{
-//		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
-//	}
-//
-//	thrust::host_vector<MinMaxDataThrust> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
-//	// read bounding boxes
-//	for (int i = 0; i < cubes.size(); ++i)
-//	{
-//		MinMaxData currentCube = cubes[i].getGlobalMinMax();
-//		mMinMax[i].min = make_float3(currentCube.min);
-//		mMinMax[i].max = make_float3(currentCube.max);
-//		mMinMax[i].id = i;// MinMaxDataThrust has an additional "id" member, because Thrust does not provide an "globalInvocationID" or similar variable inside the kernel
-//	}
-//
-//	// check min and max of all boxes for collision
-//	ThrustHelper::thrustGetCollisions(mThrustData, mMinMax.data(), collisions.data(), collisions.size());
-//}
+void CollisionSystem::iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+{
+	if (cubes.size() != collisions.size())
+	{
+		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
+	}
+
+	thrust::host_vector<ThrustHelper::MinMaxDataThrust> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
+	// read bounding boxes
+	for (int i = 0; i < cubes.size(); ++i)
+	{
+		MinMaxData currentCube = cubes[i].getGlobalMinMax();
+		mMinMax[i].min = make_float4(currentCube.min);
+		mMinMax[i].max = make_float4(currentCube.max);
+	}
+
+	// check min and max of all boxes for collision
+	ThrustHelper::thrustGetCollisions(mThrustData, mMinMax.data(), collisions.data(), collisions.size());
+}
