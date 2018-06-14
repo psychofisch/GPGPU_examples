@@ -35,14 +35,14 @@ public:
 
 	// getters
 	const std::vector<Cube>& getLevelColliders() const;
-	bool isReady();
-	bool isRunning();
-	bool isPaused();
-	uint getScore();
-	uint getSpawnedParticles();
-	float getCurrentTime();
-	float getLevelTime();
-	Level::GameState getGameState();
+	bool isReady() const;
+	bool isRunning() const;
+	bool isPaused() const;
+	uint getScore() const;
+	uint getSpawnedParticles() const;
+	float getCurrentTime() const;
+	float getLevelTime() const;
+	Level::GameState getGameState() const;
 
 	// use level functions
 	void resetLevel();

@@ -55,9 +55,6 @@
     <ClCompile Include="..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs\tinyxmlparser.cpp">
       <Filter>addons\ofxXmlSettings\libs</Filter>
     </ClCompile>
-    <ClCompile Include="src\CollisionSystem.cpp">
-      <Filter>src\Collision</Filter>
-    </ClCompile>
     <ClCompile Include="src\Stopwatch.cpp">
       <Filter>src\Helper</Filter>
     </ClCompile>
@@ -294,9 +291,6 @@
       <Filter>src\Helper</Filter>
     </ClInclude>
     <ClInclude Include="src\CollisionDefinitions.h">
-      <Filter>src\Collision</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CollisionSystem.h">
       <Filter>src\Collision</Filter>
     </ClInclude>
     <ClInclude Include="src\Stopwatch.h">

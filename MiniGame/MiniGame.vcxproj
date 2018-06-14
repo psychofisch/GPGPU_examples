@@ -178,7 +178,6 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\CollisionSystem.cpp" />
     <ClCompile Include="src\Cube.cpp" />
     <ClCompile Include="src\Level.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -205,7 +204,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CollisionDefinitions.h" />
-    <ClInclude Include="src\CollisionSystem.h" />
     <ClInclude Include="src\Cube.h" />
     <ClInclude Include="src\CudaHelper.h" />
     <ClInclude Include="src\Level.h" />

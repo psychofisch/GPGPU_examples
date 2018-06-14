@@ -39,18 +39,18 @@ double Stopwatch::getDuration(int count) const
 	return d.count();
 }
 
-double Stopwatch::getFullDuration()
+double Stopwatch::getFullDuration() const
 {
 	std::chrono::duration<double> d = std::chrono::duration_cast<std::chrono::duration<double>>(m_stop[m_stop.size()-1] - m_start[0]);
 	return d.count();
 }
 
-std::string Stopwatch::getFullDurationString()
+std::string Stopwatch::getFullDurationString() const
 {
 	return getFormatted(getFullDuration());
 }
 
-std::string Stopwatch::getDurationString(int count)
+std::string Stopwatch::getDurationString(int count) const
 {
 	double d = getDuration(count);
 	return getFormatted(d);

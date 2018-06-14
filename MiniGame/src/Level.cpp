@@ -31,7 +31,7 @@ void Level::setReady(bool _b)
 	//mIsReady = _b;
 }
 
-bool Level::isReady()
+bool Level::isReady() const
 {
 	if (mState == GameState::Ready)
 		return true;
@@ -39,7 +39,7 @@ bool Level::isReady()
 		return false;
 }
 
-bool Level::isRunning()
+bool Level::isRunning() const
 {
 	if (mState == GameState::Running)
 		return true;
@@ -47,7 +47,7 @@ bool Level::isRunning()
 		return false;
 }
 
-bool Level::isPaused()
+bool Level::isPaused() const
 {
 	if (mState == GameState::Paused)
 		return true;
@@ -55,27 +55,27 @@ bool Level::isPaused()
 		return false;
 }
 
-uint Level::getScore()
+uint Level::getScore() const
 {
 	return mCurrentScore;
 }
 
-uint Level::getSpawnedParticles()
+uint Level::getSpawnedParticles() const
 {
 	return mNumberOfSpawnParticles;
 }
 
-float Level::getCurrentTime()
+float Level::getCurrentTime() const
 {
 	return mCurrentTimeSec;
 }
 
-float Level::getLevelTime()
+float Level::getLevelTime() const
 {
 	return mSecondsToFinishLevel;
 }
 
-Level::GameState Level::getGameState()
+Level::GameState Level::getGameState() const
 {
 	return mState;
 }
@@ -90,9 +90,6 @@ void Level::setEndzone(ofVec3f _position, ofVec3f _size)
 	mEndzone.setPosition(_position);
 	mEndzone.set(_size.x, _size.y, _size.z);
 	mEndzone.recalculateMinMax();
-
-	assert("No particle system set!" && mExternalParticleSystem != nullptr);
-	mExternalParticleSystem->setEndZone(mEndzone.getGlobalMinMax());
 }
 
 void Level::setStartzone(ofVec3f _position, ofVec3f _size, uint _numberOfSpawnParticles)
@@ -172,7 +169,7 @@ void Level::update(float dt)
 
 	if (mExternalParticleSystem->getNumberOfParticles() > 0)
 	{
-		uint removed = mExternalParticleSystem->removeInEndzone();
+		uint removed = mExternalParticleSystem->removeInVolume(mEndzone.getGlobalMinMax());
 		mCurrentScore += removed;
 	}
 	else

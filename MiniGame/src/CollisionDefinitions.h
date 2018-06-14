@@ -3,7 +3,6 @@
 #include <ofVec3f.h>
 #include <ofVec4f.h>
 
-#define OUT 
 typedef unsigned int uint;
 
 namespace vec3
@@ -17,7 +16,7 @@ struct MinMaxData
 {
 	ofVec4f min, max;
 
-	MinMaxData operator+(ofVec3f p_)
+	MinMaxData operator+(ofVec3f p_) const
 	{
 		MinMaxData tmp;
 		tmp.min = this->min + p_;

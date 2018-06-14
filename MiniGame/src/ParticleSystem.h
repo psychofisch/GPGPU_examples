@@ -46,14 +46,7 @@ namespace Particle
 #define CUDAERRORS(x) x
 #define HANDLE_GL_ERROR()
 #endif
-//#ifdef _WIN32
-//
-//#include <intrin.h>
-//uint64_t rdtsc() {
-//	return __rdtsc();
-//}
-//
-//#endif
+
 	const ofVec3f directions[6] = { ofVec3f(1.f, 0, 0),
 									ofVec3f(-1.f, 0, 0),
 									ofVec3f(0, 1.f, 0),
@@ -165,7 +158,7 @@ public:
 	// set gravity
 	void setGravity(ofVec3f g);
 	// define the end zone
-	void setEndZone(MinMaxData c);
+	//void setEndZone(MinMaxData c);
 
 	// other methods
 
@@ -178,7 +171,7 @@ public:
 	// draws the particle VBO
 	void draw(const ofVec3f& _camera, const ofVec3f& _sunDir, ofPolyRenderMode _rm);
 	// removes all particles that are in the endzone and returns how many particles got removed
-	uint removeInEndzone();
+	uint removeInVolume(MinMaxData v);
 
 	//Simulation
 
@@ -223,7 +216,7 @@ private:
 	std::vector<MinMaxData> mStaticCollision;
 	bool mMeasureTime,
 		mGenericSwitch;
-	MinMaxData mEndZone;
+	//MinMaxData mEndZone;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
@@ -231,6 +224,5 @@ private:
 	void iUpdateCUDA(float dt);
 	void iUpdateThrust(float dt);
 	ofVec3f iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt);
-	void iSyncParticlePositionsToActiveMode(bool velocityToo = false);
 };
 

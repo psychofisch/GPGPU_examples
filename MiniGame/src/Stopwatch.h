@@ -15,10 +15,10 @@ public:
 	int start();
 	int stop();
 	double getDuration(int count) const;
-	double getFullDuration();
-	std::string getFullDurationString();
-	std::string getDurationString(int count);
-	std::string getFormatted(double nmbr);
+	double getFullDuration() const;
+	std::string getFullDurationString() const;
+	std::string getDurationString(int count) const;
+	static std::string getFormatted(double nmbr);
 private:
 	int m_count;
 	std::vector<std::chrono::high_resolution_clock::time_point> m_start;
