@@ -5,7 +5,7 @@
 #include "ofxXmlSettings.h"
 
 #include "ParticleSystem.h"
-#include "Level.h"
+#include "Cube.h"
 
 class ofApp : public ofBaseApp {
 

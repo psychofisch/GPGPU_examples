@@ -64,9 +64,6 @@
     <ClCompile Include="src\Stopwatch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Level.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Cube.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -291,9 +288,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\CollisionDefinitions.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Level.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Cube.h">

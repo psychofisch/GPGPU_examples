@@ -17,14 +17,14 @@ __host__ __device__ bool operator==(float3& lhs, float3& rhs);
 
 namespace ThrustHelper
 {
-	struct ThrustData
+	struct ThrustParticleData
 	{
 		thrust::device_vector<float4> position;
 		thrust::device_vector<float4> positionOut;
 		thrust::device_vector<float4> velocity;
 	};
 
-	ThrustData* setup(uint numberOfParticles);
+	ThrustParticleData* setup(uint numberOfParticles);
 
 	struct PressureFunctor : public thrust::binary_function < float4, float4, float4 > {
 		float3 pos;
@@ -32,7 +32,7 @@ namespace ThrustHelper
 		SimulationData simData;
 
 		PressureFunctor(float3 pos_, float3 vel_, SimulationData simData_);
-		__host__ __device__ float3 operator()(float4 outerPos, float4 outerVel);
+		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel);
 	};
 
 	struct SimulationFunctor : public thrust::binary_function < float4, float4, float4 > {
@@ -45,8 +45,8 @@ namespace ThrustHelper
 		__host__ __device__ float4 operator()(float4 outerPos, float4 outerVel);
 	};
 
-	void thrustUpdate(
-		ThrustData& tdata,
+	void thrustParticleUpdate(
+		ThrustParticleData& tdata,
 		float4* position,
 		float4* positionOut,
 		float4* velocity,

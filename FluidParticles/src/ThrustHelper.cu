@@ -8,59 +8,6 @@ inline __host__ __device__ bool operator==(float3& lhs, float3& rhs)
 		return false;
 }
 
-ThrustHelper::PressureFunctor::PressureFunctor(float3 pos_, float3 vel_, SimulationData simData_)
-	:pos(pos_),
-	vel(vel_),
-	simData(simData_)
-{}
-
-__host__ __device__ float3 ThrustHelper::PressureFunctor::operator()(float4 outerPos, float4 outerVel)
-{
-	float3 pressureVec = make_float3(0.f);
-	float3 viscosityVec = pressureVec;
-	float influence = 0.f;
-
-	float3 dirVec = pos - make_float3(outerPos);
-	float dist = length(dirVec);//TODO: maybe use half_length
-
-	if (dist > simData.interactionRadius)
-		return make_float3(0.f);
-
-	float3 dirVecN = normalize(dirVec);
-	float moveDir = dot(vel - make_float3(outerVel), dirVecN);
-	float distRel = 1.0f - dist / simData.interactionRadius;
-
-	float sqx = distRel * distRel;
-
-	influence += 1.0f;
-
-	// viscosity
-	if (true || moveDir > 0)
-	{
-		float factor = sqx * (simData.viscosity * moveDir);
-		float3 impulse = factor * dirVecN;
-		viscosityVec -= impulse;
-	}
-	// *** v
-
-	float pressure = sqx * simData.pressureMultiplier;
-
-	pressureVec += (pressure - simData.restPressure) * dirVecN;
-
-	//compress viscosity TODO: fix the root of this problem and not just limit it manually
-	//float threshold = 50.0;
-	if (influence > 0.f)
-	{
-		viscosityVec = viscosityVec / influence;
-	}
-
-	if (length(viscosityVec) > 100.0)
-		viscosityVec = normalize(viscosityVec) * 100.0;
-	//*** lv
-
-	return pressureVec + viscosityVec;
-}
-
 ThrustHelper::SimulationFunctor::SimulationFunctor(float dt_, float3 dim_, float3 g_, SimulationData simData_)
 	:dt(dt_),
 	dimension(dim_),
@@ -118,17 +65,70 @@ __host__ __device__ float4 ThrustHelper::SimulationFunctor::operator()(float4 ou
 	return make_float4(particlePosition);
 }
 
-ThrustHelper::ThrustData* ThrustHelper::setup(uint numberOfParticles)
+ThrustHelper::PressureFunctor::PressureFunctor(float3 pos_, float3 vel_, SimulationData simData_)
+	:pos(pos_),
+	vel(vel_),
+	simData(simData_)
+{}
+
+__host__ __device__ float4 ThrustHelper::PressureFunctor::operator()(float4 outerPos, float4 outerVel)
 {
-	ThrustData* r = new ThrustData;
+	float3 pressureVec = make_float3(0.f);
+	float3 viscosityVec = pressureVec;
+	float influence = 0.f;
+
+	float3 dirVec = pos - make_float3(outerPos);
+	float dist = length(dirVec);//TODO: maybe use half_length
+
+	if (dist > simData.interactionRadius || dist == 0.0f)
+		return make_float4(0.f);
+
+	float3 dirVecN = normalize(dirVec);
+	float moveDir = dot(vel - make_float3(outerVel), dirVecN);
+	float distRel = 1.0f - dist / simData.interactionRadius;
+
+	float sqx = distRel * distRel;
+
+	influence += 1.0f;
+
+	// viscosity
+	if (true || moveDir > 0)
+	{
+		float factor = sqx * (simData.viscosity * moveDir);
+		float3 impulse = factor * dirVecN;
+		viscosityVec -= impulse;
+	}
+	// *** v
+
+	float pressure = sqx * simData.pressureMultiplier;
+
+	pressureVec += (pressure - simData.restPressure) * dirVecN;
+
+	//compress viscosity TODO: fix the root of this problem and not just limit it manually
+	//float threshold = 50.0;
+	if (influence > 0.f)
+	{
+		viscosityVec = viscosityVec / influence;
+	}
+
+	if (length(viscosityVec) > 100.0)
+		viscosityVec = normalize(viscosityVec) * 100.0;
+	//*** lv
+
+	return make_float4(pressureVec + viscosityVec);
+}
+
+ThrustHelper::ThrustParticleData* ThrustHelper::setup(uint numberOfParticles)
+{
+	ThrustParticleData* r = new ThrustParticleData;
 	r->position.reserve(numberOfParticles);
 	r->velocity.reserve(numberOfParticles);
 	r->positionOut.reserve(numberOfParticles);
 	return r;
 }
 
-void ThrustHelper::thrustUpdate(
-	ThrustData& tdata,
+void ThrustHelper::thrustParticleUpdate(
+	ThrustParticleData& tdata,
 	float4* position,
 	float4* positionOut,
 	float4* velocity,
@@ -153,8 +153,8 @@ void ThrustHelper::thrustUpdate(
 
 		// calculate pressure
 		thrust::transform(tdata.position.begin(), tdata.position.end(), tdata.velocity.begin(), tdata.positionOut.begin(), PressureFunctor(particlePosition, particleVelocity, simData));
-		thrust::plus<float4> plus;
-		float4 pressure4 = thrust::reduce(tdata.positionOut.begin(), tdata.positionOut.end(), make_float4(0.f), plus);
+		//float4 pressure4 = make_float4(0.0);
+		float4 pressure4 = thrust::reduce(tdata.positionOut.begin(), tdata.positionOut.end(), make_float4(0.0f), thrust::plus<float4>());//sums all values together
 
 		particleVelocity += (gravity + make_float3(pressure4)) * dt;
 
@@ -191,8 +191,6 @@ void ThrustHelper::thrustUpdate(
 		}
 		// *** sc
 
-		// particleVelocity += dt * particleVelocity * -0.01f;//damping
-		//tdata.positionOut[i] = make_float4(particlePosition + particleVelocity * dt);
 		positionOut[i] = make_float4(particlePosition + particleVelocity * dt);
 		velocity[i] = make_float4(particleVelocity);
 	}

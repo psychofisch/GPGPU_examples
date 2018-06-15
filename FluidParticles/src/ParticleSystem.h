@@ -1,11 +1,5 @@
 #pragma once
 
-// Standardized MAX, MIN and CLAMP
-//#define MAX(a, b) ((a > b) ? a : b)
-//#define MIN(a, b) ((a < b) ? a : b)
-//#define CLAMP(a, b, c) MIN(MAX(a, b), c)    // double sided clip of input a
-//#define TOPCLAMP(a, b) (a < b ? a:b)	    // single top side clip of input a
-
 // Openframeworks includes
 #include <ofVec3f.h>
 #include <ofxXmlSettings.h>
@@ -26,9 +20,9 @@
 #include "oclHelper.h"
 #include "Stopwatch.h"
 #include "ParticleDefinitions.h"
-//#include "ThrustHelper.h"
-#include "CudaHelper.h"
+#include "ThrustHelper.h"
 #include "CollisionDefinitions.h"
+#include "CudaHelper.h"
 
 namespace Particle
 {
@@ -40,20 +34,13 @@ namespace Particle
 #define CUDAERRORS(x) x
 #define HANDLE_GL_ERROR()
 #endif
-	//#ifdef _WIN32
-	//
-	//#include <intrin.h>
-	//uint64_t rdtsc() {
-	//	return __rdtsc();
-	//}
-	//
-	//#endif
+
 	const ofVec3f directions[6] = { ofVec3f(1.f, 0, 0),
-		ofVec3f(-1.f, 0, 0),
-		ofVec3f(0, 1.f, 0),
-		ofVec3f(0, -1.f, 0),
-		ofVec3f(0, 0, 1.f),
-		ofVec3f(0, 0, -1.f) };
+									ofVec3f(-1.f, 0, 0),
+									ofVec3f(0, 1.f, 0),
+									ofVec3f(0, -1.f, 0),
+									ofVec3f(0, 0, 1.f),
+									ofVec3f(0, 0, -1.f) };
 	const ofVec3f gravity = ofVec3f(0, -9.81f, 0);
 
 	//definitions for Compute Shader
@@ -64,7 +51,6 @@ namespace Particle
 		ofBufferObject positionOutBuffer;
 		ofBufferObject velocityBuffer;
 		ofBufferObject staticCollisionBuffer;
-		size_t workGroupSize;
 	};
 
 	//definitions for OpenCL
@@ -114,7 +100,7 @@ public:
 		COMPUTE_SHADER,
 		CUDA,
 		OPENCL,
-		//THRUST,
+		THRUST,
 		COMPUTEMODES_SIZE // these values are used as array indices, dont delete this!
 	};
 
@@ -128,7 +114,7 @@ public:
 	void setupCompute(ofxXmlSettings& settings);
 	void setupCUDA(ofxXmlSettings& settings);
 	void setupOCL(ofxXmlSettings& settings);
-	//void setupThrust(ofxXmlSettings& settings);
+	void setupThrust(ofxXmlSettings& settings);
 	void createParticleShader(std::string vert, std::string frag);
 
 	// simple getters
@@ -159,8 +145,6 @@ public:
 	void setStaticCollision(std::vector<MinMaxData>& collision);
 	// set gravity
 	void setGravity(ofVec3f g);
-	// define the end zone
-	void setEndZone(MinMaxData c);
 
 	// other methods
 
@@ -173,7 +157,7 @@ public:
 	// draws the particle VBO
 	void draw(const ofVec3f& _camera, const ofVec3f& _sunDir, ofPolyRenderMode _rm);
 	// removes all particles that are in the endzone and returns how many particles got removed
-	uint removeInEndzone();
+	uint removeInVolume(MinMaxData v);
 
 	//Simulation
 
@@ -193,9 +177,8 @@ public:
 
 private:
 	uint mNumberOfParticles,
-		//mCapacity,
+		mCapacity,
 		mThreshold;
-	const uint mCapacity;
 	ComputeMode mMode;
 	ofVboMesh mParticleModel;
 	ofSpherePrimitive mParticleTmp;
@@ -214,19 +197,17 @@ private:
 	oclHelper mOCLHelper;
 	Particle::OCLData mOCLData;
 	Particle::CUDAta mCUData;
-	//ThrustHelper::ThrustParticleData* mThrustData;
+	ThrustHelper::ThrustParticleData* mThrustData;
 	Stopwatch mClock;
 	std::vector<MinMaxData> mStaticCollision;
 	bool mMeasureTime,
 		mGenericSwitch;
-	MinMaxData mEndZone;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);
 	void iUpdateOCL(float dt);
 	void iUpdateCUDA(float dt);
-	//void iUpdateThrust(float dt);
+	void iUpdateThrust(float dt);
 	ofVec3f iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt);
-	void iSyncParticlePositionsToActiveMode(bool velocityToo = false);
 };
 
