@@ -197,7 +197,7 @@ private:
 	oclHelper mOCLHelper;
 	Particle::OCLData mOCLData;
 	Particle::CUDAta mCUData;
-	ThrustHelper::ThrustParticleData* mThrustData;
+	std::unique_ptr<ThrustHelper::ThrustParticleData> mThrustData;
 	Stopwatch mClock;
 	std::vector<MinMaxData> mStaticCollision;
 	bool mMeasureTime,

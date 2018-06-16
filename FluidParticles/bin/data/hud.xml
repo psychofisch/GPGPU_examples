@@ -1,10 +1,10 @@
 <group>
 	<Debug_Information>
-		<FPS>142</FPS>
+		<FPS>10</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
-		<Particles>6500/50000</Particles>
+		<Mode>UNKNOWN</Mode>
+		<Particles>500/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>

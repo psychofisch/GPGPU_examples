@@ -118,9 +118,9 @@ __host__ __device__ float4 ThrustHelper::PressureFunctor::operator()(float4 oute
 	return make_float4(pressureVec + viscosityVec);
 }
 
-ThrustHelper::ThrustParticleData* ThrustHelper::setup(uint numberOfParticles)
+std::unique_ptr<ThrustHelper::ThrustParticleData> ThrustHelper::setup(uint numberOfParticles)
 {
-	ThrustParticleData* r = new ThrustParticleData;
+	auto r = std::make_unique<ThrustHelper::ThrustParticleData>();
 	r->position.reserve(numberOfParticles);
 	r->velocity.reserve(numberOfParticles);
 	r->positionOut.reserve(numberOfParticles);

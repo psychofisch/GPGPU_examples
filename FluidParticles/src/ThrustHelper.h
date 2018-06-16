@@ -24,7 +24,7 @@ namespace ThrustHelper
 		thrust::device_vector<float4> velocity;
 	};
 
-	ThrustParticleData* setup(uint numberOfParticles);
+	std::unique_ptr<ThrustParticleData> setup(uint numberOfParticles);
 
 	struct PressureFunctor : public thrust::binary_function < float4, float4, float4 > {
 		float3 pos;

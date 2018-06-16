@@ -47,12 +47,6 @@ ParticleSystem::~ParticleSystem()
 	}
 
 	// GL and OpenCL buffers clear themselves at destruction
-
-	//Thrust
-	if (mAvailableModes[ComputeMode::THRUST])
-	{
-		delete mThrustData;
-	}
 }
 
 void ParticleSystem::setupAll(ofxXmlSettings & settings)
