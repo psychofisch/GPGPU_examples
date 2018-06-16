@@ -184,8 +184,8 @@ private:
 	ofSpherePrimitive mParticleTmp;
 	ofShader mParticleShader;
 	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
-	ofVec4f	*mParticlePosition,
-		*mParticleVelocity;
+	std::vector<ofVec4f> mParticlePosition,
+		mParticleVelocity;
 	ofVec3f	mDimension,
 		mGravity,
 		mPosition;
