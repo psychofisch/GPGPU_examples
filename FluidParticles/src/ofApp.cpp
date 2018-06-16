@@ -40,7 +40,7 @@ void ofApp::setup() {
 		maxParticles = 5000;
 	}
 
-	mParticleSystem = new ParticleSystem(maxParticles);
+	mParticleSystem = std::make_shared<ParticleSystem>(maxParticles);
 	mParticleSystem->setupAll(mXmlSettings);
 	mParticleSystem->setMode(ParticleSystem::ComputeMode::CPU);
 	mParticleSystem->setDimensions(ofVec3f(1.f, 1.f, 1.f));
@@ -441,8 +441,6 @@ void ofApp::dragEvent(ofDragInfo dragInfo) {
 
 void ofApp::quit()
 {
-	delete mParticleSystem;
-
 	if (mHudSaveOnExit)
 	{
 		std::cout << "saving settings...";

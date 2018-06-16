@@ -30,7 +30,7 @@ public:
 
 private:
 	ofCamera mMainCamera;
-	ParticleSystem *mParticleSystem;
+	std::shared_ptr<ParticleSystem> mParticleSystem;
 	int mRotationAxis;
 	ofQuaternion mGlobalRotation;
 	ofVec2f mMouse;
@@ -39,7 +39,6 @@ private:
 	bool mValve;
 	ofVec3f mSunDirection;
 	ofShader mWorldShader;
-	//Level mLevel;
 	ofBoxPrimitive mWorld;
 	std::vector<Cube> mCollider;
 
