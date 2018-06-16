@@ -1,10 +1,10 @@
 <group>
 	<Debug_Information>
-		<FPS>10</FPS>
+		<FPS>43</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>UNKNOWN</Mode>
-		<Particles>500/50000</Particles>
+		<Mode>CPU</Mode>
+		<Particles>3000/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
