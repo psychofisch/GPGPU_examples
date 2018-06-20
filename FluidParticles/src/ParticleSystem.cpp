@@ -84,6 +84,8 @@ void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 		mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticlePosition.data(), GL_DYNAMIC_DRAW);
 		mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticleVelocity.data(), GL_DYNAMIC_DRAW);
 
+		mComputeData.workGroupSize = settings.getValue("COMPUTE:WORKGROUPSIZE", 512);
+
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
 	}
 	else
@@ -612,7 +614,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 	worldAABB.min = ofVec3f(particleSize);
 	worldAABB.max = ofVec3f(mDimension - particleSize);
 
-	std::vector<ofVec4f> tmpPos(mNumberOfParticles);
+	std::vector<ofVec4f> tmpPos(mNumberOfParticles);//no need for single-thread usage but needed to get "correct" results in multi-threaded usage
 
 #pragma omp parallel for shared(tmpPos)
 	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
@@ -797,8 +799,7 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.computeShader.setUniform3f("mDimension", mDimension);
 
 	// call the kernel
-	// local size: hard-coded "512", because it is also hard-coded in the kernel source code
-	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles)/512), 1, 1);
+	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles)/ mComputeData.workGroupSize), 1, 1);
 	mComputeData.computeShader.end();//forces the program to wait until the calculation is finished 
 
 	// copy the new positions to the position Buffer

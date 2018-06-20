@@ -28,7 +28,6 @@ layout (std140, binding = 3) buffer StaticCollisionBuffer {
 };
 
 uniform float dt;
-//uniform SimulationData simData;
 uniform float interactionRadius;
 uniform float pressureMultiplier;
 uniform float viscosity;
@@ -43,7 +42,7 @@ vec3 calculatePressure(uint index, vec3 pos, vec3 vel);
 bool ClipLine(int d, const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout float f_low, inout float f_high);
 bool LineAABBIntersection(const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout vec3 vecIntersection, inout float flFraction);
 
-layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;//this has to match the COMPUTE:WORKGROUPSIZE in the settings.xml file
 void main(){
 	uint index = gl_GlobalInvocationID.x;
 	

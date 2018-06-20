@@ -51,6 +51,7 @@ namespace Particle
 		ofBufferObject positionOutBuffer;
 		ofBufferObject velocityBuffer;
 		ofBufferObject staticCollisionBuffer;
+		size_t workGroupSize;
 	};
 
 	//definitions for OpenCL
