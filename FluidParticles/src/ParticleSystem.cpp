@@ -612,7 +612,9 @@ void ParticleSystem::iUpdateCPU(float dt)
 	worldAABB.min = ofVec3f(particleSize);
 	worldAABB.max = ofVec3f(mDimension - particleSize);
 
-#pragma omp parallel for
+	std::vector<ofVec4f> tmpPos(mNumberOfParticles);
+
+#pragma omp parallel for shared(tmpPos)
 	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
 	{
 		ofVec3f particlePosition = mParticlePosition[i];
@@ -686,8 +688,11 @@ void ParticleSystem::iUpdateCPU(float dt)
 		particlePosition += particleVelocity * dt;
 
 		mParticleVelocity[i] = particleVelocity;
-		mParticlePosition[i] = particlePosition + mPosition; // add the system position offset
+		//mParticlePosition[i] = particlePosition + mPosition; // add the system position offset
+		tmpPos[i] = particlePosition + mPosition; // add the system position offset
 	}
+
+	mParticlePosition = tmpPos;
 }
 
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt)
