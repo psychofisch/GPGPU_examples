@@ -34,7 +34,6 @@ struct MinMaxData
 };
 
 // intersection code from https://github.com/BSVino/MathForGameDevelopers/blob/line-box-intersection/math/collision.cpp
-
 inline bool ClipLine(int d, const MinMaxData& aabbBox, const ofVec3f& v0, const ofVec3f& v1, float& f_low, float& f_high)
 {
 	// f_low and f_high are the results from all clipping so far. We'll write our results back out to those parameters.

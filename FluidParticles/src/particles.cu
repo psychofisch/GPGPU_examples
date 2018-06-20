@@ -292,8 +292,8 @@ extern "C" void cudaParticleUpdate(
 	const float3 gravity,
 	const float3 position,
 	const float3 dimension,
-	const uint numberOfParticles,
-	const uint numberOfColliders,
+	const size_t numberOfParticles,
+	const size_t numberOfColliders,
 	SimulationData simData)
 {
 	cudaDeviceProp devProp;
@@ -301,13 +301,13 @@ extern "C" void cudaParticleUpdate(
 	cudaGetDevice(&device);
 	cudaGetDeviceProperties(&devProp, device);
 
-	int num = 1;
-	int threads = numberOfParticles;
-	int maxThreads = devProp.maxThreadsPerBlock;
+	size_t num = 1;
+	size_t threads = numberOfParticles;
+	size_t maxThreads = devProp.maxThreadsPerBlock;
 
-	if (numberOfParticles > (uint)maxThreads)
+	if (numberOfParticles > maxThreads)
 	{
-		num = (int)ceilf(float(numberOfParticles) / maxThreads);
+		num = (size_t)ceilf(float(numberOfParticles) / maxThreads);
 		threads = maxThreads;
 	}
 

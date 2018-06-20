@@ -8,14 +8,13 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 	//*** general setup
 	// these buffers are required, even when CPU mode is not enabled
 	// they are used as cache between different GPU modes
-	//mParticlePosition = new ofVec4f[maxParticles];
-	//mParticleVelocity = new ofVec4f[maxParticles];
-
 	mParticlePosition.resize(maxParticles);
 	mParticleVelocity.resize(maxParticles);
 
-	for (int i = 0; i < ComputeMode::COMPUTEMODES_SIZE; ++i)
-		mAvailableModes[i] = false;
+	for (bool& m : mAvailableModes)
+	{
+		m = false;
+	}
 
 	mGravity = Particle::gravity;
 	//***
@@ -37,9 +36,7 @@ ParticleSystem::ParticleSystem(uint maxParticles)
 
 ParticleSystem::~ParticleSystem()
 {
-	// free the CPU buffes
-	//delete[] mParticlePosition;
-	//delete[] mParticleVelocity;
+	// CPU, GL and OpenCL buffers clear themselves at destruction
 
 	// free the CUDA buffers
 	if (mAvailableModes[ComputeMode::CUDA])
@@ -48,8 +45,6 @@ ParticleSystem::~ParticleSystem()
 		CUDAERRORS(cudaFree(mCUData.velocity));
 		CUDAERRORS(cudaFree(mCUData.positionOut));
 	}
-
-	// GL and OpenCL buffers clear themselves at destruction
 }
 
 void ParticleSystem::setupAll(ofxXmlSettings & settings)
@@ -328,11 +323,11 @@ void ParticleSystem::setGravity(ofVec3f g)
 
 ParticleSystem::ComputeMode ParticleSystem::nextMode(ParticleSystem::ComputeMode current) const
 {
-	int enumSize = ComputeMode::COMPUTEMODES_SIZE;
+	size_t enumSize = mAvailableModes.size();
 
-	for (int i = 0; i < enumSize; ++i)
+	for (size_t i = 0; i < enumSize; ++i)
 	{
-		int next = (current + 1 + i) % enumSize;
+		size_t next = (current + 1 + i) % enumSize;
 		if (mAvailableModes[next] // checks if the next mode is even available
 			&& !(next == ComputeMode::CPU && mNumberOfParticles > mThreshold)) // checks if there are more particles than the CPU threshold allows
 			return static_cast<ComputeMode>(next);
@@ -609,13 +604,10 @@ void ParticleSystem::iUpdateCPU(float dt)
 {
 	//Particles inspired by https://knork.org/doubleRelaxation.html
 
-	float maxSpeed = 500.f;
 	float fluidDamp = 0.f;
 	float particleSize = mSimData.interactionRadius * 0.1f;
 
 	//optimization
-	maxSpeed = 1.f / maxSpeed;
-	ofVec3f boundingBox = mDimension;
 	MinMaxData worldAABB;
 	worldAABB.min = ofVec3f(particleSize);
 	worldAABB.max = ofVec3f(mDimension - particleSize);
@@ -655,7 +647,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 			if (result == false)
 				continue;
 
-			if (intersection.x == currentAABB.max.x || intersection.x == currentAABB.min.x)
+			if (intersection.x == currentAABB.max.x || intersection.x == currentAABB.min.x)// float == comparison is bad but this is currently the easiest way
 				particleVelocity.x *= -fluidDamp;
 			else if (intersection.y == currentAABB.max.y || intersection.y == currentAABB.min.y)
 				particleVelocity.y *= -fluidDamp;
@@ -664,20 +656,9 @@ void ParticleSystem::iUpdateCPU(float dt)
 			//else
 			//	std::cout << "W00T!?\n";//DEBUG
 
-			//particlePosition = intersection;
 			newPos = intersection;
-			break;// DEBUG! this prevents multiple collisions!
 
-			//	//ofVec3f reflection;
-			//	ofVec3f n = Particle::directions[closest];
-
-			//	// source -> https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector#13266
-			//	particleVelocity = particleVelocity - (2 * particleVelocity.dot(n) * n);
-			//	particleVelocity *= fluidDamp;
-			//	
-			//	collisionCnt = 0;
-			//	//result = j;
-			//	//break;// OPT: do not delete this (30% performance loss)
+			collisionCnt--;
 		}
 		// *** sc
 
@@ -733,7 +714,7 @@ ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVe
 
 		ofVec3f dirVecN = dirVec.getNormalized();
 		ofVec3f otherParticleVel = mParticleVelocity[i];
-		float moveDir = (vel - otherParticleVel).dot(dirVecN);
+		float moveDir = ((vel - otherParticleVel)).dot(dirVecN);
 		float distRel = 1.f - (dist / interactionRadius);
 
 		float sqx = distRel * distRel;
@@ -843,8 +824,8 @@ void ParticleSystem::iUpdateOCL(float dt)
 	kernel.setArg(5, ofVec4f(mGravity));
 	kernel.setArg(6, ofVec4f(mPosition));
 	kernel.setArg(7, ofVec4f(mDimension));
-	kernel.setArg(8, mNumberOfParticles);
-	kernel.setArg(9, mOCLData.allocatedColliders);
+	kernel.setArg(8, uint(mNumberOfParticles));
+	kernel.setArg(9, uint(mOCLData.allocatedColliders));
 	kernel.setArg(10, mSimData);
 
 	// calculate the global and local size

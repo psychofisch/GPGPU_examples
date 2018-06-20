@@ -1,9 +1,9 @@
 <group>
 	<Debug_Information>
-		<FPS>43</FPS>
+		<FPS>275</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>CPU</Mode>
+		<Mode>OpenCL</Mode>
 		<Particles>3000/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
@@ -15,7 +15,7 @@
 	<Simulation_Settings>
 		<Interaction_Radius>0.142857</Interaction_Radius>
 		<Pressure_Multiplier>2.65306</Pressure_Multiplier>
-		<Viscosity>698.98</Viscosity>
+		<Viscosity>683.673</Viscosity>
 		<Rest_Pressure>0.188776</Rest_Pressure>
 	<Pause>0</Pause>
 		<Step>0</Step>

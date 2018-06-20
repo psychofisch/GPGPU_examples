@@ -61,7 +61,7 @@ namespace Particle
 		cl::Buffer positionOutBuffer;
 		cl::Buffer velocityBuffer;
 		cl::Buffer staticCollisionBuffer;
-		uint allocatedColliders;
+		size_t allocatedColliders;
 	};
 
 	//definitions for CUDA
@@ -86,8 +86,8 @@ extern "C" void cudaParticleUpdate(
 	const float3 gravity,
 	const float3 position,
 	const float3 dimension,
-	const uint numberOfParticles,
-	const uint numberOfColliders,
+	const size_t numberOfParticles,
+	const size_t numberOfColliders,
 	SimulationData simData);
 
 //class definition
@@ -176,14 +176,14 @@ public:
 	void toggleGenericSwitch();
 
 private:
-	uint mNumberOfParticles,
+	size_t mNumberOfParticles,
 		mCapacity,
 		mThreshold;
 	ComputeMode mMode;
 	ofVboMesh mParticleModel;
 	ofSpherePrimitive mParticleTmp;
 	ofShader mParticleShader;
-	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
+	std::array<bool, static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)> mAvailableModes;
 	std::vector<ofVec4f> mParticlePosition,
 		mParticleVelocity;
 	ofVec3f	mDimension,
