@@ -84,7 +84,7 @@ void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 		mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticlePosition.data(), GL_DYNAMIC_DRAW);
 		mComputeData.velocityBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticleVelocity.data(), GL_DYNAMIC_DRAW);
 
-		mComputeData.workGroupSize = settings.getValue("COMPUTE:WORKGROUPSIZE", 512);
+		mComputeData.workGroupCount = settings.getValue("COMPUTE:WORKGROUPCOUNT", 512);
 
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
 	}
@@ -799,7 +799,7 @@ void ParticleSystem::iUpdateCompute(float dt)
 	mComputeData.computeShader.setUniform3f("mDimension", mDimension);
 
 	// call the kernel
-	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles)/ mComputeData.workGroupSize), 1, 1);
+	mComputeData.computeShader.dispatchCompute(std::ceilf(float(mNumberOfParticles)/ mComputeData.workGroupCount), 1, 1);
 	mComputeData.computeShader.end();//forces the program to wait until the calculation is finished 
 
 	// copy the new positions to the position Buffer
