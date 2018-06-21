@@ -855,12 +855,12 @@ void ParticleSystem::iUpdateOCL(float dt)
 	err = queue.enqueueNDRangeKernel(kernel, offset, global, local);
 	oclHelper::handle_clerror(err, __LINE__);
 
-	// copy the result back to the CPU
-	err = queue.enqueueReadBuffer(mOCLData.positionOutBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mParticlePosition.data());
-	oclHelper::handle_clerror(err, __LINE__);
-
 	// copy the result to the GPU position buffer
 	err = queue.enqueueCopyBuffer(mOCLData.positionOutBuffer, mOCLData.positionBuffer, 0, 0, mNumberOfParticles * sizeof(ofVec4f));
+	oclHelper::handle_clerror(err, __LINE__);
+
+	// copy the result back to the CPU
+	err = queue.enqueueReadBuffer(mOCLData.positionOutBuffer, CL_TRUE, 0, mNumberOfParticles * sizeof(ofVec4f), mParticlePosition.data());
 	oclHelper::handle_clerror(err, __LINE__);
 
 	// wait until the queue is finished

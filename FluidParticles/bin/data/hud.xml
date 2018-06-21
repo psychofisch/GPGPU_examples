@@ -1,10 +1,10 @@
 <group>
 	<Debug_Information>
-		<FPS>92</FPS>
+		<FPS>280</FPS>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
-		<Particles>10000/50000</Particles>
+		<Mode>OpenCL</Mode>
+		<Particles>3000/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
@@ -14,8 +14,8 @@
 	</Program_Information>
 	<Simulation_Settings>
 		<Interaction_Radius>0.142857</Interaction_Radius>
-		<Pressure_Multiplier>2.65306</Pressure_Multiplier>
-		<Viscosity>683.673</Viscosity>
+		<Pressure_Multiplier>4.38775</Pressure_Multiplier>
+		<Viscosity>341.837</Viscosity>
 		<Rest_Pressure>0.188776</Rest_Pressure>
 	<Pause>0</Pause>
 		<Step>0</Step>

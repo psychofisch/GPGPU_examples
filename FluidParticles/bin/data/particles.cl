@@ -11,42 +11,25 @@ struct MinMaxData
 	float4 min, max;
 };
 
-float dim4(const float4* v, size_t i)
+inline float dim3(const float3* v, size_t i)
 {
 	switch (i)
 	{
-	case 0: return (*v).x;//no breaks required
-	case 1:	return (*v).y;
-	case 2:	return (*v).z;
-	case 3: return (*v).w;
+	case 0: return v->x;//no breaks required
+	case 1:	return v->y;
+	case 2:	return v->z;
 	}
 
 	return NAN;
 }
 
-float dim3(const float3* v, size_t i)
+inline float dim4(const float4* v, size_t i)
 {
-	switch (i)
-	{
-	case 0: return (*v).x;//no breaks required
-	case 1:	return (*v).y;
-	case 2:	return (*v).z;
-	}			   
+	if(i == 3)
+		return v->w;
 
-	return NAN;
+	return dim3(v, i);
 }
-
-//inline float* dim3ptr(float3* v, size_t i)
-//{
-//	switch (i)
-//	{
-//	case 0: return &((*v).x);//no breaks required
-//	case 1:	return &((*v).y);
-//	case 2:	return &((*v).z);
-//	}
-//
-//	return v.x;//TODO: return something that indicates an error
-//}
 
 float3 calculatePressure(__global float4* position, 
 	__global float4* velocity, 
