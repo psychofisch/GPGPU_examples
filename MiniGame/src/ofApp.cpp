@@ -522,16 +522,22 @@ void ofApp::quit()
 
 std::string ofApp::iHudGetModeString(ParticleSystem::ComputeMode m)
 {
-	if (m == ParticleSystem::ComputeMode::CPU)
-		return "CPU";
-	else if (m == ParticleSystem::ComputeMode::COMPUTE_SHADER)
-		return "Compute Shader";
-	else if (m == ParticleSystem::ComputeMode::OPENCL)
-		return "OpenCL";
-	else if (m == ParticleSystem::ComputeMode::CUDA)
+	switch (m)
+	{
+	case ParticleSystem::CPU:
+			return "CPU";
+		break;
+	case ParticleSystem::COMPUTE_SHADER:
+			return "Compute Shader";
+		break;
+	case ParticleSystem::CUDA:
 		return "CUDA";
-	else if (m == ParticleSystem::ComputeMode::THRUST)
-		return "Thrust";
-	else
-		return "UNKNOWN";
+		break;
+	case ParticleSystem::OPENCL:
+			return "OpenCL";
+		break;
+	default:
+			return "UNKNOWN";
+		break;
+	}
 }

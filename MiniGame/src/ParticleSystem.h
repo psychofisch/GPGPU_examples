@@ -1,20 +1,8 @@
 #pragma once
 
-// Standardized MAX, MIN and CLAMP
-//#define MAX(a, b) ((a > b) ? a : b)
-//#define MIN(a, b) ((a < b) ? a : b)
-//#define CLAMP(a, b, c) MIN(MAX(a, b), c)    // double sided clip of input a
-//#define TOPCLAMP(a, b) (a < b ? a:b)	    // single top side clip of input a
-
 // Openframeworks includes
 #include <ofVec3f.h>
-//#include <ofRectangle.h>
-//#include <ofMath.h>
-//#include <ofQuaternion.h>
-//#include <ofShader.h>
-//#include <ofVbo.h>
 #include <ofxXmlSettings.h>
-//#include <of3dPrimitives.h>
 
 // CUDA includes
 #include <cuda_runtime.h>
@@ -22,17 +10,10 @@
 #include <helper_cuda.h>
 #include <helper_math.h>
 
-//Thrust includes
-#include <thrust\device_vector.h>
-#include <thrust\host_vector.h>
-#include <thrust\device_malloc.h>
-#include <thrust\copy.h>
-
 // own includes
 #include "oclHelper.h"
 #include "Stopwatch.h"
 #include "ParticleDefinitions.h"
-#include "ThrustHelper.h"
 #include "CollisionDefinitions.h"
 #include "CudaHelper.h"
 
@@ -63,6 +44,7 @@ namespace Particle
 		ofBufferObject positionOutBuffer;
 		ofBufferObject velocityBuffer;
 		ofBufferObject staticCollisionBuffer;
+		size_t workGroupCount;
 	};
 
 	//definitions for OpenCL
@@ -73,7 +55,7 @@ namespace Particle
 		cl::Buffer positionOutBuffer;
 		cl::Buffer velocityBuffer;
 		cl::Buffer staticCollisionBuffer;
-		uint allocatedColliders;
+		size_t allocatedColliders;
 	};
 
 	//definitions for CUDA
@@ -98,8 +80,8 @@ extern "C" void cudaParticleUpdate(
 	const float3 gravity,
 	const float3 position,
 	const float3 dimension,
-	const uint numberOfParticles,
-	const uint numberOfColliders,
+	const size_t numberOfParticles,
+	const size_t numberOfColliders,
 	SimulationData simData);
 
 //class definition
@@ -112,7 +94,6 @@ public:
 		COMPUTE_SHADER,
 		CUDA,
 		OPENCL,
-		THRUST,
 		COMPUTEMODES_SIZE // these values are used as array indices, dont delete this!
 	};
 
@@ -126,7 +107,6 @@ public:
 	void setupCompute(ofxXmlSettings& settings);
 	void setupCUDA(ofxXmlSettings& settings);
 	void setupOCL(ofxXmlSettings& settings);
-	void setupThrust(ofxXmlSettings& settings);
 	void createParticleShader(std::string vert, std::string frag);
 
 	// simple getters
@@ -188,16 +168,16 @@ public:
 	void toggleGenericSwitch();
 
 private:
-	uint mNumberOfParticles,
+	size_t mNumberOfParticles,
 		mCapacity,
 		mThreshold;
 	ComputeMode mMode;
 	ofVboMesh mParticleModel;
 	ofSpherePrimitive mParticleTmp;
 	ofShader mParticleShader;
-	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
-	ofVec4f	*mParticlePosition,
-		*mParticleVelocity;
+	std::array<bool, static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)> mAvailableModes;
+	std::vector<ofVec4f> mParticlePosition,
+		mParticleVelocity;
 	ofVec3f	mDimension,
 		mGravity,
 		mPosition;
@@ -209,7 +189,6 @@ private:
 	oclHelper mOCLHelper;
 	Particle::OCLData mOCLData;
 	Particle::CUDAta mCUData;
-	ThrustHelper::ThrustParticleData* mThrustData;
 	Stopwatch mClock;
 	std::vector<MinMaxData> mStaticCollision;
 	bool mMeasureTime,
@@ -219,7 +198,6 @@ private:
 	void iUpdateCompute(float dt);
 	void iUpdateOCL(float dt);
 	void iUpdateCUDA(float dt);
-	void iUpdateThrust(float dt);
 	ofVec3f iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt);
 };
 
