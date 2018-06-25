@@ -14,7 +14,7 @@ struct MinMaxData
 {
 	ofVec4f min, max;
 
-	MinMaxData operator+(ofVec4f p_)
+	MinMaxData operator+(const ofVec4f& p_) const
 	{
 		MinMaxData tmp;
 		tmp.min = this->min + p_;

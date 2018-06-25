@@ -85,12 +85,11 @@ public:
 	// sets a new computation mode; usually used in combination with "nextMode"
 	void setMode(ComputeMode m);
 
-	void getCollisions(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
+	void getCollisions(const std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
 
 private:
 	ComputeMode mMode;
 	bool mAvailableModes[static_cast<size_t>(ComputeMode::COMPUTEMODES_SIZE)];
-	//std::vector<MinMaxData> mMinMax;
 	ComputeShaderData mComputeData;
 	CUDAta mCudata;
 	oclHelper mOCLHelper;
@@ -98,9 +97,9 @@ private:
 	ThrustHelper::ThrustData mThrustData;
 	bool mCPUThreshold;
 
-	void iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
-	void iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
-	void iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
-	void iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
-	void iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsCPU(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsCompute(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsCUDA(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsOCL(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsThrust(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
 };

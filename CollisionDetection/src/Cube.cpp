@@ -33,12 +33,12 @@ void Cube::recalculateMinMax()
 	mMinMax.max = max;
 }
 
-MinMaxData Cube::getLocalMinMax()
+MinMaxData Cube::getLocalMinMax() const
 {
 	return mMinMax;
 }
 
-MinMaxData Cube::getGlobalMinMax()
+MinMaxData Cube::getGlobalMinMax() const
 {
 	return mMinMax + this->getPosition();
 }

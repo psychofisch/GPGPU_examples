@@ -16,9 +16,10 @@ public:
 
 	// this method needs to be called everytime the objects gets rotated (TODO: overload rotate-functions?)
 	void recalculateMinMax();
-	MinMaxData getLocalMinMax();
+	// returns the local dimensions of the object
+	MinMaxData getLocalMinMax() const;
 	// adds the global position to the minMax values
-	MinMaxData getGlobalMinMax();
+	MinMaxData getGlobalMinMax() const;
 
 private:
 	MinMaxData mMinMax;

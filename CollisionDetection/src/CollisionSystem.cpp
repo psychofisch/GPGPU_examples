@@ -138,39 +138,39 @@ void CollisionSystem::setMode(ComputeMode m)
 	mMode = m;
 }
 
-void CollisionSystem::getCollisions(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
-{
-	switch (mMode)
-	{
-		case CPU: iGetCollisionsCPU(cubes, collisions);
-			break;
-		case COMPUTE_SHADER: iGetCollisionsCompute(cubes, collisions);
-			break;
-		case CUDA: iGetCollisionsCUDA(cubes, collisions);
-			break;
-		case OPENCL: iGetCollisionsOCL(cubes, collisions);
-			break;
-		case THRUST: iGetCollisionsThrust(cubes, collisions);
-			break;
-		default:
-			break;
-	}
-}
-
-void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::getCollisions(const std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
 {
 	if (cubes.size() != collisions.size())
 	{
 		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
 	}
 
-	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
-	// read bounding boxes
+	std::vector<MinMaxData> minMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
+	 // read bounding boxes
 	for (int i = 0; i < cubes.size(); ++i)
 	{
-		mMinMax[i] = cubes[i].getGlobalMinMax();
+		minMax[i] = cubes[i].getGlobalMinMax();
 	}
 
+	switch (mMode)
+	{
+		case CPU: iGetCollisionsCPU(minMax, collisions);
+			break;
+		case COMPUTE_SHADER: iGetCollisionsCompute(minMax, collisions);
+			break;
+		case CUDA: iGetCollisionsCUDA(minMax, collisions);
+			break;
+		case OPENCL: iGetCollisionsOCL(minMax, collisions);
+			break;
+		case THRUST: iGetCollisionsThrust(minMax, collisions);
+			break;
+		default:
+			break;
+	}
+}
+
+void CollisionSystem::iGetCollisionsCPU(std::vector<MinMaxData>& mMinMax, OUT std::vector<int>& collisions)
+{
 	// check min and max of all boxes for collision
 	std::vector<int> tmpCol(collisions.size());// OPT: local storage has a bit better performance again
 	for (int i = 0; i < mMinMax.size(); i++) 
@@ -214,13 +214,8 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<Cube>& cubes, OUT std::vecto
 	collisions = tmpCol;
 }
 
-void CollisionSystem::iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsCompute(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)
 {
-	if (cubes.size() != collisions.size())
-	{
-		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
-	}
-
 	if (mComputeData.minMaxBuffer.size() < sizeof(MinMaxData) * cubes.size())
 	{
 		mComputeData.minMaxBuffer.allocate(sizeof(MinMaxData) * cubes.size(), GL_DYNAMIC_DRAW);
@@ -231,17 +226,8 @@ void CollisionSystem::iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::v
 		mComputeData.collisionBuffer.allocate(sizeof(int) * cubes.size(), GL_DYNAMIC_DRAW);
 	}
 
-	std::vector<MinMaxData> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
-	// read bounding boxes
-	for (int i = 0; i < cubes.size(); ++i)
-	{
-		MinMaxData currentCube = cubes[i].getGlobalMinMax();
-		mMinMax[i].min = currentCube.min;
-		mMinMax[i].max = currentCube.max;
-	}
-
 	// copy minMax data to GPU
-	mComputeData.minMaxBuffer.updateData(mMinMax);
+	mComputeData.minMaxBuffer.updateData(cubes);
 
 	mComputeData.minMaxBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
 	mComputeData.collisionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
@@ -260,13 +246,8 @@ void CollisionSystem::iGetCollisionsCompute(std::vector<Cube>& cubes, OUT std::v
 	mComputeData.collisionBuffer.unmap();
 }
 
-void CollisionSystem::iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsCUDA(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)
 {
-	if (cubes.size() != collisions.size())
-	{
-		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
-	}
-
 	if (mCudata.currentArraySize < cubes.size())
 	{
 		if (mCudata.currentArraySize > 0)
@@ -285,17 +266,8 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vect
 		checkCudaErrors(cudaMalloc(&mCudata.collisionBuffer, sizeof(int) * mCudata.currentArraySize));
 	}
 
-	std::vector<float4> minMax(mCudata.currentArraySize * 2);
-	// read bounding boxes
-	for (int i = 0; i < cubes.size(); ++i)
-	{
-		MinMaxData currentCube = cubes[i].getGlobalMinMax();
-		minMax[(i * 2)] = make_float4(currentCube.min);
-		minMax[(i * 2) +1] = make_float4(currentCube.max);
-	}
-
 	// copy the minMax data to the GPU
-	checkCudaErrors(cudaMemcpy(mCudata.minMaxBuffer, minMax.data(), sizeof(float4) * 2 *  mCudata.currentArraySize, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpy(mCudata.minMaxBuffer, cubes.data(), sizeof(float4) * 2 *  mCudata.currentArraySize, cudaMemcpyHostToDevice));
 
 	// calculate the collisions
 	cudaGetCollisions(mCudata.minMaxBuffer, mCudata.collisionBuffer, mCudata.currentArraySize);
@@ -304,22 +276,8 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<Cube>& cubes, OUT std::vect
 	checkCudaErrors(cudaMemcpy(&collisions[0], mCudata.collisionBuffer, sizeof(int) * mCudata.currentArraySize, cudaMemcpyDeviceToHost));
 }
 
-void CollisionSystem::iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsOCL(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)
 {
-	if (cubes.size() != collisions.size())
-	{
-		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
-	}
-
-	std::vector<float4> minMax(cubes.size() * 2);
-	// read bounding boxes
-	for (int i = 0; i < cubes.size(); ++i)
-	{
-		MinMaxData currentCube = cubes[i].getGlobalMinMax();
-		minMax[(i * 2)] = make_float4(currentCube.min);
-		minMax[(i * 2) + 1] = make_float4(currentCube.max);
-	}
-
 	if (mOCLData.currentArraySize < cubes.size())
 	{
 		mOCLData.currentArraySize = cubes.size();
@@ -337,7 +295,7 @@ void CollisionSystem::iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vecto
 	cl::CommandQueue queue = mOCLHelper.getCommandQueue();
 
 	// copy the minMaxBuffer to the GPU
-	err = queue.enqueueWriteBuffer(mOCLData.minMaxBuffer, CL_FALSE, 0, sizeof(float4) * 2 * mOCLData.currentArraySize, &minMax[0]);
+	err = queue.enqueueWriteBuffer(mOCLData.minMaxBuffer, CL_FALSE, 0, sizeof(float4) * 2 * mOCLData.currentArraySize, cubes.data());
 	oclHelper::handle_clerror(err, __LINE__);
 
 	cl::Kernel kernel = mOCLHelper.getKernel();
@@ -376,22 +334,8 @@ void CollisionSystem::iGetCollisionsOCL(std::vector<Cube>& cubes, OUT std::vecto
 	oclHelper::handle_clerror(err, __LINE__);
 }
 
-void CollisionSystem::iGetCollisionsThrust(std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsThrust(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)
 {
-	if (cubes.size() != collisions.size())
-	{
-		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
-	}
-
-	thrust::host_vector<ThrustHelper::MinMaxDataThrust> mMinMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
-	// read bounding boxes
-	for (int i = 0; i < cubes.size(); ++i)
-	{
-		MinMaxData currentCube = cubes[i].getGlobalMinMax();
-		mMinMax[i].min = make_float4(currentCube.min);
-		mMinMax[i].max = make_float4(currentCube.max);
-	}
-
 	// check min and max of all boxes for collision
-	ThrustHelper::thrustGetCollisions(mThrustData, mMinMax.data(), collisions.data(), collisions.size());
+	ThrustHelper::thrustGetCollisions(mThrustData, reinterpret_cast<ThrustHelper::MinMaxDataThrust*>(cubes.data()), collisions.data(), collisions.size());
 }

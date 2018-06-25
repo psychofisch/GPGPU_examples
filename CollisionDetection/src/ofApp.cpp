@@ -161,8 +161,10 @@ void ofApp::update(){
 	//*** mc
 
 	// Collision detection
-	if(mHudCollision)
+	if (mHudCollision)
+	{
 		mCollisionSystem.getCollisions(mCubes, mCollisions);
+	}
 	//*** cd
 
 	if (!mHudPause || mHudStep)
