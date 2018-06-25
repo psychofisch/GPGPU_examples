@@ -38,8 +38,6 @@ class ofApp : public ofBaseApp{
 		ofVec3f mCameraRotation;
 		float mMouseSens;
 		bool mLockMouse;
-
-		Cube mTestCube;
 		std::vector<Cube> mCubes;
 
 		ofxXmlSettings mXmlSettings;
@@ -53,7 +51,6 @@ class ofApp : public ofBaseApp{
 		ofParameterGroup mHudControlGroup;
 		ofParameter<std::string> mHudMode;
 		ofParameter<size_t> mHudWorkGroup;
-		//ofParameter<std::string> mHudParticles;
 		ofParameter<bool> mHudPause;
 		ofParameter<bool> mHudStep;
 		ofParameter<bool> mHudDraw;

@@ -18,19 +18,20 @@ void ofApp::setup(){
 	ofSetVerticalSync(false);
 	ofBackground(69, 69, 69);
 
-	mTestCube.setResolution(1);
-	mTestCube.setScale(1.f);
-	mTestCube.set(10.f);
-	mTestCube.setPosition(ofVec3f(0.f));
+	Cube templateCube;
+	templateCube.setResolution(1);
+	templateCube.setScale(1.f);
+	templateCube.set(10.f);
+	templateCube.setPosition(ofVec3f(0.f));
 
 	int boxNumber = mXmlSettings.getValue("GENERAL:BOXES", 1000);
 	int sqrtBox = sqrtf(boxNumber);
-	float side = mTestCube.getWidth();
+	float side = templateCube.getWidth();
 	ofVec3f boxPos(0.f);
 	ofVec3f direction;
 	float ringSize = std::max(boxNumber * 0.15f, side * 5.f);
 	float ringWidth = 0.3f;
-	mCubes.resize(boxNumber, mTestCube);
+	mCubes.resize(boxNumber, templateCube);
 	mCollisions.resize(boxNumber, false);
 	for (int i = 0; i < boxNumber; ++i)
 	{
@@ -254,7 +255,6 @@ void ofApp::keyReleased(int key){
 		case 'h':
 			std::cout << "Camera:" << mMainCamera.getPosition() << std::endl;
 			std::cout << "Camera:" << mMainCamera.getGlobalOrientation() << std::endl;
-			std::cout << "Box: " << mTestCube.getPosition() << std::endl;
 			break;
 		case 'r':
 			break;
