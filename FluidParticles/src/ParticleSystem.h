@@ -176,6 +176,11 @@ public:
 	// a generic switch used in debugging
 	void toggleGenericSwitch();
 
+	// static functions
+	
+	// get string representation of the ComputeMode enum
+	static std::string getComputeModeString(const ParticleSystem::ComputeMode m);
+
 private:
 	size_t mNumberOfParticles,
 		mCapacity,

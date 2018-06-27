@@ -90,7 +90,7 @@ void ofApp::setup() {
 	mHud.add(mHudGameGroup);
 	mHud.loadFromFile("hud.xml");
 
-	mHudMode = iHudGetModeString(mParticleSystem->getMode());
+	mHudMode = ParticleSystem::getComputeModeString(mParticleSystem->getMode());
 
 	std::cout << "OpenGL " << ofGetGLRenderer()->getGLVersionMajor() << "." << ofGetGLRenderer()->getGLVersionMinor() << std::endl;
 
@@ -323,7 +323,7 @@ void ofApp::keyReleased(int key) {
 	{
 		ParticleSystem::ComputeMode currentMode = mParticleSystem->nextMode(mParticleSystem->getMode());
 		mParticleSystem->setMode(currentMode);
-		mHudMode = iHudGetModeString(currentMode);
+		mHudMode = ParticleSystem::getComputeModeString(currentMode);
 	}
 	break;
 	case 'y':	mParticleSystem->toggleGenericSwitch();
@@ -460,20 +460,4 @@ void ofApp::quit()
 	}
 	std::cout << "quitting...bye =)\n";
 	this->exit();
-}
-
-std::string ofApp::iHudGetModeString(ParticleSystem::ComputeMode m)
-{
-	if (m == ParticleSystem::ComputeMode::CPU)
-		return "CPU";
-	else if (m == ParticleSystem::ComputeMode::COMPUTE_SHADER)
-		return "Compute Shader";
-	else if (m == ParticleSystem::ComputeMode::OPENCL)
-		return "OpenCL";
-	else if (m == ParticleSystem::ComputeMode::CUDA)
-		return "CUDA";
-	/*else if (m == ParticleSystem::ComputeMode::THRUST)
-		return "Thrust";*/
-	else
-		return "UNKNOWN";
 }

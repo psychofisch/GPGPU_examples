@@ -73,6 +73,4 @@ private:
 	ofParameter<std::string> mHudGameGameState;
 	ofParameter<std::string> mHudGameHelp;
 	ofParameter<float> mHudGameTime;
-
-	std::string iHudGetModeString(ParticleSystem::ComputeMode m);
 };

@@ -95,11 +95,11 @@ __kernel void particleUpdate(
 			continue;
 
 		if (intersection.x == currentAABB.max.x || intersection.x == currentAABB.min.x)
-			particleVelocity.x *= -1.0;
+			particleVelocity.x *= -fluidDamp;
 		else if (intersection.y == currentAABB.max.y || intersection.y == currentAABB.min.y)
-			particleVelocity.y *= -1.0;
+			particleVelocity.y *= -fluidDamp;
 		else if (intersection.z == currentAABB.max.z || intersection.z == currentAABB.min.z)
-			particleVelocity.z *= -1.0;
+			particleVelocity.z *= -fluidDamp;
 		//else
 		//	std::cout << "W00T!?\n";//DEBUG
 

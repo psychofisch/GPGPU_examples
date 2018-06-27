@@ -567,8 +567,8 @@ void ParticleSystem::update(float dt)
 
 	uint64_t cycle;
 	if (mMeasureTime)
-		//mClock.start();
-		cycle = __rdtsc();
+		mClock.start();
+		//cycle = __rdtsc();
 
 	// each update computes the new particle positions and stores them into mParticlePosition (on the CPU)
 	switch (mMode)
@@ -595,10 +595,10 @@ void ParticleSystem::update(float dt)
 
 	if (mMeasureTime)
 	{
-		//double time = mClock.getDuration(mClock.stop());
-		//std::cout << time << std::endl;
-		cycle = __rdtsc() - cycle;
-		std::cout << /*mNumberOfParticles << ";" <<*/ cycle << std::endl;
+		double time = mClock.getDuration(mClock.stop());
+		std::cout << time << std::endl;
+		//cycle = __rdtsc() - cycle;
+		//std::cout << /*mNumberOfParticles << ";" <<*/ cycle << std::endl;
 		mMeasureTime = false;
 	}
 }
@@ -921,4 +921,20 @@ uint ParticleSystem::debug_testIfParticlesOutside()
 void ParticleSystem::toggleGenericSwitch()
 {
 	mGenericSwitch = !mGenericSwitch;
+}
+
+std::string ParticleSystem::getComputeModeString(const ParticleSystem::ComputeMode m)
+{
+	if (m == ParticleSystem::ComputeMode::CPU)
+		return "CPU";
+	else if (m == ParticleSystem::ComputeMode::COMPUTE_SHADER)
+		return "Compute Shader";
+	else if (m == ParticleSystem::ComputeMode::OPENCL)
+		return "OpenCL";
+	else if (m == ParticleSystem::ComputeMode::CUDA)
+		return "CUDA";
+	else if (m == ParticleSystem::ComputeMode::THRUST)
+	return "Thrust";
+	else
+		return "UNKNOWN";
 }
