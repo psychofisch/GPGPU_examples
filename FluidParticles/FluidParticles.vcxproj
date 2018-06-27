@@ -132,6 +132,9 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;$(CUDA_PATH_V9_1)/lib/x64;..\NvidiaOpenCL\lib\x64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
+    <CudaCompile>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -176,6 +179,9 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;$(CUDA_PATH_V9_1)/lib/x64;..\NvidiaOpenCL\lib\x64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
+    <CudaCompile>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Cube.cpp" />

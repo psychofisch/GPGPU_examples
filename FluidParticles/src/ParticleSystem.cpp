@@ -416,6 +416,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	{
 		mComputeData.positionBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mParticlePosition.data() + mNumberOfParticles);
 		mComputeData.velocityBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, sizeof(ofVec4f) * particleCap, mParticleVelocity.data() + mNumberOfParticles);
+		HANDLE_GL_ERROR();
 	}
 	else if (mMode == ComputeMode::OPENCL)
 	{
@@ -694,7 +695,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		tmpPos[i] = particlePosition + mPosition; // add the system position offset
 	}
 
-	mParticlePosition = tmpPos;
+	std::copy(tmpPos.begin(), tmpPos.end(), mParticlePosition.begin());
 }
 
 ofVec3f ParticleSystem::iCalculatePressureVector(size_t index, ofVec4f pos, ofVec4f vel, float dt)
