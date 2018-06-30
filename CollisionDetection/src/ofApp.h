@@ -27,7 +27,9 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
-		
+
+		void resetCubes(int numberOfCubes);
+
 		void quit();
 
 	private:
@@ -50,6 +52,7 @@ class ofApp : public ofBaseApp{
 
 		ofParameterGroup mHudControlGroup;
 		ofParameter<std::string> mHudMode;
+		ofParameter<std::string> mHudCubes;
 		ofParameter<size_t> mHudWorkGroup;
 		ofParameter<bool> mHudPause;
 		ofParameter<bool> mHudStep;

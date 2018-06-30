@@ -18,60 +18,7 @@ void ofApp::setup(){
 	ofSetVerticalSync(false);
 	ofBackground(69, 69, 69);
 
-	Cube templateCube;
-	templateCube.setResolution(1);
-	templateCube.setScale(1.f);
-	templateCube.set(10.f);
-	templateCube.setPosition(ofVec3f(0.f));
-
-	int boxNumber = mXmlSettings.getValue("GENERAL:BOXES", 1000);
-	int sqrtBox = sqrtf(boxNumber);
-	float side = templateCube.getWidth();
-	ofVec3f boxPos(0.f);
-	ofVec3f direction;
-	float ringSize = std::max(boxNumber * 0.15f, side * 5.f);
-	float ringWidth = 0.3f;
-	mCubes.resize(boxNumber, templateCube);
-	mCollisions.resize(boxNumber, false);
-	for (int i = 0; i < boxNumber; ++i)
-	{
-		if (i > boxNumber * 0.666f)
-		{
-			direction.x = ofRandom(-1.f, 1.0f);
-			direction.y = ofRandom(-0.1f, 0.1f);
-			direction.z = ofRandom(-1.f, 1.0f);
-		}
-		else if (i > boxNumber * 0.333f)
-		{
-			direction.x = ofRandom(-1.f, 1.0f);
-			direction.z = ofRandom(-0.1f, 0.1f);
-			direction.y = ofRandom(-1.f, 1.0f);
-		}
-		else
-		{
-			direction.z = ofRandom(-1.f, 1.0f);
-			direction.x = ofRandom(-0.1f, 0.1f);
-			direction.y = ofRandom(-1.f, 1.0f);
-		}
-		direction.normalize();
-
-		boxPos = direction * (ringSize * ofRandom(1.f - ringWidth, 1.f + ringWidth));
-
-		//shape
-		mCubes[i].set(side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f));
-
-		//position
-		mCubes[i].setPosition(boxPos);
-
-		//color
-		if (i % 2 == 0)
-			mCubes[i].mColor = ofColor::cyan;
-		else
-			mCubes[i].mColor = ofColor::magenta;
-
-		//minMax
-		mCubes[i].recalculateMinMax();
-	}
+	resetCubes(mXmlSettings.getValue("GENERAL:BOXES", 1000));
 
 	mCollisionSystem.setupAll(mXmlSettings);
 
@@ -102,6 +49,7 @@ void ofApp::setup(){
 
 	mHudControlGroup.setName("Program Information");
 	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
+	mHudControlGroup.add(mHudCubes.set("Cubes", ofToString(mCubes.size())));
 	mHudControlGroup.add(mHudMovement.set("Movement", true));
 	mHudControlGroup.add(mHudDraw.set("Draw", true));
 	mHudControlGroup.add(mHudCollision.set("Collisions", true));
@@ -259,8 +207,13 @@ void ofApp::keyReleased(int key){
 			std::cout << "Camera:" << mMainCamera.getGlobalOrientation() << std::endl;
 			break;
 		case 'r':
+			mCubes.resize(0);
+			mCollisions.resize(0);
+			mHudCubes = ofToString(mCubes.size());
 			break;
-		case 'n':
+		case 'e':
+			resetCubes(mCubes.size() + mXmlSettings.getValue("GENERAL:ADD", 100));
+			mHudCubes = ofToString(mCubes.size());
 			break;
 		case 't':
 			break; 
@@ -357,6 +310,64 @@ void ofApp::windowResized(int w, int h){
 //--------------------------------------------------------------
 void ofApp::gotMessage(ofMessage msg){
 
+}
+
+void ofApp::resetCubes(int numberOfCubes)
+{
+	Cube templateCube;
+	templateCube.setResolution(1);
+	templateCube.setScale(1.f);
+	templateCube.set(10.f);
+	templateCube.setPosition(ofVec3f(0.f));
+
+	int boxNumber = numberOfCubes;
+	int sqrtBox = sqrtf(boxNumber);
+	float side = templateCube.getWidth();
+	ofVec3f boxPos(0.f);
+	ofVec3f direction;
+	float ringSize = std::max(boxNumber * 0.15f, side * 5.f);
+	float ringWidth = 0.3f;
+	mCubes.resize(boxNumber, templateCube);
+	mCollisions.resize(boxNumber, false);
+	for (int i = 0; i < boxNumber; ++i)
+	{
+		if (i > boxNumber * 0.666f)
+		{
+			direction.x = ofRandom(-1.f, 1.0f);
+			direction.y = ofRandom(-0.1f, 0.1f);
+			direction.z = ofRandom(-1.f, 1.0f);
+		}
+		else if (i > boxNumber * 0.333f)
+		{
+			direction.x = ofRandom(-1.f, 1.0f);
+			direction.z = ofRandom(-0.1f, 0.1f);
+			direction.y = ofRandom(-1.f, 1.0f);
+		}
+		else
+		{
+			direction.z = ofRandom(-1.f, 1.0f);
+			direction.x = ofRandom(-0.1f, 0.1f);
+			direction.y = ofRandom(-1.f, 1.0f);
+		}
+		direction.normalize();
+
+		boxPos = direction * (ringSize * ofRandom(1.f - ringWidth, 1.f + ringWidth));
+
+		//shape
+		mCubes[i].set(side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f));
+
+		//position
+		mCubes[i].setPosition(boxPos);
+
+		//color
+		if (i % 2 == 0)
+			mCubes[i].mColor = ofColor::cyan;
+		else
+			mCubes[i].mColor = ofColor::magenta;
+
+		//minMax
+		mCubes[i].recalculateMinMax();
+	}
 }
 
 //--------------------------------------------------------------

@@ -140,6 +140,9 @@ void CollisionSystem::setMode(ComputeMode m)
 
 void CollisionSystem::getCollisions(const std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
 {
+	if (cubes.size() == 0)
+		return;
+
 	if (cubes.size() != collisions.size())
 	{
 		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
