@@ -180,11 +180,6 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<MinMaxData>& mMinMax, OUT st
 	{
 		const ofVec3f currentMin = mMinMax[i].min;
 		const ofVec3f currentMax = mMinMax[i].max;
-		ofVec3f test(0, 1, 2);
-
-		test[0] = 10;
-		
-		test.x = 5;
 		
 		//ofVec3f otherMin, otherMax;
 		int result = -1;
