@@ -82,27 +82,23 @@ void ofApp::update(){
 	// move cubes
 	ofSeedRandom(1337);//seed every frame so that every cube has a constant "random" speed value
 	ofNode pos;
-	int half = mCubes.size() * 0.5f;
-	for (int i = 0; i < mCubes.size() && mHudMovement; ++i)
+	for (size_t i = 0; i < mCubes.size() && mHudMovement; ++i)
 	{
 		float r = ofRandom(0.8f, 1.2f);
-		float sign = 1.f;
-		if (i > half)
-			sign *= -1.f;
+
 		pos.setPosition(mCubes[i].getPosition());
 
+		ofVec3f axis = vec3::left;
 		if (i > mCubes.size() * 0.666f)
 		{
-			pos.rotateAround(sign * 30.f * r * dt, vec3::up, ofVec3f::zero());
+			axis = vec3::up;
 		}
 		else if (i > mCubes.size() * 0.333f)
 		{
-			pos.rotateAround(sign * 30.f * r * dt, vec3::forward, ofVec3f::zero());
+			axis = vec3::forward;
 		}
-		else
-		{
-			pos.rotateAround(sign * 30.f * r * dt, vec3::left, ofVec3f::zero());
-		}
+
+		pos.rotateAround(30.f * r * dt, axis, ofVec3f::zero());
 		
 		mCubes[i].setPosition(pos.getPosition());
 	}
@@ -360,10 +356,11 @@ void ofApp::resetCubes(int numberOfCubes)
 		mCubes[i].setPosition(boxPos);
 
 		//color
-		if (i % 2 == 0)
+		mCubes[i].mColor = ofColor::cyan;
+		/*if (i % 2 == 0)
 			mCubes[i].mColor = ofColor::cyan;
 		else
-			mCubes[i].mColor = ofColor::magenta;
+			mCubes[i].mColor = ofColor::magenta;*/
 
 		//minMax
 		mCubes[i].recalculateMinMax();

@@ -1,6 +1,6 @@
 <group>
 	<Debug_Information>
-		<FPS>52</FPS>
+		<FPS>48</FPS>
 	</Debug_Information>
 	<Program_Information>
 		<Mode>CUDA</Mode>
@@ -12,7 +12,7 @@
 	<Movement>1</Movement>
 	<Draw>1</Draw>
 	<Collisions>1</Collisions>
-	<Cubes>5000</Cubes>
+	<Cubes>1000</Cubes>
 	</Program_Information>
 	<Simulation_Settings>
 		<Smoothing_Width>0.382653</Smoothing_Width>

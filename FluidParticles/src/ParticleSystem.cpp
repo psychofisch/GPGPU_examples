@@ -146,7 +146,7 @@ void ParticleSystem::setupOCL(ofxXmlSettings & settings)
 			mOCLData.positionOutBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * mCapacity);
 			mOCLData.velocityBuffer = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(ofVec4f) * mCapacity);
 
-			// query the maximum work group size rom the device
+			// query the maximum work group size from the device
 			cl_int err = mOCLHelper.getDevice().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &mOCLData.maxWorkGroupSize);
 			mOCLData.maxWorkGroupSize /= 2;//testing showed best performance at half the max ThreadCount
 			oclHelper::handle_clerror(err, __LINE__);

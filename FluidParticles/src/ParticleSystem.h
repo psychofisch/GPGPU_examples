@@ -68,7 +68,7 @@ namespace Particle
 	//definitions for CUDA
 	struct CUDAta
 	{
-		size_t maxWorkGroupSize;
+		int maxWorkGroupSize;
 		float4 *position;
 		float4 *positionOut;
 		float4 *velocity;
