@@ -9,6 +9,8 @@
 //#include "ParticleSystem.h"
 #include "CollisionSystem.h"
 
+#define HANDLE_GL_ERROR() {GLenum err; while ((err = glGetError()) != GL_NO_ERROR) ofLogNotice() << __FILE__ << ":" << __LINE__ << ": GL error:	" << err;}
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -41,6 +43,13 @@ class ofApp : public ofBaseApp{
 		float mMouseSens;
 		bool mLockMouse;
 		std::vector<Cube> mCubes;
+		CollisionSystem mCollisionSystem;
+		std::vector<int> mCollisions;
+		std::vector<ofVec4f> mCubePosAndSize;
+		ofShader mBoxShader;
+		ofBufferObject mPosAndSize;
+		ofBufferObject mGPUCollisions;
+		ofVboMesh mTemplateCube;
 
 		ofxXmlSettings mXmlSettings;
 
@@ -61,7 +70,4 @@ class ofApp : public ofBaseApp{
 		ofParameter<bool> mHudCollision;
 
 		std::string iHudGetModeString(CollisionSystem::ComputeMode m);
-
-		CollisionSystem mCollisionSystem;
-		std::vector<int> mCollisions;
 };

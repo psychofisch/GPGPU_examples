@@ -298,16 +298,19 @@
     <ResourceCompile Include="icon.rc" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="bin\data\collision.compute">
-      <Filter>src</Filter>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
     <CudaCompile Include="src\ThrustHelper.cu">
       <Filter>src</Filter>
     </CudaCompile>
     <CudaCompile Include="src\collision.cu">
       <Filter>src</Filter>
     </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\data\collision.cl">
+      <Filter>src</Filter>
+    </None>
+    <None Include="bin\data\collision.compute">
+      <Filter>src</Filter>
+    </None>
   </ItemGroup>
 </Project>

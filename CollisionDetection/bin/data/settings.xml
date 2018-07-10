@@ -1,6 +1,8 @@
 <GENERAL>
     <BOXES>5000</BOXES>
     <ADD>1000</ADD>
+    <VERT>simple.vert</VERT>
+    <FRAG>simple.frag</FRAG>
 </GENERAL>
 <CONTROLS>
     <MOUSESENS>0.800000012</MOUSESENS>

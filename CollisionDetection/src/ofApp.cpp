@@ -19,6 +19,9 @@ void ofApp::setup(){
 	ofBackground(69, 69, 69);
 
 	resetCubes(mXmlSettings.getValue("GENERAL:BOXES", 1000));
+	ofBoxPrimitive tmpBox;
+	tmpBox.set(1.0f);
+	mTemplateCube = tmpBox.getMesh();
 
 	mCollisionSystem.setupAll(mXmlSettings);
 
@@ -26,7 +29,7 @@ void ofApp::setup(){
 	//mMainCamera.setNearClip(0.01f);
 	//mMainCamera.setFarClip(50.f);
 	mMainCamera.setupPerspective(true, 90.f, 0.01, 10000.f);
-	mMainCamera.setPosition(0, 10.f, 10.f);
+	mMainCamera.setPosition(0, 0.f, 0.f);
 
 	mLight.setPointLight();
 	mLight.setPosition(ofVec3f(0.f, 30.f, 0.f));
@@ -43,6 +46,11 @@ void ofApp::setup(){
 	mMouse = vec2i(-1, -1);
 	mMouseSens = mXmlSettings.getValue("CONTROLS:MOUSESENS", 0.8f);
 
+	// box shader setup
+	mBoxShader.load(mXmlSettings.getValue("GENERAL:VERT", ""), mXmlSettings.getValue("GENERAL:FRAG", ""));
+	HANDLE_GL_ERROR();
+
+	// HUD setup
 	mHudDebugGroup.setName("Debug Information");
 	mHudDebugGroup.add(mHudFps.set("FPS", -1.f));
 	//mHudDebugGroup.add(mHudRotation.set("Rotation", mGlobalRotation));
@@ -80,13 +88,15 @@ void ofApp::update(){
 	mMainCamera.truck(moveVec.x);
 
 	// move cubes
+
 	ofSeedRandom(1337);//seed every frame so that every cube has a constant "random" speed value
 	ofNode pos;
 	for (size_t i = 0; i < mCubes.size() && mHudMovement; ++i)
 	{
 		float r = ofRandom(0.8f, 1.2f);
 
-		pos.setPosition(mCubes[i].getPosition());
+		//pos.setPosition(mCubes[i].getPosition());
+		pos.setPosition(mCubePosAndSize[i * 2]);
 
 		ofVec3f axis = vec3::left;
 		if (i > mCubes.size() * 0.666f)
@@ -101,13 +111,36 @@ void ofApp::update(){
 		pos.rotateAround(30.f * r * dt, axis, ofVec3f::zero());
 		
 		mCubes[i].setPosition(pos.getPosition());
+
+		mCubePosAndSize[i * 2] = pos.getPosition();
 	}
+
+	if (mCubePosAndSize.size() > 0 && mPosAndSize.size() < sizeof(ofVec4f) * mCubePosAndSize.size())
+	{
+		std::cout << "mCubePosAndSize reallocate\n";
+		mPosAndSize.allocate(mCubePosAndSize, GL_DYNAMIC_DRAW);
+		//mPosAndSize.allocate(sizeof(ofVec4f) * mCubePosAndSize.size(), GL_DYNAMIC_DRAW);
+	}
+	else
+		mPosAndSize.updateData(mCubePosAndSize);
+	HANDLE_GL_ERROR();
 	//*** mc
 
 	// Collision detection
 	if (mHudCollision)
 	{
 		mCollisionSystem.getCollisions(mCubes, mCollisions);
+
+		if (mCollisions.size() > 0)
+		{
+			if (mGPUCollisions.size() < sizeof(int) * mCollisions.size())
+			{
+				std::cout << "mGPUCollisions reallocate\n";
+				mGPUCollisions.allocate(mCollisions, GL_DYNAMIC_DRAW);
+				//mPosAndSize.allocate(sizeof(ofVec4f) * mCubePosAndSize.size(), GL_DYNAMIC_DRAW);
+			}else
+				mGPUCollisions.updateData(mCollisions);
+		}
 	}
 	//*** cd
 
@@ -125,40 +158,31 @@ void ofApp::update(){
 void ofApp::draw(){
 	ofEnableDepthTest();
 
-	//mMainCamera.lookAt(ofVec3f(0.f));
-	ofEnableLighting();
-	mLight.enable();
 	mMainCamera.begin();
 
-	//mTestCube.draw(ofPolyRenderMode::OF_MESH_WIREFRAME);
-	
-	ofPushMatrix();
-	//ofRotate(angle, axis.x, axis.y, axis.z);
-	//ofTranslate(-mParticleSystem->getDimensions() * 0.5f);
-	ofPushStyle();
-
-	for (int i = 0; i < mCubes.size() && mHudDraw; ++i)
+	if (mCubes.size() > 0)
 	{
-		if(mCollisions[i] >= 0)
-			ofSetColor(ofColor::red);
-		else
-			ofSetColor(mCubes[i].mColor);
-		mCubes[i].draw();
-		//mCubes[i].drawWireframe();
-	}
-	//ofSetColor(mHudColor);
-	//mTestCube.draw();
+		mBoxShader.begin();
 
-	ofPopStyle();
-	ofPopMatrix();
+		mPosAndSize.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
+		mGPUCollisions.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
+
+		mBoxShader.setUniform1i("noOfBoxes", mCubes.size());
+		mBoxShader.setUniform1i("collisionsOn", (mHudCollision) ? 1 : 0);
+		mBoxShader.setUniform3f("sunPos", ofVec3f(0, 0, 0));
+
+		mTemplateCube.drawInstanced(ofPolyRenderMode::OF_MESH_FILL, mCubes.size());
+
+		mBoxShader.end();
+	}
 
 	mMainCamera.end();
-	mLight.disable();
-	ofDisableLighting();
 
 	ofDisableDepthTest();
 
 	mHud.draw();
+
+	HANDLE_GL_ERROR();
 }
 
 //--------------------------------------------------------------
@@ -315,6 +339,8 @@ void ofApp::resetCubes(int numberOfCubes)
 	templateCube.setScale(1.f);
 	templateCube.set(10.f);
 	templateCube.setPosition(ofVec3f(0.f));
+	templateCube.disableColors();
+	templateCube.disableTextures();
 
 	int boxNumber = numberOfCubes;
 	int sqrtBox = sqrtf(boxNumber);
@@ -324,7 +350,8 @@ void ofApp::resetCubes(int numberOfCubes)
 	float ringSize = std::max(boxNumber * 0.15f, side * 5.f);
 	float ringWidth = 0.3f;
 	mCubes.resize(boxNumber, templateCube);
-	mCollisions.resize(boxNumber, false);
+	mCollisions.resize(boxNumber, -1);
+	mCubePosAndSize.resize(boxNumber * 2);
 	for (int i = 0; i < boxNumber; ++i)
 	{
 		if (i > boxNumber * 0.666f)
@@ -351,9 +378,11 @@ void ofApp::resetCubes(int numberOfCubes)
 
 		//shape
 		mCubes[i].set(side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f));
+		mCubePosAndSize[(i * 2) + 1] = mCubes[i].getSize();
 
 		//position
-		mCubes[i].setPosition(boxPos);
+		//mCubes[i].setPosition(boxPos);
+		mCubePosAndSize[i * 2] = boxPos;
 
 		//color
 		mCubes[i].mColor = ofColor::cyan;
