@@ -41,6 +41,8 @@ void ofApp::setup(){
 		maxParticles = 5000;
 	}
 
+	//mTargetCollisions = mXmlSettings.getValue("GENERAL:COLPERC", 0.1f);
+
 	mLockMouse = false;
 
 	mMouse = vec2i(-1, -1);
@@ -53,6 +55,7 @@ void ofApp::setup(){
 	// HUD setup
 	mHudDebugGroup.setName("Debug Information");
 	mHudDebugGroup.add(mHudFps.set("FPS", -1.f));
+	mHudDebugGroup.add(mHudCollisionPercentage.set("Collision%", "??%"));
 	//mHudDebugGroup.add(mHudRotation.set("Rotation", mGlobalRotation));
 
 	mHudControlGroup.setName("Program Information");
@@ -91,6 +94,7 @@ void ofApp::update(){
 
 	ofSeedRandom(1337);//seed every frame so that every cube has a constant "random" speed value
 	ofNode pos;
+	int colCount = 0;
 	for (size_t i = 0; i < mCubes.size() && mHudMovement; ++i)
 	{
 		float r = ofRandom(0.8f, 1.2f);
@@ -113,7 +117,19 @@ void ofApp::update(){
 		mCubes[i].setPosition(pos.getPosition());
 
 		mCubePosAndSize[i * 2] = pos.getPosition();
+
+		// DEBUG: collision percentage
+		if (mCollisions[i] > -1)
+			colCount++;
+		//*** DEBUG
 	}
+
+	// DEBUG: collision percentage
+	if (mCollisions.size() > 0)
+		mHudCollisionPercentage = ofToString(100.f * colCount / mCollisions.size(), 2);
+	else
+		mHudCollisionPercentage = "0";
+	//*** DEBUG
 
 	if (mCubePosAndSize.size() > 0 && mPosAndSize.size() < sizeof(ofVec4f) * mCubePosAndSize.size())
 	{
@@ -152,6 +168,8 @@ void ofApp::update(){
 		//mParticleSystem->update(dt);
 		mHudStep = false;
 	}
+
+	mHudCubes = ofToString(mCubes.size());
 }
 
 //--------------------------------------------------------------
@@ -236,6 +254,9 @@ void ofApp::keyReleased(int key){
 			mHudCubes = ofToString(mCubes.size());
 			break;
 		case 't':
+			/*mXmlSettings.loadFile("settings.xml");
+			mTargetCollisions = mXmlSettings.getValue("GENERAL:COLPERC", 0.1f);
+			resetCubes(mCubes.size());*/
 			break; 
 		case 'u':
 			break;
@@ -334,21 +355,22 @@ void ofApp::gotMessage(ofMessage msg){
 
 void ofApp::resetCubes(int numberOfCubes)
 {
+	float baseBoxSize = 14.95f * powf(numberOfCubes, -0.36f);// this scales the boxes so that ~15-20% of the boxes collide at all times
+
 	Cube templateCube;
 	templateCube.setResolution(1);
 	templateCube.setScale(1.f);
-	templateCube.set(10.f);
+	templateCube.set(baseBoxSize);
 	templateCube.setPosition(ofVec3f(0.f));
 	templateCube.disableColors();
 	templateCube.disableTextures();
 
 	int boxNumber = numberOfCubes;
-	int sqrtBox = sqrtf(boxNumber);
 	float side = templateCube.getWidth();
 	ofVec3f boxPos(0.f);
 	ofVec3f direction;
-	float ringSize = std::max(boxNumber * 0.15f, side * 5.f);
-	float ringWidth = 0.3f;
+	float ringSize = 30.f;//fixed ring size
+	float ringWidth = 0.3f;//relative to ring size
 	mCubes.resize(boxNumber, templateCube);
 	mCollisions.resize(boxNumber, -1);
 	mCubePosAndSize.resize(boxNumber * 2);

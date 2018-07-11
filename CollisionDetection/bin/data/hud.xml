@@ -1,24 +1,13 @@
 <group>
 	<Debug_Information>
-		<FPS>99</FPS>
+		<FPS>41</FPS>
+		<Collision%>14.13</Collision%>
 	</Debug_Information>
 	<Program_Information>
-		<Mode>OpenCL</Mode>
-		<Particles>120/20000</Particles>
-		<Particle_Color>63, 151, 58, 255</Particle_Color>
-	<Workgroup_Size>4095</Workgroup_Size>
-	<Pause>0</Pause>
-		<Step>0</Step>
-	<Movement>1</Movement>
-	<Draw>1</Draw>
-	<Collisions>1</Collisions>
-	<Cubes>11000</Cubes>
+		<Mode>Compute Shader</Mode>
+		<Cubes>20000</Cubes>
+		<Movement>1</Movement>
+		<Draw>1</Draw>
+		<Collisions>1</Collisions>
 	</Program_Information>
-	<Simulation_Settings>
-		<Smoothing_Width>0.382653</Smoothing_Width>
-	<Rest_Density>19.1327</Rest_Density>
-	<Spring>1.27551</Spring>
-		<Spring_Near>1.47959</Spring_Near>
-	</Simulation_Settings>
-<group/>
 </group>

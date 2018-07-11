@@ -50,6 +50,7 @@ class ofApp : public ofBaseApp{
 		ofBufferObject mPosAndSize;
 		ofBufferObject mGPUCollisions;
 		ofVboMesh mTemplateCube;
+		//float mTargetCollisions;
 
 		ofxXmlSettings mXmlSettings;
 
@@ -68,6 +69,7 @@ class ofApp : public ofBaseApp{
 		ofParameter<bool> mHudDraw;
 		ofParameter<bool> mHudMovement;
 		ofParameter<bool> mHudCollision;
+		ofParameter<std::string> mHudCollisionPercentage;
 
 		std::string iHudGetModeString(CollisionSystem::ComputeMode m);
 };
