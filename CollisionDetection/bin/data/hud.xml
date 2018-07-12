@@ -1,13 +1,15 @@
 <group>
-	<Debug_Information>
-		<FPS>41</FPS>
-		<Collision%>14.13</Collision%>
-	</Debug_Information>
 	<Program_Information>
-		<Mode>Compute Shader</Mode>
-		<Cubes>20000</Cubes>
-		<Movement>1</Movement>
+		<FPS>13</FPS>
+		<Mode>CPU</Mode>
+		<Cubes>4000</Cubes>
+		<Collisions>0.00</Collisions>
+		<Measure_Next>0</Measure_Next>
+	</Program_Information>
+	<Settings>
+		<Movement>0</Movement>
 		<Draw>1</Draw>
 		<Collisions>1</Collisions>
-	</Program_Information>
+	</Settings>
+<group/>
 </group>

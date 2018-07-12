@@ -14,12 +14,10 @@
 #include "CollisionDefinitions.h"
 #include "Cube.h"
 #include "ThrustHelper.h"
+#include "Stopwatch.h"
 
-// general definitions
-#ifdef _DEBUG
-	#define GLERROR std::cout << __LINE__ << ": " << glGetError() << std::endl
-#else
-	#define GLERROR
+#ifndef HANDLE_GL_ERROR()
+#define HANDLE_GL_ERROR() {GLenum err; while ((err = glGetError()) != GL_NO_ERROR) ofLogWarning() << __FILE__ << ":" << __LINE__ << ": GL error = " << err;}
 #endif
 
 //definitions for Compute Shader
@@ -79,13 +77,25 @@ public:
 	void setupOCL(ofxXmlSettings& settings);
 	void setupThrust(ofxXmlSettings& settings);
 
+	// returns the current mode as enum
 	ComputeMode getMode() const;
-	//only returns the next available mode but does not set it
+	// returns the current mode as std::string
+	std::string getModeAsString() const;
+	// returns the next available mode but does not set it
 	ComputeMode nextMode(CollisionSystem::ComputeMode current) const;
 	// sets a new computation mode; usually used in combination with "nextMode"
 	void setMode(ComputeMode m);
-
+	// measures the next calculation
+	void measureNextCalculation();
+	// gets the result of the last measurement
+	double getMeasurement() const;
+	// method that calculates and returns the collisions
 	void getCollisions(const std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
+	
+	// statics
+
+	// converts the ComputeMode enum to string
+	static std::string getComputeModeString(ComputeMode m);
 
 private:
 	ComputeMode mMode;
@@ -95,7 +105,10 @@ private:
 	oclHelper mOCLHelper;
 	OCLData mOCLData;
 	ThrustHelper::ThrustData mThrustData;
-	bool mCPUThreshold;
+	bool mCPUThreshold,
+		mMeasureNext = false;
+	double mLastMeasurement;
+	Stopwatch mClock;
 
 	void iGetCollisionsCPU(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCompute(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);

@@ -50,12 +50,16 @@ void CollisionSystem::setupCompute(ofxXmlSettings & settings)
 		//allocate buffer memory
 		//mComputeData.minMaxBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
 
+		HANDLE_GL_ERROR();
+
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = settings.getValue("COMPUTE:ENABLED", true);
 	}
 	else
 	{
 		mAvailableModes[ComputeMode::COMPUTE_SHADER] = false;
 	}
+
+	HANDLE_GL_ERROR();
 }
 void CollisionSystem::setupCUDA(ofxXmlSettings & settings)
 {
@@ -119,6 +123,11 @@ CollisionSystem::ComputeMode CollisionSystem::getMode() const
 	return mMode;
 }
 
+std::string CollisionSystem::getModeAsString() const
+{
+	return this->getComputeModeString(mMode);
+}
+
 CollisionSystem::ComputeMode CollisionSystem::nextMode(CollisionSystem::ComputeMode current) const
 {
 	int enumSize = ComputeMode::COMPUTEMODES_SIZE;
@@ -138,6 +147,16 @@ void CollisionSystem::setMode(ComputeMode m)
 	mMode = m;
 }
 
+void CollisionSystem::measureNextCalculation()
+{
+	mMeasureNext = true;
+}
+
+double CollisionSystem::getMeasurement() const
+{
+	return mLastMeasurement;
+}
+
 void CollisionSystem::getCollisions(const std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
 {
 	if (cubes.size() == 0)
@@ -149,11 +168,14 @@ void CollisionSystem::getCollisions(const std::vector<Cube>& cubes, OUT std::vec
 	}
 
 	std::vector<MinMaxData> minMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
-	 // read bounding boxes
+	// read bounding boxes
 	for (int i = 0; i < cubes.size(); ++i)
 	{
 		minMax[i] = cubes[i].getGlobalMinMax();
 	}
+
+	if(mMeasureNext)
+		mClock.start();
 
 	switch (mMode)
 	{
@@ -170,6 +192,28 @@ void CollisionSystem::getCollisions(const std::vector<Cube>& cubes, OUT std::vec
 		default:
 			break;
 	}
+
+	if (mMeasureNext)
+	{
+		mLastMeasurement = mClock.getDuration(mClock.stop());
+		mMeasureNext = false;
+	}
+}
+
+std::string CollisionSystem::getComputeModeString(ComputeMode m)
+{
+	if (m == ComputeMode::CPU)
+		return "CPU";
+	else if (m == ComputeMode::COMPUTE_SHADER)
+		return "Compute Shader";
+	else if (m == ComputeMode::OPENCL)
+		return "OpenCL";
+	else if (m == ComputeMode::CUDA)
+		return "CUDA";
+	else if (m == ComputeMode::THRUST)
+		return "Thrust";
+	else
+		return "UNKNOWN";
 }
 
 void CollisionSystem::iGetCollisionsCPU(std::vector<MinMaxData>& mMinMax, OUT std::vector<int>& collisions)
@@ -248,6 +292,8 @@ void CollisionSystem::iGetCollisionsCompute(std::vector<MinMaxData>& cubes, OUT 
 	int* collisionsGPU = mComputeData.collisionBuffer.map<int>(GL_READ_ONLY);
 	memcpy(&collisions[0], collisionsGPU, sizeof(int) * collisions.size());
 	mComputeData.collisionBuffer.unmap();
+
+	HANDLE_GL_ERROR();
 }
 
 void CollisionSystem::iGetCollisionsCUDA(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)

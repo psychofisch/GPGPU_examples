@@ -53,25 +53,25 @@ void ofApp::setup(){
 	HANDLE_GL_ERROR();
 
 	// HUD setup
-	mHudDebugGroup.setName("Debug Information");
+	mHudDebugGroup.setName("Program Information");
 	mHudDebugGroup.add(mHudFps.set("FPS", -1.f));
-	mHudDebugGroup.add(mHudCollisionPercentage.set("Collision%", "??%"));
-	//mHudDebugGroup.add(mHudRotation.set("Rotation", mGlobalRotation));
+	mHudDebugGroup.add(mHudMode.set("Mode", "XXX"));
+	mHudDebugGroup.add(mHudCubes.set("Cubes", ofToString(mCubes.size())));
+	mHudDebugGroup.add(mHudCollisionPercentage.set("Collisions", "??%"));
+	mHudDebugGroup.add(mHudMeasureNext.set("Measure Next", false));
 
-	mHudControlGroup.setName("Program Information");
-	mHudControlGroup.add(mHudMode.set("Mode", "XXX"));
-	mHudControlGroup.add(mHudCubes.set("Cubes", ofToString(mCubes.size())));
+	mHudControlGroup.setName("Settings");
 	mHudControlGroup.add(mHudMovement.set("Movement", true));
 	mHudControlGroup.add(mHudDraw.set("Draw", true));
 	mHudControlGroup.add(mHudCollision.set("Collisions", true));
-	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
-
+	
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
 	mHud.add(mHudControlGroup);
 	mHud.loadFromFile("hud.xml");
 
-	mHudMode = iHudGetModeString(mCollisionSystem.getMode());
+	mHudMode = mCollisionSystem.getModeAsString();
+	mHudCubes = ofToString(mCubes.size());
 }
 
 //--------------------------------------------------------------
@@ -91,11 +91,11 @@ void ofApp::update(){
 	mMainCamera.truck(moveVec.x);
 
 	// move cubes
-
 	ofSeedRandom(1337);//seed every frame so that every cube has a constant "random" speed value
 	ofNode pos;
 	int colCount = 0;
-	for (size_t i = 0; i < mCubes.size() && mHudMovement; ++i)
+
+	for (int i = 0; i < mCubes.size() && mHudMovement; ++i)
 	{
 		float r = ofRandom(0.8f, 1.2f);
 
@@ -120,7 +120,9 @@ void ofApp::update(){
 
 		// DEBUG: collision percentage
 		if (mCollisions[i] > -1)
+		{
 			colCount++;
+		}
 		//*** DEBUG
 	}
 
@@ -130,12 +132,14 @@ void ofApp::update(){
 	else
 		mHudCollisionPercentage = "0";
 	//*** DEBUG
+	//*** mc
 
+	HANDLE_GL_ERROR();
 	if (mCubePosAndSize.size() > 0 && mPosAndSize.size() < sizeof(ofVec4f) * mCubePosAndSize.size())
 	{
 		std::cout << "mCubePosAndSize reallocate\n";
 		mPosAndSize.allocate(mCubePosAndSize, GL_DYNAMIC_DRAW);
-		//mPosAndSize.allocate(sizeof(ofVec4f) * mCubePosAndSize.size(), GL_DYNAMIC_DRAW);
+		HANDLE_GL_ERROR();
 	}
 	else
 		mPosAndSize.updateData(mCubePosAndSize);
@@ -145,6 +149,9 @@ void ofApp::update(){
 	// Collision detection
 	if (mHudCollision)
 	{
+		if (mHudMeasureNext)
+			mCollisionSystem.measureNextCalculation();
+
 		mCollisionSystem.getCollisions(mCubes, mCollisions);
 
 		if (mCollisions.size() > 0)
@@ -157,17 +164,14 @@ void ofApp::update(){
 			}else
 				mGPUCollisions.updateData(mCollisions);
 		}
+
+		if (mHudMeasureNext)
+		{
+			std::cout << mCollisionSystem.getMeasurement() << std::endl;
+			mHudMeasureNext = false;
+		}
 	}
 	//*** cd
-
-	if (!mHudPause || mHudStep)
-	{
-		float deltaTime = dt;
-		if (mHudStep)
-			deltaTime = 0.008f;
-		//mParticleSystem->update(dt);
-		mHudStep = false;
-	}
 
 	mHudCubes = ofToString(mCubes.size());
 }
@@ -271,7 +275,7 @@ void ofApp::keyReleased(int key){
 		{
 			CollisionSystem::ComputeMode currentMode = mCollisionSystem.nextMode(mCollisionSystem.getMode());
 			mCollisionSystem.setMode(currentMode);
-			mHudMode = iHudGetModeString(currentMode);
+			mHudMode = mCollisionSystem.getModeAsString();
 		}
 			break;
 		default: std::cout << "this key hasn't been assigned\n";
@@ -426,36 +430,14 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 void ofApp::quit()
 {
 	std::cout << "saving settings...";
-	/*uint tmpCapacity = mParticleSystem->getCapacity();
-	if (tmpCapacity > INT_MAX)
-	{
-		tmpCapacity = INT_MAX;
-	}
-	mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(tmpCapacity));//BUG: this doesn't work
-	//mXmlSettings.setValue("GENERAL:MAXPARTICLES", static_cast<int>(100000u));//^BUG: this does work?!?!*/
 	mXmlSettings.setValue("CONTROLS:MOUSESENS", mMouseSens);
-	//mXmlSettings.setValue("SIM:SWIDTH", mHud);
 	mXmlSettings.saveFile("settings.xml");
+	std::cout << "done\n";
 
+	std::cout << "saving HUD...";
 	mHud.saveToFile("hud.xml");
 	std::cout << "done\n";
 
 	std::cout << "quitting...bye =)\n";
 	this->exit();
-}
-
-std::string ofApp::iHudGetModeString(CollisionSystem::ComputeMode m)
-{
-	if (m == CollisionSystem::ComputeMode::CPU)
-		return "CPU";
-	else if (m == CollisionSystem::ComputeMode::COMPUTE_SHADER)
-		return "Compute Shader";
-	else if (m == CollisionSystem::ComputeMode::OPENCL)
-		return "OpenCL";
-	else if (m == CollisionSystem::ComputeMode::CUDA)
-		return "CUDA";
-	else if (m == CollisionSystem::ComputeMode::THRUST)
-		return "Thrust";
-	else
-		return "UNKNOWN";
 }

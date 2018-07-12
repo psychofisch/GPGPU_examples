@@ -1,15 +1,16 @@
 #pragma once
 
+#ifndef HANDLE_GL_ERROR()
+#define HANDLE_GL_ERROR() {GLenum err; while ((err = glGetError()) != GL_NO_ERROR) ofLogWarning() << __FILE__ << ":" << __LINE__ << ": GL error = " << err;}
+#endif
+
 #include "ofMain.h"
 #include "ofxGui.h"
 #include "ofxXmlSettings.h"
 
 #include "Cube.h"
 #include "vec2i.h"
-//#include "ParticleSystem.h"
 #include "CollisionSystem.h"
-
-#define HANDLE_GL_ERROR() {GLenum err; while ((err = glGetError()) != GL_NO_ERROR) ofLogNotice() << __FILE__ << ":" << __LINE__ << ": GL error:	" << err;}
 
 class ofApp : public ofBaseApp{
 
@@ -58,18 +59,13 @@ class ofApp : public ofBaseApp{
 
 		ofParameterGroup mHudDebugGroup;
 		ofParameter<float> mHudFps;
-		ofParameter<ofQuaternion> mHudRotation;
+		ofParameter<std::string> mHudCollisionPercentage;
+		ofParameter<bool> mHudMeasureNext;
 
 		ofParameterGroup mHudControlGroup;
 		ofParameter<std::string> mHudMode;
 		ofParameter<std::string> mHudCubes;
-		ofParameter<size_t> mHudWorkGroup;
-		ofParameter<bool> mHudPause;
-		ofParameter<bool> mHudStep;
 		ofParameter<bool> mHudDraw;
 		ofParameter<bool> mHudMovement;
 		ofParameter<bool> mHudCollision;
-		ofParameter<std::string> mHudCollisionPercentage;
-
-		std::string iHudGetModeString(CollisionSystem::ComputeMode m);
 };
