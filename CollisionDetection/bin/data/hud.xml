@@ -1,13 +1,13 @@
 <group>
 	<Program_Information>
-		<FPS>13</FPS>
+		<FPS>101</FPS>
 		<Mode>CPU</Mode>
-		<Cubes>4000</Cubes>
-		<Collisions>0.00</Collisions>
+		<Cubes>2000</Cubes>
+		<Collisions>17.55</Collisions>
 		<Measure_Next>0</Measure_Next>
 	</Program_Information>
 	<Settings>
-		<Movement>0</Movement>
+		<Movement>1</Movement>
 		<Draw>1</Draw>
 		<Collisions>1</Collisions>
 	</Settings>

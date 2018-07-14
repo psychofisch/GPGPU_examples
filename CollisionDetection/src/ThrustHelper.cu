@@ -61,14 +61,7 @@ void ThrustHelper::thrustGetCollisions(
 
 	MinMaxDataThrust* minMaxDevice = thrust::raw_pointer_cast(tdata.minMaxBuffer.data());
 	
-	// calculate simulation with Thrust
-	/*thrust::transform(
-		tdata.minMaxBuffer.begin(),
-		tdata.minMaxBuffer.end(),
-		tdata.collisions.begin(),
-		CollisionFunctor(amountOfCubes, minMaxDevice)
-	);*/
-	
+	// calculate simulation with Thrust	
 	thrust::transform(
 		tdata.minMaxBuffer.begin(),
 		tdata.minMaxBuffer.end(),
