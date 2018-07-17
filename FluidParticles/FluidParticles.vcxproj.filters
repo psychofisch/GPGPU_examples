@@ -296,6 +296,9 @@
     <ClInclude Include="src\cudaHelper.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\ParticlesCuda.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
@@ -307,6 +310,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="bin\data\particles.cl">
+      <Filter>src</Filter>
+    </None>
+    <None Include="particles.hu">
       <Filter>src</Filter>
     </None>
   </ItemGroup>

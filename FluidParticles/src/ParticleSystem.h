@@ -23,6 +23,7 @@
 #include "ThrustHelper.h"
 #include "CollisionDefinitions.h"
 #include "CudaHelper.h"
+#include "ParticlesCuda.h"
 
 namespace Particle
 {
@@ -78,18 +79,18 @@ namespace Particle
 }
 
 // external CUDA function in the particles.cu file
-extern "C" void cudaParticleUpdate(
-	float4* positions,
-	float4* positionOut,
-	float4* velocity,
-	MinMaxData* staticColliders,
-	const float dt,
-	const float3 gravity,
-	const float3 position,
-	const float3 dimension,
-	const size_t numberOfParticles,
-	const size_t numberOfColliders,
-	SimulationData simData);
+//extern "C" void cudaParticleUpdate(
+//	float4* positions,
+//	float4* positionOut,
+//	float4* velocity,
+//	MinMaxData* staticColliders,
+//	const float dt,
+//	const float3 gravity,
+//	const float3 position,
+//	const float3 dimension,
+//	const size_t numberOfParticles,
+//	const size_t numberOfColliders,
+//	SimulationData simData);
 
 //class definition
 class ParticleSystem

@@ -877,7 +877,7 @@ void ParticleSystem::iUpdateCUDA(float dt)
 	float3 cudaPosition = make_float3(mPosition.x, mPosition.y, mPosition.z);
 
 	// call the kernel
-	cudaParticleUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, mCUData.staticCollisionBuffer, dt, cudaGravity, cudaDimension, cudaPosition, mNumberOfParticles, mCUData.allocatedColliders, mSimData);
+	cudaParticleUpdate(mCUData.position, mCUData.positionOut, mCUData.velocity, reinterpret_cast<MinMaxDataCuda*>(mCUData.staticCollisionBuffer), dt, cudaGravity, cudaDimension, cudaPosition, mNumberOfParticles, mCUData.allocatedColliders, mSimData);
 	
 	// sync the result back to the CPU
 	// note: swapping pointers instead of copying only boosted the performance by 2fps@20,000 particles on a GTX1060

@@ -1,28 +1,4 @@
-// System includes
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
-
-// CUDA runtime
-#include <cuda_runtime.h>
-
-// helper functions and utilities to work with CUDA
-#include <helper_cuda.h>
-#include <helper_functions.h>
-#include <helper_math.h>
-
-#include "cudaHelper.h"
-#include "ParticleDefinitions.h"
-
-//inline __device__ bool operator==(float3& lhs, float3& rhs)
-//{
-//	if (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z)
-//		return true;
-//	else
-//		return false;
-//}
+#include "ParticlesCuda.h"
 
 __device__ float dim(const float3& v, size_t i)
 {
@@ -60,10 +36,6 @@ __device__ float dim(const float4& v, size_t i)
 
 	return NAN;
 }
-
-__device__ float3 calculatePressure(const float4* __restrict__ positions, const float4* __restrict__ velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
-__device__ bool ClipLine(int d, const MinMaxDataCuda aabbBox, const float3 v0, const float3 v1, float& f_low, float& f_high);
-__device__ bool LineAABBIntersection(const MinMaxDataCuda aabbBox, const float3 v0, const float3 v1, float3& vecIntersection, float& flFraction);
 
 __global__ void particleUpdate(
 	const float4* __restrict__ positions,
@@ -283,7 +255,7 @@ __device__ bool LineAABBIntersection(const MinMaxDataCuda aabbBox, const float3 
 	return true;
 }
 
-extern "C" void cudaParticleUpdate(
+void cudaParticleUpdate(
 	float4* positions,
 	float4* positionOut,
 	float4* velocity,
