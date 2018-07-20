@@ -59,6 +59,7 @@ void ofApp::setup(){
 	mHudDebugGroup.add(mHudCubes.set("Cubes", ofToString(mCubes.size())));
 	mHudDebugGroup.add(mHudCollisionPercentage.set("Collisions", "??%"));
 	mHudDebugGroup.add(mHudMeasureNext.set("Measure Next", false));
+	mHudDebugGroup.add(mHudMeasureTime.set("Time", -1.0f, 0.f, 30.f));
 
 	mHudControlGroup.setName("Settings");
 	mHudControlGroup.add(mHudMovement.set("Movement", true));
@@ -149,7 +150,8 @@ void ofApp::update(){
 	// Collision detection
 	if (mHudCollision)
 	{
-		if (mHudMeasureNext)
+		mAutoMeasure += dt;
+		if (mAutoMeasure > 0.5f || mHudMeasureNext == true)
 			mCollisionSystem.measureNextCalculation();
 
 		mCollisionSystem.getCollisions(mCubes, mCollisions);
@@ -165,10 +167,17 @@ void ofApp::update(){
 				mGPUCollisions.updateData(mCollisions);
 		}
 
-		if (mHudMeasureNext)
+		if (mAutoMeasure > 0.5f || mHudMeasureNext == true)
 		{
-			std::cout << mCollisionSystem.getMeasurement() << std::endl;
-			mHudMeasureNext = false;
+			float time = mCollisionSystem.getMeasurement() * 1000;
+			mHudMeasureTime = time;
+			mAutoMeasure = 0.f;
+
+			if (mHudMeasureNext)
+			{
+				mHudMeasureNext = false;
+				std::cout << time << std::endl;
+			}
 		}
 	}
 	//*** cd
@@ -182,7 +191,7 @@ void ofApp::draw(){
 
 	mMainCamera.begin();
 
-	if (mCubes.size() > 0)
+	if (mCubes.size() > 0 && mHudDraw)
 	{
 		mBoxShader.begin();
 

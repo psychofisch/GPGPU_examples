@@ -61,6 +61,8 @@ class ofApp : public ofBaseApp{
 		ofParameter<float> mHudFps;
 		ofParameter<std::string> mHudCollisionPercentage;
 		ofParameter<bool> mHudMeasureNext;
+		ofParameter<float> mHudMeasureTime;
+		float mAutoMeasure;
 
 		ofParameterGroup mHudControlGroup;
 		ofParameter<std::string> mHudMode;
