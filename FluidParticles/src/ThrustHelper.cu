@@ -8,11 +8,13 @@ inline __host__ __device__ bool operator==(float3& lhs, float3& rhs)
 		return false;
 }
 
-ThrustHelper::SimulationFunctor::SimulationFunctor(float dt_, float3 dim_, float3 g_, SimulationData simData_)
+ThrustHelper::SimulationFunctor::SimulationFunctor(float dt_, float3 dim_, float3 g_, SimulationData simData_, const MinMaxDataCuda* colliders_, uint numberOfColliders_)
 	:dt(dt_),
 	dimension(dim_),
 	gravity(g_),
-	simData(simData_)
+	simData(simData_),
+	colliders(colliders_),
+	numberOfColliders(numberOfColliders_)
 {}
 
 __host__ __device__ posVel ThrustHelper::SimulationFunctor::operator()(posVel input)
@@ -20,41 +22,74 @@ __host__ __device__ posVel ThrustHelper::SimulationFunctor::operator()(posVel in
 	float3 particlePosition = make_float3(input.get<0>());
 	float3 particleVelocity = make_float3(input.get<1>());
 
-	particleVelocity += gravity * dt;
+	float fluidDamp = 0.0;
+	float particleSize = simData.interactionRadius * 0.1f;
+	float3 worldAABBmin = make_float3(particleSize);
+	float3 worldAABBmax = dimension - particleSize;
+
+	//float3 particlePressure = calculatePressure(positions, velocity, index, particlePosition, particleVelocity, numberOfParticles, simData);
+	float3 particlePressure = make_float3(0.f);
+
+	// gravity
+	particleVelocity += (gravity + particlePressure) * dt;
+	// *** g
+
+	float3 deltaVelocity = particleVelocity * dt;
+	float3 sizeOffset = normalize(particleVelocity) * particleSize;
+	float3 newPos = particlePosition + deltaVelocity;
 
 	// static collision
-	//TODO: write some kind of for-loop
-	if ((particlePosition.x + particleVelocity.x * dt > dimension.x && particleVelocity.x > 0.f) || (particlePosition.x + particleVelocity.x * dt < 0.f && particleVelocity.x < 0.f))
+	int collisionCnt = 3; //support multiple collisions
+	for (int i = 0; i < numberOfColliders && collisionCnt > 0; i++)
 	{
-		if (particlePosition.x + particleVelocity.x * dt < 0.f)
-			particlePosition.x = 0.f;
-		else
-			particlePosition.x = dimension.x;
+		MinMaxDataCuda currentAABB = colliders[i];
+		float3 intersection = make_float3(0.f);
+		float fraction;
+		bool result = false;
 
-		particleVelocity.x *= -.3f;
-	}
+		// ERROR: LineAABBIntersection from the CUDA implementation can't be used
+		result = LineAABBIntersection(currentAABB, particlePosition, newPos + sizeOffset, intersection, fraction);
 
-	if ((particlePosition.y + particleVelocity.y * dt  > dimension.y && particleVelocity.y > 0.f) || (particlePosition.y + particleVelocity.y * dt < 0.f && particleVelocity.y < 0.f))
-	{
-		if (particlePosition.y + particleVelocity.y * dt < 0.f)
-			particlePosition.y = 0.f;
-		else
-			particlePosition.y = dimension.y;
+		if (result == false)
+			continue;
 
-		particleVelocity.y *= -.3f;
-	}
+		if (intersection.x == currentAABB.max.x || intersection.x == currentAABB.min.x)
+			particleVelocity.x *= -fluidDamp;
+		else if (intersection.y == currentAABB.max.y || intersection.y == currentAABB.min.y)
+			particleVelocity.y *= -fluidDamp;
+		else if (intersection.z == currentAABB.max.z || intersection.z == currentAABB.min.z)
+			particleVelocity.z *= -fluidDamp;
+		//else
+		//	std::cout << "W00T!?\n";//DEBUG
 
-	if ((particlePosition.z + particleVelocity.z * dt > dimension.z && particleVelocity.z > 0.f) || (particlePosition.z + particleVelocity.z * dt < 0.f && particleVelocity.z < 0.f))
-	{
-		if (particlePosition.z + particleVelocity.z * dt < 0.f)
-			particlePosition.z = 0.f;
-		else
-			particlePosition.z = dimension.z;
-
-		particleVelocity.z *= -.3f;
+		//particlePosition = intersection;
+		newPos = intersection;
+		break;// DEBUG! this prevents multiple collisions!
 	}
 	// *** sc
 
+	// ERROR: the "dim" function from the CUDA implementation can't be used
+	// bounding box collision
+	float3 tmpVel = particleVelocity;
+	for (int i = 0; i < 3; ++i)
+	{
+		if ((dim(newPos, i) > dim(worldAABBmax, i) && dim(tmpVel, i) > 0.0) // max boundary
+			|| (dim(newPos, i) < dim(worldAABBmin, i) && dim(tmpVel, i) < 0.0) // min boundary
+			)
+		{
+			/*if (newPos[i] < worldAABB.min[i])
+			newPos[i] = worldAABB.min[i];
+			else
+			newPos[i] = worldAABB.max[i];*/
+
+			dim(tmpVel, i) *= -fluidDamp;
+		}
+	}
+
+	particleVelocity = tmpVel;
+	// *** bbc
+
+	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
 	posVel result;
@@ -78,10 +113,12 @@ void ThrustHelper::thrustParticleUpdate(
 	float4* position,
 	float4* positionOut,
 	float4* velocity,
+	const MinMaxDataCuda* staticColliders,
 	const float dt,
 	const float3 gravity,
 	const float3 dimension,
 	const uint numberOfParticles,
+	const uint numberOfColliders,
 	SimulationData simData)
 {
 	tdata.position.assign(position, position + numberOfParticles);
@@ -92,8 +129,12 @@ void ThrustHelper::thrustParticleUpdate(
 	auto inLast = thrust::make_zip_iterator(thrust::make_tuple(tdata.position.end(), tdata.velocity.end()));
 	auto outFirst = thrust::make_zip_iterator(thrust::make_tuple(tdata.positionOut.begin(), tdata.velocity.begin()));
 
-	thrust::transform(inFirst, inLast, outFirst, SimulationFunctor(dt, dimension, gravity, simData));
+	thrust::transform(inFirst, inLast, outFirst, SimulationFunctor(dt, dimension, gravity, simData, staticColliders, numberOfColliders));
 
 	thrust::copy(tdata.positionOut.begin(), tdata.positionOut.end(), position);
 	thrust::copy(tdata.velocity.begin(), tdata.velocity.end(), velocity);
 }
+
+//void ThrustHelper::thrustCopyColliders(ThrustParticleData & tdata, std::vector<MinMaxDataCuda>& collision)
+//{
+//}

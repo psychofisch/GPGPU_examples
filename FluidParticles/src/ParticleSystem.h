@@ -22,7 +22,7 @@
 #include "ParticleDefinitions.h"
 #include "ThrustHelper.h"
 #include "CollisionDefinitions.h"
-#include "CudaHelper.h"
+//#include "CudaHelper.h"
 #include "ParticlesCuda.h"
 
 namespace Particle
@@ -73,7 +73,7 @@ namespace Particle
 		float4 *position;
 		float4 *positionOut;
 		float4 *velocity;
-		MinMaxData *staticCollisionBuffer;
+		MinMaxDataCuda *staticCollisionBuffer;
 		size_t allocatedColliders;
 	};
 }

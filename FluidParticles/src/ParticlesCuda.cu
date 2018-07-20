@@ -1,42 +1,5 @@
 #include "ParticlesCuda.h"
 
-__device__ float dim(const float3& v, size_t i)
-{
-	switch (i)
-	{
-	case 0: return v.x;//no breaks required
-	case 1:	return v.y;
-	case 2:	return v.z;
-	}
-
-	return NAN;
-}
-
-__device__ inline float& dim(float3& v, size_t i)
-{
-	switch (i)
-	{
-	case 0: return v.x;//no breaks required
-	case 1:	return v.y;
-	case 2:	return v.z;
-	}
-
-	return v.x;//TODO: return something that indicates an error
-}
-
-__device__ float dim(const float4& v, size_t i)
-{
-	switch (i)
-	{
-	case 0: return v.x;//no breaks required
-	case 1:	return v.y;
-	case 2:	return v.z;
-	case 3: return v.w;
-	}
-
-	return NAN;
-}
-
 __global__ void particleUpdate(
 	const float4* __restrict__ positions,
 	float4* __restrict__ positionOut,
@@ -46,8 +9,8 @@ __global__ void particleUpdate(
 	const float3 gravity,
 	const float3 position,
 	const float3 dimension,
-	const uint numberOfParticles,
-	const uint numberOfColliders,
+	const size_t numberOfParticles,
+	const size_t numberOfColliders,
 	SimulationData simData)
 {
 	const uint index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -141,7 +104,7 @@ __global__ void particleUpdate(
 	velocity[index] = make_float4(particleVelocity, 0.0f);
 }
 
-__device__ float3 calculatePressure(const float4* __restrict__ position, const float4* __restrict__ velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData)
+__device__ __host__ float3 calculatePressure(const float4* __restrict__ position, const float4* __restrict__ velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData)
 {
 	float3 pressureVec = make_float3(0.f);
 	float3 viscosityVec = pressureVec;
@@ -192,67 +155,6 @@ __device__ float3 calculatePressure(const float4* __restrict__ position, const f
 	//*** lv
 
 	return pressureVec + viscosityVec;
-}
-
-__device__ bool ClipLine(int d, const MinMaxDataCuda aabbBox, const float3 v0, const float3 v1, float& f_low, float& f_high)
-{
-	// f_low and f_high are the results from all clipping so far. We'll write our results back out to those parameters.
-
-	// f_dim_low and f_dim_high are the results we're calculating for this current dimension.
-	float f_dim_low, f_dim_high;
-
-	// Find the point of intersection in this dimension only as a fraction of the total vector http://youtu.be/USjbg5QXk3g?t=3m12s
-	f_dim_low = (dim(aabbBox.min, d) - dim(v0, d)) / (dim(v1, d) - dim(v0, d));
-	f_dim_high = (dim(aabbBox.max, d) - dim(v0, d)) / (dim(v1, d) - dim(v0, d));
-
-	// Make sure low is less than high
-	if (f_dim_high < f_dim_low)
-	{
-		float tmp = f_dim_high;
-		f_dim_high = f_dim_low;
-		f_dim_low = tmp;
-	}
-
-	// If this dimension's high is less than the low we got then we definitely missed. http://youtu.be/USjbg5QXk3g?t=7m16s
-	if (f_dim_high < f_low)
-		return false;
-
-	// Likewise if the low is less than the high.
-	if (f_dim_low > f_high)
-		return false;
-
-	// Add the clip from this dimension to the previous results http://youtu.be/USjbg5QXk3g?t=5m32s
-	f_low = max(f_dim_low, f_low);
-	f_high = min(f_dim_high, f_high);
-
-	if (f_low > f_high)
-		return false;
-
-	return true;
-}
-
-// Find the intersection of a line from v0 to v1 and an axis-aligned bounding box http://www.youtube.com/watch?v=USjbg5QXk3g
-__device__ bool LineAABBIntersection(const MinMaxDataCuda aabbBox, const float3 v0, const float3 v1, float3& vecIntersection, float& flFraction)
-{
-	float f_low = 0;
-	float f_high = 1;
-
-	if (!ClipLine(0, aabbBox, v0, v1, f_low, f_high))
-		return false;
-
-	if (!ClipLine(1, aabbBox, v0, v1, f_low, f_high))
-		return false;
-
-	if (!ClipLine(2, aabbBox, v0, v1, f_low, f_high))
-		return false;
-
-	// The formula for I: http://youtu.be/USjbg5QXk3g?t=6m24s
-	float3 b = v1 - v0;
-	vecIntersection = v0 + b * f_low;
-
-	flFraction = f_low;
-
-	return true;
 }
 
 void cudaParticleUpdate(

@@ -1,6 +1,6 @@
 <GENERAL>
-    <BOXES>1000</BOXES>
-    <ADD>1000</ADD>
+    <BOXES>100</BOXES>
+    <ADD>100</ADD>
     <COLPERC>0.5</COLPERC>
     <VERT>simple.vert</VERT>
     <FRAG>simple.frag</FRAG>

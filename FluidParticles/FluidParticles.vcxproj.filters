@@ -312,15 +312,12 @@
     <None Include="bin\data\particles.cl">
       <Filter>src</Filter>
     </None>
-    <None Include="particles.hu">
-      <Filter>src</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\particles.cu">
+    <CudaCompile Include="src\ThrustHelper.cu">
       <Filter>src</Filter>
     </CudaCompile>
-    <CudaCompile Include="src\ThrustHelper.cu">
+    <CudaCompile Include="src\ParticlesCuda.cu">
       <Filter>src</Filter>
     </CudaCompile>
   </ItemGroup>

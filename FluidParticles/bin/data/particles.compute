@@ -40,7 +40,7 @@ uniform vec3 mDimension;
 
 vec3 calculatePressure(uint index, vec3 pos, vec3 vel);
 bool ClipLine(int d, const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout float f_low, inout float f_high);
-bool LineAABBIntersection(const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout vec3 vecIntersection, inout float flFraction);
+bool LineAABBIntersection(const MinMaxData aabbBox, const vec3 v0, const vec3 v1, out vec3 vecIntersection, out float flFraction);
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;//this has to match the COMPUTE:WORKGROUPSIZE in the settings.xml file
 void main(){
@@ -244,7 +244,7 @@ bool ClipLine(int d, const MinMaxData aabbBox, const vec3 v0, const vec3 v1, ino
 }
 
 // Find the intersection of a line from v0 to v1 and an axis-aligned bounding box http://www.youtube.com/watch?v=USjbg5QXk3g
-bool LineAABBIntersection(const MinMaxData aabbBox, const vec3 v0, const vec3 v1, inout vec3 vecIntersection, inout float flFraction)
+bool LineAABBIntersection(const MinMaxData aabbBox, const vec3 v0, const vec3 v1, out vec3 vecIntersection, out float flFraction)
 {
 	float f_low = 0;
 	float f_high = 1;

@@ -311,6 +311,12 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.staticCollisionBuffer, CL_TRUE, 0, sizeof(MinMaxData) * colliderSize, mStaticCollision.data());
 		oclHelper::handle_clerror(err, __LINE__);
 	}
+
+	//Thrust
+	if (mAvailableModes[ComputeMode::THRUST])
+	{
+
+	}
 }
 
 void ParticleSystem::setGravity(ofVec3f g)
@@ -897,7 +903,7 @@ void ParticleSystem::iUpdateThrust(float dt)
 	float4* positionF4 = reinterpret_cast<float4*>(mParticlePosition.data());
 	float4* velocityF4 = reinterpret_cast<float4*>(mParticleVelocity.data());
 
-	ThrustHelper::thrustParticleUpdate(*mThrustData, positionF4, positionF4, velocityF4, dt, cudaGravity, cudaDimension, mNumberOfParticles, mSimData);
+	ThrustHelper::thrustParticleUpdate(*mThrustData, positionF4, positionF4, velocityF4, reinterpret_cast<MinMaxDataCuda*>(mCUData.staticCollisionBuffer), dt, cudaGravity, cudaDimension, mNumberOfParticles, mCUData.allocatedColliders, mSimData);
 }
 
 // debug function to count how many particles are outside the boundary

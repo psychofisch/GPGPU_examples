@@ -134,6 +134,7 @@
     <PostBuildEvent />
     <CudaCompile>
       <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <Defines>NVCC</Defines>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -181,6 +182,7 @@
     <PostBuildEvent />
     <CudaCompile>
       <CodeGeneration>compute_50,sm_50</CodeGeneration>
+      <Defines>NVCC</Defines>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -299,12 +301,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\particles.cu">
+    <CudaCompile Include="src\ParticlesCuda.cu">
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_60,sm_60</CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="src\ThrustHelper.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_60,sm_60</CodeGeneration>
     </CudaCompile>
   </ItemGroup>

@@ -18,12 +18,13 @@
 #include "cudaHelper.h"
 #include "ParticleDefinitions.h"
 
-__device__ float dim(const float3& v, size_t i);
-__device__ inline float& dim(float3& v, size_t i);
-__device__ float dim(const float4& v, size_t i);
-__device__ float3 calculatePressure(const float4* __restrict__ positions, const float4* __restrict__ velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
-__device__ bool ClipLine(int d, const MinMaxDataCuda aabbBox, const float3 v0, const float3 v1, float& f_low, float& f_high);
-__device__ bool LineAABBIntersection(const MinMaxDataCuda aabbBox, const float3 v0, const float3 v1, float3& vecIntersection, float& flFraction);
+//__device__ __host__ float dim(const float3& v, size_t i);
+//__device__ __host__ float& dim(float3& v, size_t i);
+//__device__ __host__ float dim(const float4& v, size_t i);
+//__device__ __host__ bool ClipLine(int d, const MinMaxDataCuda aabbBox, const float3 v0, const float3 v1, float& f_low, float& f_high);
+//__device__ __host__ bool LineAABBIntersection(const MinMaxDataCuda aabbBox, const float3 v0, const float3 v1, float3& vecIntersection, float& flFraction);
+
+__device__ __host__ float3 calculatePressure(const float4* __restrict__ positions, const float4* __restrict__ velocity, uint index, float3 pos, float3 vel, uint numberOfParticles, SimulationData simData);
 
 __global__ void particleUpdate(
 	const float4* __restrict__ positions,
@@ -34,8 +35,8 @@ __global__ void particleUpdate(
 	const float3 gravity,
 	const float3 position,
 	const float3 dimension,
-	const uint numberOfParticles,
-	const uint numberOfColliders,
+	const size_t numberOfParticles,
+	const size_t numberOfColliders,
 	SimulationData simData);
 
 void cudaParticleUpdate(
