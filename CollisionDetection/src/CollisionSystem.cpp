@@ -44,11 +44,13 @@ void CollisionSystem::setupCPU(ofxXmlSettings & settings)
 void CollisionSystem::setupCompute(ofxXmlSettings & settings)
 {
 	// compile the compute code
+	mClock.start();
 	if (mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, settings.getValue("COMPUTE:SOURCE", "collision.compute"))
 		&& mComputeData.computeShader.linkProgram())
 	{
 		//allocate buffer memory
 		//mComputeData.minMaxBuffer.allocate(sizeof(ofVec4f) * mCapacity, mPosition, GL_DYNAMIC_DRAW);
+		std::cout << "GLSL build time: " << mClock.getDuration(mClock.stop()) << std::endl;
 
 		HANDLE_GL_ERROR();
 
@@ -85,9 +87,11 @@ void CollisionSystem::setupOCL(ofxXmlSettings & settings)
 	// try to set up an OpenCL context
 	if (!mOCLHelper.setupOpenCLContext(platformID, deviceID))
 	{
+		mClock.start();
 		// try to compile the source file
 		if (!mOCLHelper.compileKernel(sourceFile.c_str()))
 		{
+			std::cout << "OpenCL build time: " << mClock.getDuration(mClock.stop()) << std::endl;
 			// if all of the above worked -> set up all buffers and settings
 			cl::Context context = mOCLHelper.getCLContext();
 

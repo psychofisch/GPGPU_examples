@@ -75,10 +75,12 @@ void ParticleSystem::setupCompute(ofxXmlSettings & settings)
 	if (settings.getValue("COMPUTE::ENABLED", false) == false)
 		return;
 
+	mClock.start();
 	// compile the compute code
 	if (mComputeData.computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, settings.getValue("COMPUTE:SOURCE", "particles.compute"))
 		&& mComputeData.computeShader.linkProgram())
 	{
+		std::cout << "GLSL build time: " << mClock.getDuration(mClock.stop()) << std::endl;
 		//allocate buffer memory
 		mComputeData.positionOutBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticlePosition.data(), GL_DYNAMIC_DRAW);
 		mComputeData.positionBuffer.allocate(sizeof(ofVec4f) * mCapacity, mParticlePosition.data(), GL_DYNAMIC_DRAW);
@@ -135,9 +137,11 @@ void ParticleSystem::setupOCL(ofxXmlSettings & settings)
 	// try to set up an OpenCL context
 	if (!mOCLHelper.setupOpenCLContext(platformID, deviceID))
 	{
+		mClock.start();
 		// try to compile the source file
 		if (!mOCLHelper.compileKernel(sourceFile.c_str()))
 		{
+			std::cout << "OpenCL build time: " << mClock.getDuration(mClock.stop()) << std::endl;
 			// if all of the above worked -> set up all buffers and settings
 			cl::Context context = mOCLHelper.getCLContext();
 
