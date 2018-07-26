@@ -161,21 +161,21 @@ double CollisionSystem::getMeasurement() const
 	return mLastMeasurement;
 }
 
-void CollisionSystem::getCollisions(const std::vector<Cube>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::getCollisions(const std::vector<Box>& boxes, OUT std::vector<int>& collisions)
 {
-	if (cubes.size() == 0)
+	if (boxes.size() == 0)
 		return;
 
-	if (cubes.size() != collisions.size())
+	if (boxes.size() != collisions.size())
 	{
 		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
 	}
 
-	std::vector<MinMaxData> minMax(cubes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
+	std::vector<MinMaxData> minMax(boxes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
 	// read bounding boxes
-	for (int i = 0; i < cubes.size(); ++i)
+	for (int i = 0; i < boxes.size(); ++i)
 	{
-		minMax[i] = cubes[i].getGlobalMinMax();
+		minMax[i] = boxes[i].getGlobalMinMax();
 	}
 
 	if(mMeasureNext)
@@ -266,30 +266,30 @@ void CollisionSystem::iGetCollisionsCPU(std::vector<MinMaxData>& mMinMax, OUT st
 	collisions = tmpCol;
 }
 
-void CollisionSystem::iGetCollisionsCompute(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsCompute(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions)
 {
-	if (mComputeData.minMaxBuffer.size() < sizeof(MinMaxData) * cubes.size())
+	if (mComputeData.minMaxBuffer.size() < sizeof(MinMaxData) * boxes.size())
 	{
-		mComputeData.minMaxBuffer.allocate(sizeof(MinMaxData) * cubes.size(), GL_DYNAMIC_DRAW);
+		mComputeData.minMaxBuffer.allocate(sizeof(MinMaxData) * boxes.size(), GL_DYNAMIC_DRAW);
 	}
 
-	if (mComputeData.collisionBuffer.size() < sizeof(int) * cubes.size())
+	if (mComputeData.collisionBuffer.size() < sizeof(int) * boxes.size())
 	{
-		mComputeData.collisionBuffer.allocate(sizeof(int) * cubes.size(), GL_DYNAMIC_DRAW);
+		mComputeData.collisionBuffer.allocate(sizeof(int) * boxes.size(), GL_DYNAMIC_DRAW);
 	}
 
 	// copy minMax data to GPU
-	mComputeData.minMaxBuffer.updateData(cubes);
+	mComputeData.minMaxBuffer.updateData(boxes);
 
 	mComputeData.minMaxBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
 	mComputeData.collisionBuffer.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
 	mComputeData.computeShader.begin();
-	mComputeData.computeShader.setUniform1i("amountOfCubes", cubes.size());
+	mComputeData.computeShader.setUniform1i("numberOfBoxes", boxes.size());
 
 	// call the kernel
 	// local size: hard-coded "512", because it is also hard-coded in the kernel source code
-	mComputeData.computeShader.dispatchCompute(std::ceilf(float(cubes.size()) / 512), 1, 1);
+	mComputeData.computeShader.dispatchCompute(std::ceilf(float(boxes.size()) / 512), 1, 1);
 	mComputeData.computeShader.end();//forces the program to wait until the calculation is finished 
 
 	// copy the GPU data back to the CPU
@@ -300,9 +300,9 @@ void CollisionSystem::iGetCollisionsCompute(std::vector<MinMaxData>& cubes, OUT 
 	HANDLE_GL_ERROR();
 }
 
-void CollisionSystem::iGetCollisionsCUDA(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsCUDA(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions)
 {
-	if (mCudata.currentArraySize < cubes.size())
+	if (mCudata.currentArraySize < boxes.size())
 	{
 		if (mCudata.currentArraySize > 0)
 		{
@@ -310,9 +310,9 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<MinMaxData>& cubes, OUT std
 			cudaFree(mCudata.collisionBuffer);
 		}
 
-		mCudata.currentArraySize = cubes.size();
+		mCudata.currentArraySize = boxes.size();
 
-		std::cout << "CUDA: allocating memory for " << mCudata.currentArraySize << " cubes.\n";
+		std::cout << "CUDA: allocating memory for " << mCudata.currentArraySize << " boxes.\n";
 
 		// allocate memory on the GPU
 		// do not use "cudaMallocManaged" and "cudaDeviceSynchronize" -> extremely slow!
@@ -321,7 +321,7 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<MinMaxData>& cubes, OUT std
 	}
 
 	// copy the minMax data to the GPU
-	checkCudaErrors(cudaMemcpy(mCudata.minMaxBuffer, cubes.data(), sizeof(float4) * 2 *  mCudata.currentArraySize, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpy(mCudata.minMaxBuffer, boxes.data(), sizeof(float4) * 2 *  mCudata.currentArraySize, cudaMemcpyHostToDevice));
 
 	// calculate the collisions
 	cudaGetCollisions(mCudata.minMaxBuffer, mCudata.collisionBuffer, mCudata.currentArraySize);
@@ -330,13 +330,13 @@ void CollisionSystem::iGetCollisionsCUDA(std::vector<MinMaxData>& cubes, OUT std
 	checkCudaErrors(cudaMemcpy(&collisions[0], mCudata.collisionBuffer, sizeof(int) * mCudata.currentArraySize, cudaMemcpyDeviceToHost));
 }
 
-void CollisionSystem::iGetCollisionsOCL(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsOCL(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions)
 {
-	if (mOCLData.currentArraySize < cubes.size())
+	if (mOCLData.currentArraySize < boxes.size())
 	{
-		mOCLData.currentArraySize = cubes.size();
+		mOCLData.currentArraySize = boxes.size();
 
-		std::cout << "OpenCL: allocating memory for " << mOCLData.currentArraySize << " cubes.\n";
+		std::cout << "OpenCL: allocating memory for " << mOCLData.currentArraySize << " boxes.\n";
 
 		cl_int err;
 		mOCLData.minMaxBuffer = cl::Buffer(mOCLHelper.getCLContext(), CL_MEM_READ_WRITE, sizeof(float4) * 2 * mOCLData.currentArraySize, 0, &err);
@@ -349,7 +349,7 @@ void CollisionSystem::iGetCollisionsOCL(std::vector<MinMaxData>& cubes, OUT std:
 	cl::CommandQueue queue = mOCLHelper.getCommandQueue();
 
 	// copy the minMaxBuffer to the GPU
-	err = queue.enqueueWriteBuffer(mOCLData.minMaxBuffer, CL_FALSE, 0, sizeof(float4) * 2 * mOCLData.currentArraySize, cubes.data());
+	err = queue.enqueueWriteBuffer(mOCLData.minMaxBuffer, CL_FALSE, 0, sizeof(float4) * 2 * mOCLData.currentArraySize, boxes.data());
 	oclHelper::handle_clerror(err, __LINE__);
 
 	cl::Kernel kernel = mOCLHelper.getKernel();
@@ -388,8 +388,8 @@ void CollisionSystem::iGetCollisionsOCL(std::vector<MinMaxData>& cubes, OUT std:
 	oclHelper::handle_clerror(err, __LINE__);
 }
 
-void CollisionSystem::iGetCollisionsThrust(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsThrust(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions)
 {
 	// check min and max of all boxes for collision
-	ThrustHelper::thrustGetCollisions(mThrustData, reinterpret_cast<ThrustHelper::MinMaxDataThrust*>(cubes.data()), collisions.data(), collisions.size());
+	ThrustHelper::thrustGetCollisions(mThrustData, reinterpret_cast<ThrustHelper::MinMaxDataThrust*>(boxes.data()), collisions.data(), collisions.size());
 }

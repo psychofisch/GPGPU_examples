@@ -8,7 +8,7 @@
 #include "ofxGui.h"
 #include "ofxXmlSettings.h"
 
-#include "Cube.h"
+#include "Box.h"
 #include "vec2i.h"
 #include "CollisionSystem.h"
 
@@ -31,7 +31,7 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
-		void resetCubes(int numberOfCubes);
+		void resetBoxes(int numberOfBoxes);
 
 		void quit();
 
@@ -43,14 +43,14 @@ class ofApp : public ofBaseApp{
 		ofVec3f mCameraRotation;
 		float mMouseSens;
 		bool mLockMouse;
-		std::vector<Cube> mCubes;
+		std::vector<Box> mBoxes;
 		CollisionSystem mCollisionSystem;
 		std::vector<int> mCollisions;
-		std::vector<ofVec4f> mCubePosAndSize;
+		std::vector<ofVec4f> mBoxPosAndSize;
 		ofShader mBoxShader;
 		ofBufferObject mPosAndSize;
 		ofBufferObject mGPUCollisions;
-		ofVboMesh mTemplateCube;
+		ofVboMesh mTemplateBox;
 		//float mTargetCollisions;
 
 		ofxXmlSettings mXmlSettings;
@@ -66,7 +66,7 @@ class ofApp : public ofBaseApp{
 
 		ofParameterGroup mHudControlGroup;
 		ofParameter<std::string> mHudMode;
-		ofParameter<std::string> mHudCubes;
+		ofParameter<std::string> mHudBoxes;
 		ofParameter<bool> mHudDraw;
 		ofParameter<bool> mHudMovement;
 		ofParameter<bool> mHudCollision;

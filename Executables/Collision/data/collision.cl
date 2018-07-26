@@ -1,18 +1,18 @@
 __kernel void getCollisions(
 	__global float4 *minMaxBuffer,
 	__global int *collisionBuffer,
-	const ulong amountOfCubes
+	const ulong numberOfBoxes
 ){
 	uint index = get_global_id(0);
 
-	if(index >= amountOfCubes)
+	if(index >= numberOfBoxes)
 		return;
 
 	float3 currentMin = minMaxBuffer[(index * 2u)].xyz; //min
 	float3 currentMax = minMaxBuffer[(index * 2u) + 1u].xyz; //max
 	int result = -1;
 
-	for (int j = 0; j < amountOfCubes; j++)
+	for (int j = 0; j < numberOfBoxes; j++)
 	{
 		if (index == j)
 			continue;

@@ -18,10 +18,10 @@ void ofApp::setup(){
 	ofSetVerticalSync(false);
 	ofBackground(69, 69, 69);
 
-	resetCubes(mXmlSettings.getValue("GENERAL:BOXES", 1000));
+	resetBoxes(mXmlSettings.getValue("GENERAL:BOXES", 1000));
 	ofBoxPrimitive tmpBox;
 	tmpBox.set(1.0f);
-	mTemplateCube = tmpBox.getMesh();
+	mTemplateBox = tmpBox.getMesh();
 
 	mCollisionSystem.setupAll(mXmlSettings);
 
@@ -56,7 +56,7 @@ void ofApp::setup(){
 	mHudDebugGroup.setName("Program Information");
 	mHudDebugGroup.add(mHudFps.set("FPS", -1.f));
 	mHudDebugGroup.add(mHudMode.set("Mode", "XXX"));
-	mHudDebugGroup.add(mHudCubes.set("Cubes", ofToString(mCubes.size())));
+	mHudDebugGroup.add(mHudBoxes.set("Boxes", ofToString(mBoxes.size())));
 	mHudDebugGroup.add(mHudCollisionPercentage.set("Collisions", "??%"));
 	mHudDebugGroup.add(mHudMeasureNext.set("Measure Next", false));
 	mHudDebugGroup.add(mHudMeasureTime.set("Time", -1.0f, 0.f, 30.f));
@@ -72,7 +72,7 @@ void ofApp::setup(){
 	mHud.loadFromFile("hud.xml");
 
 	mHudMode = mCollisionSystem.getModeAsString();
-	mHudCubes = ofToString(mCubes.size());
+	mHudBoxes = ofToString(mBoxes.size());
 }
 
 //--------------------------------------------------------------
@@ -86,38 +86,38 @@ void ofApp::update(){
 	moveVec.z = mMoveVec.y * 0.1f;
 	moveVec.y = 0.f;
 
-	moveVec *= 500.f * std::max(mCubes.size() * 0.001f, 1.f) * dt;
+	moveVec *= 500.f * std::max(mBoxes.size() * 0.001f, 1.f) * dt;
 
 	mMainCamera.dolly(-moveVec.z);
 	mMainCamera.truck(moveVec.x);
 
-	// move cubes
-	ofSeedRandom(1337);//seed every frame so that every cube has a constant "random" speed value
+	// move boxes
+	ofSeedRandom(1337);//seed every frame so that every box has a constant "random" speed value
 	ofNode pos;
 	int colCount = 0;
 
-	for (int i = 0; i < mCubes.size() && mHudMovement; ++i)
+	for (int i = 0; i < mBoxes.size() && mHudMovement; ++i)
 	{
 		float r = ofRandom(0.8f, 1.2f);
 
-		//pos.setPosition(mCubes[i].getPosition());
-		pos.setPosition(mCubePosAndSize[i * 2]);
+		//pos.setPosition(mBoxes[i].getPosition());
+		pos.setPosition(mBoxPosAndSize[i * 2]);
 
 		ofVec3f axis = vec3::left;
-		if (i > mCubes.size() * 0.666f)
+		if (i > mBoxes.size() * 0.666f)
 		{
 			axis = vec3::up;
 		}
-		else if (i > mCubes.size() * 0.333f)
+		else if (i > mBoxes.size() * 0.333f)
 		{
 			axis = vec3::forward;
 		}
 
 		pos.rotateAround(30.f * r * dt, axis, ofVec3f::zero());
 		
-		mCubes[i].setPosition(pos.getPosition());
+		mBoxes[i].setPosition(pos.getPosition());
 
-		mCubePosAndSize[i * 2] = pos.getPosition();
+		mBoxPosAndSize[i * 2] = pos.getPosition();
 
 		// DEBUG: collision percentage
 		if (mCollisions[i] > -1)
@@ -136,14 +136,14 @@ void ofApp::update(){
 	//*** mc
 
 	HANDLE_GL_ERROR();
-	if (mCubePosAndSize.size() > 0 && mPosAndSize.size() < sizeof(ofVec4f) * mCubePosAndSize.size())
+	if (mBoxPosAndSize.size() > 0 && mPosAndSize.size() < sizeof(ofVec4f) * mBoxPosAndSize.size())
 	{
-		std::cout << "mCubePosAndSize reallocate\n";
-		mPosAndSize.allocate(mCubePosAndSize, GL_DYNAMIC_DRAW);
+		std::cout << "mBoxPosAndSize reallocate\n";
+		mPosAndSize.allocate(mBoxPosAndSize, GL_DYNAMIC_DRAW);
 		HANDLE_GL_ERROR();
 	}
 	else
-		mPosAndSize.updateData(mCubePosAndSize);
+		mPosAndSize.updateData(mBoxPosAndSize);
 	HANDLE_GL_ERROR();
 	//*** mc
 
@@ -154,7 +154,7 @@ void ofApp::update(){
 		if (mAutoMeasure > 0.5f || mHudMeasureNext == true)
 			mCollisionSystem.measureNextCalculation();
 
-		mCollisionSystem.getCollisions(mCubes, mCollisions);
+		mCollisionSystem.getCollisions(mBoxes, mCollisions);
 
 		if (mCollisions.size() > 0)
 		{
@@ -162,7 +162,7 @@ void ofApp::update(){
 			{
 				std::cout << "mGPUCollisions reallocate\n";
 				mGPUCollisions.allocate(mCollisions, GL_DYNAMIC_DRAW);
-				//mPosAndSize.allocate(sizeof(ofVec4f) * mCubePosAndSize.size(), GL_DYNAMIC_DRAW);
+				//mPosAndSize.allocate(sizeof(ofVec4f) * mBoxPosAndSize.size(), GL_DYNAMIC_DRAW);
 			}else
 				mGPUCollisions.updateData(mCollisions);
 		}
@@ -182,7 +182,7 @@ void ofApp::update(){
 	}
 	//*** cd
 
-	mHudCubes = ofToString(mCubes.size());
+	mHudBoxes = ofToString(mBoxes.size());
 }
 
 //--------------------------------------------------------------
@@ -191,18 +191,18 @@ void ofApp::draw(){
 
 	mMainCamera.begin();
 
-	if (mCubes.size() > 0 && mHudDraw)
+	if (mBoxes.size() > 0 && mHudDraw)
 	{
 		mBoxShader.begin();
 
 		mPosAndSize.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
 		mGPUCollisions.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
-		mBoxShader.setUniform1i("noOfBoxes", mCubes.size());
+		mBoxShader.setUniform1i("noOfBoxes", mBoxes.size());
 		mBoxShader.setUniform1i("collisionsOn", (mHudCollision) ? 1 : 0);
 		mBoxShader.setUniform3f("sunPos", ofVec3f(0, 0, 0));
 
-		mTemplateCube.drawInstanced(ofPolyRenderMode::OF_MESH_FILL, mCubes.size());
+		mTemplateBox.drawInstanced(ofPolyRenderMode::OF_MESH_FILL, mBoxes.size());
 
 		mBoxShader.end();
 	}
@@ -258,27 +258,20 @@ void ofApp::keyReleased(int key){
 			std::cout << "Camera:" << mMainCamera.getGlobalOrientation() << std::endl;
 			break;
 		case 'r':
-			mCubes.resize(0);
+			mBoxes.resize(0);
 			mCollisions.resize(0);
-			mHudCubes = ofToString(mCubes.size());
+			mHudBoxes = ofToString(mBoxes.size());
 			break;
 		case 'e':
-			resetCubes(mCubes.size() + mXmlSettings.getValue("GENERAL:ADD", 100));
-			mHudCubes = ofToString(mCubes.size());
+			resetBoxes(mBoxes.size() + mXmlSettings.getValue("GENERAL:ADD", 100));
+			mHudBoxes = ofToString(mBoxes.size());
 			break;
 		case 't':
-			/*mXmlSettings.loadFile("settings.xml");
-			mTargetCollisions = mXmlSettings.getValue("GENERAL:COLPERC", 0.1f);
-			resetCubes(mCubes.size());*/
 			break; 
 		case 'u':
 			break;
 		case 'c':
 			mLockMouse = !mLockMouse;
-			/*{
-				ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
-				mParticleSystem->addCube(ofVec3f(0, tmpSize.y, 0), tmpSize * ofVec3f(0.5f, 1.f, 0.5f), 500, true);
-			}*/
 			break;
 		case 'm':
 		{
@@ -366,27 +359,27 @@ void ofApp::gotMessage(ofMessage msg){
 
 }
 
-void ofApp::resetCubes(int numberOfCubes)
+void ofApp::resetBoxes(int numberOfBoxes)
 {
-	float baseBoxSize = 14.95f * powf(numberOfCubes, -0.36f);// this scales the boxes so that ~15-20% of the boxes collide at all times
+	float baseBoxSize = 14.95f * powf(numberOfBoxes, -0.36f);// this scales the boxes so that ~15-20% of the boxes collide at all times
 
-	Cube templateCube;
-	templateCube.setResolution(1);
-	templateCube.setScale(1.f);
-	templateCube.set(baseBoxSize);
-	templateCube.setPosition(ofVec3f(0.f));
-	templateCube.disableColors();
-	templateCube.disableTextures();
+	Box templateBox;
+	templateBox.setResolution(1);
+	templateBox.setScale(1.f);
+	templateBox.set(baseBoxSize);
+	templateBox.setPosition(ofVec3f(0.f));
+	templateBox.disableColors();
+	templateBox.disableTextures();
 
-	int boxNumber = numberOfCubes;
-	float side = templateCube.getWidth();
+	int boxNumber = numberOfBoxes;
+	float side = templateBox.getWidth();
 	ofVec3f boxPos(0.f);
 	ofVec3f direction;
 	float ringSize = 30.f;//fixed ring size
 	float ringWidth = 0.3f;//relative to ring size
-	mCubes.resize(boxNumber, templateCube);
+	mBoxes.resize(boxNumber, templateBox);
 	mCollisions.resize(boxNumber, -1);
-	mCubePosAndSize.resize(boxNumber * 2);
+	mBoxPosAndSize.resize(boxNumber * 2);
 	for (int i = 0; i < boxNumber; ++i)
 	{
 		if (i > boxNumber * 0.666f)
@@ -412,22 +405,18 @@ void ofApp::resetCubes(int numberOfCubes)
 		boxPos = direction * (ringSize * ofRandom(1.f - ringWidth, 1.f + ringWidth));
 
 		//shape
-		mCubes[i].set(side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f));
-		mCubePosAndSize[(i * 2) + 1] = mCubes[i].getSize();
+		mBoxes[i].set(side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f), side * ofRandom(0.5f, 1.5f));
+		mBoxPosAndSize[(i * 2) + 1] = mBoxes[i].getSize();
 
 		//position
-		//mCubes[i].setPosition(boxPos);
-		mCubePosAndSize[i * 2] = boxPos;
+		//mBoxes[i].setPosition(boxPos);
+		mBoxPosAndSize[i * 2] = boxPos;
 
 		//color
-		mCubes[i].mColor = ofColor::cyan;
-		/*if (i % 2 == 0)
-			mCubes[i].mColor = ofColor::cyan;
-		else
-			mCubes[i].mColor = ofColor::magenta;*/
+		mBoxes[i].mColor = ofColor::cyan;
 
 		//minMax
-		mCubes[i].recalculateMinMax();
+		mBoxes[i].recalculateMinMax();
 	}
 }
 

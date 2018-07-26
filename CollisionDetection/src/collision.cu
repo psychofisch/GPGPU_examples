@@ -16,18 +16,18 @@
 __global__ void getCollisions(
 	const float4* minMaxBuffer,
 	int* collisionBuffer,
-	const int amountOfCubes)
+	const int numberOfBoxes)
 {
 	const int index = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (index >= amountOfCubes)
+	if (index >= numberOfBoxes)
 		return;
 
 	float4 currentMin = minMaxBuffer[(index * 2)]; //min
 	float4 currentMax = minMaxBuffer[(index * 2) + 1]; //max
 	int result = -1;
 
-	for (int j = 0; j < amountOfCubes; j++)
+	for (int j = 0; j < numberOfBoxes; j++)
 	{
 		if (index == j)
 			continue;
@@ -62,7 +62,7 @@ __global__ void getCollisions(
 extern "C" void cudaGetCollisions(
 	float4* minMaxBuffer,
 	int* collisionBuffer,
-	const int amountOfCubes)
+	const int numberOfBoxes)
 {
 	cudaDeviceProp devProp;
 	int device;
@@ -70,14 +70,14 @@ extern "C" void cudaGetCollisions(
 	cudaGetDeviceProperties(&devProp, device);
 
 	int num = 1;
-	int threads = amountOfCubes;
+	int threads = numberOfBoxes;
 	int maxThreads = devProp.maxThreadsPerBlock;
 
-	if (amountOfCubes > maxThreads)
+	if (numberOfBoxes > maxThreads)
 	{
-		num = (int)ceilf(float(amountOfCubes) / maxThreads);
+		num = (int)ceilf(float(numberOfBoxes) / maxThreads);
 		threads = maxThreads;
 	}
 
-	getCollisions <<< num, threads >>>(minMaxBuffer, collisionBuffer, amountOfCubes);
+	getCollisions <<< num, threads >>>(minMaxBuffer, collisionBuffer, numberOfBoxes);
 }

@@ -1,7 +1,7 @@
 #include "ThrustHelper.h"
 
 ThrustHelper::CollisionFunctor::CollisionFunctor(uint aoc_, MinMaxDataThrust* mmd_)
-	:amountOfCubes(aoc_),
+	:numberOfBoxes(aoc_),
 	minMaxRaw(mmd_)
 {}
 
@@ -12,7 +12,7 @@ __host__ __device__ int ThrustHelper::CollisionFunctor::operator()(MinMaxDataThr
 	float3 currentMax = make_float3(minMax.max);
 	int i = index;
 
-	for (uint j = 0; j < amountOfCubes; j++)
+	for (uint j = 0; j < numberOfBoxes; j++)
 	{
 		if (i == j)
 			continue;
@@ -48,16 +48,16 @@ void ThrustHelper::thrustGetCollisions(
 	ThrustData& tdata,
 	MinMaxDataThrust* minMaxBuffer,
 	int* collisionBuffer,
-	const uint amountOfCubes)
+	const uint numberOfBoxes)
 {
-	if (tdata.collisions.size() < amountOfCubes)
+	if (tdata.collisions.size() < numberOfBoxes)
 	{
-		std::cout << "Thrust: allocating memory for " << amountOfCubes << " cubes.\n";
-		tdata.collisions.resize(amountOfCubes);
+		std::cout << "Thrust: allocating memory for " << numberOfBoxes << " boxes.\n";
+		tdata.collisions.resize(numberOfBoxes);
 	}
 	
 	// copy the minMaxBuffer to the device
-	tdata.minMaxBuffer.assign(minMaxBuffer, minMaxBuffer + amountOfCubes);
+	tdata.minMaxBuffer.assign(minMaxBuffer, minMaxBuffer + numberOfBoxes);
 
 	MinMaxDataThrust* minMaxDevice = thrust::raw_pointer_cast(tdata.minMaxBuffer.data());
 	
@@ -67,7 +67,7 @@ void ThrustHelper::thrustGetCollisions(
 		tdata.minMaxBuffer.end(),
 		thrust::make_counting_iterator(0),
 		tdata.collisions.begin(),
-		CollisionFunctor(amountOfCubes, minMaxDevice)
+		CollisionFunctor(numberOfBoxes, minMaxDevice)
 	);
 
 	// copy the device collision buffer to the host

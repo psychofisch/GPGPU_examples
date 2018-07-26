@@ -1,23 +1,17 @@
 <group>
-	<Debug_Information>
-		<FPS>95</FPS>
-	</Debug_Information>
 	<Program_Information>
-		<Mode>OpenCL</Mode>
-		<Particles>120/20000</Particles>
-		<Particle_Color>63, 151, 58, 255</Particle_Color>
-	<Workgroup_Size>4095</Workgroup_Size>
-	<Pause>0</Pause>
-		<Step>0</Step>
-	<Movement>1</Movement>
-	<Draw>1</Draw>
-	<Collisions>1</Collisions>
+		<FPS>247</FPS>
+		<Mode>CPU</Mode>
+		<Cubes>1000</Cubes>
+		<Collisions>0.00</Collisions>
+		<Measure_Next>0</Measure_Next>
+		<Time>2.57483</Time>
+	<Boxes>100</Boxes>
 	</Program_Information>
-	<Simulation_Settings>
-		<Smoothing_Width>0.382653</Smoothing_Width>
-	<Rest_Density>19.1327</Rest_Density>
-	<Spring>1.27551</Spring>
-		<Spring_Near>1.47959</Spring_Near>
-	</Simulation_Settings>
+	<Settings>
+		<Movement>0</Movement>
+		<Draw>1</Draw>
+		<Collisions>1</Collisions>
+	</Settings>
 <group/>
 </group>

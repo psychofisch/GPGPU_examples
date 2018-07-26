@@ -8,20 +8,20 @@ layout(std430, binding = 1) buffer CollisionBuffer {
 	int collisionBuffer[];
 };
 
-uniform int amountOfCubes;
+uniform int numberOfBoxes;
 
 layout(local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
 void main(){
 	uint index = gl_GlobalInvocationID.x;
 
-	if(index >= amountOfCubes)
+	if(index >= numberOfBoxes)
 		return;
 
 	vec3 currentMin = minMaxBuffer[(index * 2u)].xyz; //min
 	vec3 currentMax = minMaxBuffer[(index * 2u) + 1u].xyz; //max
 	int result = -1;
 
-	for (int j = 0; j < amountOfCubes; j++)
+	for (int j = 0; j < numberOfBoxes; j++)
 	{
 		if (index == j)
 			continue;

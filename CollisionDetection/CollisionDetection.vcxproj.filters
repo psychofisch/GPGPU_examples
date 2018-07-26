@@ -61,10 +61,10 @@
     <ClCompile Include="src\Stopwatch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Cube.cpp">
+    <ClCompile Include="src\CollisionSystem.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\CollisionSystem.cpp">
+    <ClCompile Include="src\Box.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -284,13 +284,13 @@
     <ClInclude Include="src\vec2i.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Cube.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\CollisionSystem.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\CollisionDefinitions.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Box.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

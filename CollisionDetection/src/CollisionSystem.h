@@ -12,7 +12,7 @@
 
 // own includes
 #include "CollisionDefinitions.h"
-#include "Cube.h"
+#include "Box.h"
 #include "ThrustHelper.h"
 #include "Stopwatch.h"
 
@@ -32,7 +32,7 @@ struct ComputeShaderData
 extern "C" void cudaGetCollisions(
 	float4* minMaxBuffer,
 	int* collisionBuffer,
-	const int amountOfCubes);
+	const int numberOfBoxes);
 
 struct CUDAta
 {
@@ -90,7 +90,7 @@ public:
 	// gets the result of the last measurement
 	double getMeasurement() const;
 	// method that calculates and returns the collisions
-	void getCollisions(const std::vector<Cube>& cubes, OUT std::vector<int>& collisions);
+	void getCollisions(const std::vector<Box>& boxes, OUT std::vector<int>& collisions);
 	
 	// statics
 
@@ -110,9 +110,9 @@ private:
 	double mLastMeasurement;
 	Stopwatch mClock;
 
-	void iGetCollisionsCPU(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
-	void iGetCollisionsCompute(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
-	void iGetCollisionsCUDA(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
-	void iGetCollisionsOCL(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
-	void iGetCollisionsThrust(std::vector<MinMaxData>& cubes, OUT std::vector<int>& collisions);
+	void iGetCollisionsCPU(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
+	void iGetCollisionsCompute(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
+	void iGetCollisionsCUDA(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
+	void iGetCollisionsOCL(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
+	void iGetCollisionsThrust(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
 };

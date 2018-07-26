@@ -28,7 +28,7 @@ namespace ThrustHelper
 
 	// define a struct to hold the function that is used by Thrust
 	struct CollisionFunctor : public thrust::binary_function < MinMaxDataThrust, int, int > {
-		uint amountOfCubes;
+		uint numberOfBoxes;
 		MinMaxDataThrust* minMaxRaw;
 
 		CollisionFunctor(uint aoc_, MinMaxDataThrust* mmd_);
@@ -40,5 +40,5 @@ namespace ThrustHelper
 		ThrustData& tdata,
 		MinMaxDataThrust* minMaxBuffer,
 		int* collisionBuffer,
-		const uint amountOfCubes);
+		const uint numberOfBoxes);
 }

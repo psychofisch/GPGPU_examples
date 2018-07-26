@@ -1,11 +1,12 @@
 <group>
 	<Program_Information>
-		<FPS>71</FPS>
+		<FPS>815</FPS>
 		<Mode>CPU</Mode>
-		<Cubes>100</Cubes>
-		<Collisions>22.00</Collisions>
+		<Cubes>1000</Cubes>
+		<Collisions>14.00</Collisions>
 		<Measure_Next>0</Measure_Next>
-		<Time>1.83618</Time>
+		<Time>0.072776</Time>
+	<Boxes>100</Boxes>
 	</Program_Information>
 	<Settings>
 		<Movement>1</Movement>
