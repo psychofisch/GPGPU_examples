@@ -96,7 +96,7 @@
       <Runtime>MTd</Runtime>
     </CudaCompile>
     <Link>
-      <AdditionalDependencies>cudart_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>./GL/glut32.lib;./GL/glew32.lib;./GL/glfw3d.lib;cudart_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
