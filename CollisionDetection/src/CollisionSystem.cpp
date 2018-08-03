@@ -220,7 +220,7 @@ std::string CollisionSystem::getComputeModeString(ComputeMode m)
 		return "UNKNOWN";
 }
 
-void CollisionSystem::iGetCollisionsCPU(std::vector<MinMaxData>& mMinMax, OUT std::vector<int>& collisions)
+void CollisionSystem::iGetCollisionsCPU(const std::vector<MinMaxData>& mMinMax, OUT std::vector<int>& collisions)
 {
 	// check min and max of all boxes for collision
 	std::vector<int> tmpCol(collisions.size());// OPT: local storage has a bit better performance again

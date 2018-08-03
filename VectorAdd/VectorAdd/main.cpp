@@ -111,7 +111,6 @@ void main(int argc, char *argv[])
 
 void clVectorAdd(const std::vector<int>& vecA, const std::vector<int>& vecB, std::vector<int>& vecC)
 {
-	cl_int err;
 	cl::Context context;
 
 	size_t platformId = 0;
@@ -120,83 +119,51 @@ void clVectorAdd(const std::vector<int>& vecA, const std::vector<int>& vecB, std
 	// query all available platforms
 	std::vector<cl::Platform> platforms;
 	cl::Platform::get(&platforms);
-	if (platforms.size() == 0 || platforms.size() < platformId + 1) {
-		std::cout << "ERROR: OpenCL platform not available!\n";
-		return;
-	}
 
 	// create a context and get available devices
 	cl::Platform platform = platforms[platformId];
-	std::cout << "Platform Name: " << platform.getInfo<CL_PLATFORM_NAME>(&err) << std::endl;
-	handle_clerror(err, __LINE__);
+
 	cl_context_properties properties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)(platform)(), 0 };
 
 	// create context on desired platform and select device
 	context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
-	std::vector<cl::Device> mDevices = context.getInfo<CL_CONTEXT_DEVICES>(&err);
-	handle_clerror(err, __LINE__);
+	std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
 
-	if (mDevices.size() == 0 || mDevices.size() < deviceId + 1)
-	{
-		std::cout << "ERROR: no available OpenCL devices found\n";
-		return;
-	}
-
-	char deviceName[255];
-	err = mDevices[deviceId].getInfo(CL_DEVICE_NAME, &deviceName);
-	std::cout << "using OpenCL device: " << deviceName << std::endl;
+	//char deviceName[255];
+	//devices[deviceId].getInfo(CL_DEVICE_NAME, &deviceName);
 
 	cl::Program program;
 	// load and build the kernel
-	const char* file = "vectorAdd.cl";
-	std::ifstream sourceFile(file);
-	if (!sourceFile)
-	{
-		std::cout << "kernel source file \"" << file << "\" not found!" << std::endl;
-		return;
-	}
+	std::ifstream sourceFile("vectorAdd.cl");
+
 	std::string sourceCode(
 		std::istreambuf_iterator<char>(sourceFile),
 		(std::istreambuf_iterator<char>()));
 	cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length() + 1));
 	program = cl::Program(context, source);
 
-	err = program.build(mDevices);
-	if (err != CL_SUCCESS)
-	{
-		std::string s;
-		program.getBuildInfo(mDevices[0], CL_PROGRAM_BUILD_LOG, &s);
-		std::cout << s << std::endl;
-		program.getBuildInfo(mDevices[0], CL_PROGRAM_BUILD_OPTIONS, &s);
-		std::cout << s << std::endl;
-		return;
-	}
-	handle_clerror(err, __LINE__);
+	program.build(devices);
 
 	//create kernels
-	cl::Kernel kernel = cl::Kernel(program, "vectorAdd", &err);
-	handle_clerror(err, __LINE__);
+	cl::Kernel kernel = cl::Kernel(program, "vectorAdd");
 
-	cl::CommandQueue queue = cl::CommandQueue(context, mDevices[deviceId], 0, &err);
-	handle_clerror(err, __LINE__);
+	cl::CommandQueue queue = cl::CommandQueue(context, devices[deviceId], 0);
 
-	//create and fill kernels
+	//create and fill buffers
 	size_t size = sizeof(int) * vecC.size();
 	cl::Buffer vecs[3];
 	auto it = vecA.begin();
-	vecs[0] = cl::Buffer(context, CL_MEM_READ_ONLY, size, 0, &err);
-	vecs[1] = cl::Buffer(context, CL_MEM_READ_ONLY, size, 0, &err);
-	vecs[2] = cl::Buffer(context, CL_MEM_WRITE_ONLY, size, 0, &err);
+	vecs[0] = cl::Buffer(context, CL_MEM_READ_ONLY, size, 0);
+	vecs[1] = cl::Buffer(context, CL_MEM_READ_ONLY, size, 0);
+	vecs[2] = cl::Buffer(context, CL_MEM_WRITE_ONLY, size, 0);
 
-	err = queue.enqueueWriteBuffer(vecs[0], CL_FALSE, 0, size, vecA.data());
-	err = queue.enqueueWriteBuffer(vecs[1], CL_TRUE, 0, size, vecB.data());
-	handle_clerror(err, __LINE__);
+	queue.enqueueWriteBuffer(vecs[0], CL_FALSE, 0, size, vecA.data());
+	queue.enqueueWriteBuffer(vecs[1], CL_TRUE, 0, size, vecB.data());
 
-	err = kernel.setArg(0, vecs[0]);
-	err = kernel.setArg(1, vecs[1]);
-	err = kernel.setArg(2, vecs[2]);
-	err = kernel.setArg(3, vecC.size());
-	handle_clerror(err, __LINE__);
+	kernel.setArg(0, vecs[0]);
+	kernel.setArg(1, vecs[1]);
+	kernel.setArg(2, vecs[2]);
+	kernel.setArg(3, vecC.size());
 
 	//dispatch kernel
 	// calculate the global and local size
@@ -207,12 +174,10 @@ void clVectorAdd(const std::vector<int>& vecA, const std::vector<int>& vecB, std
 	local = cl::NDRange(10);
 	global = cl::NDRange(10);
 
-	err = queue.enqueueNDRangeKernel(kernel, offset, global, local);
-	handle_clerror(err, __LINE__);
+	queue.enqueueNDRangeKernel(kernel, offset, global, local);
 
 	//get result from GPU
-	err = queue.enqueueReadBuffer(vecs[2], CL_TRUE, 0, size, vecC.data());
-	handle_clerror(err, __LINE__);
+	queue.enqueueReadBuffer(vecs[2], CL_TRUE, 0, size, vecC.data());
 
 	return;
 }

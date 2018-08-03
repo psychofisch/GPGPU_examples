@@ -110,7 +110,7 @@ private:
 	double mLastMeasurement;
 	Stopwatch mClock;
 
-	void iGetCollisionsCPU(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
+	void iGetCollisionsCPU(const std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCompute(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
 	void iGetCollisionsCUDA(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);
 	void iGetCollisionsOCL(std::vector<MinMaxData>& boxes, OUT std::vector<int>& collisions);

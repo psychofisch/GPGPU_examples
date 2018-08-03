@@ -1,11 +1,11 @@
 <group>
 	<Program_Information>
-		<FPS>118</FPS>
-		<Mode>CUDA</Mode>
+		<FPS>34</FPS>
+		<Mode>OpenCL</Mode>
 		<Cubes>1000</Cubes>
-		<Collisions>17.60</Collisions>
+		<Collisions>17.35</Collisions>
 		<Measure_Next>0</Measure_Next>
-		<Time>506.685</Time>
+		<Time>26.2057</Time>
 	<Boxes>2000</Boxes>
 	</Program_Information>
 	<Settings>
