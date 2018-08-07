@@ -9,12 +9,16 @@
 #include "GL\glut.h"
 #include "GL\glfw3.h"
 
+//#include <openFrameworks\gl\ofBufferObject.h>
+//#include <openFrameworks\gl\ofShader.h>
+
 #include "thrust.h"
 
 extern "C" void cudaVectorAdd(const int *vectorA, const int *vectorB, int *vectorC, int numElements);
 void handle_clerror(cl_int err, int line);
 std::string cl_errorstring(cl_int err);
-void clVectorAdd(const std::vector<int>& vecA, const std::vector<int>& vecB, std::vector<int>& vecC);
+void clVectorAdd(const int *vectorA, const int *vectorB, int *vectorC, int numElements);
+void glslVectorAdd(const int *vectorA, const int *vectorB, int *vectorC, int numElements);
 
 #define DEBUG
 
@@ -36,7 +40,7 @@ void main(int argc, char *argv[])
 	{
 #ifdef DEBUG
 		vectorA[i] = -10;
-		vectorB[i] = +10;
+		vectorB[i] = +20;
 		vectorC[i] = 666;
 #elif
 		vectorA[i] = intR(mt);
@@ -66,7 +70,7 @@ void main(int argc, char *argv[])
 	{
 		// Compute Shader
 		std::cout << "OpenCL";
-		clVectorAdd(vectorA, vectorB, vectorC);
+		clVectorAdd(vectorA.data(), vectorB.data(), vectorC.data(), arraySize);
 		//*** cs
 	}
 	else if (strcmp("cuda", argv[1]) == 0)
@@ -96,7 +100,7 @@ void main(int argc, char *argv[])
 	bool check = true;
 	for (size_t i = 0; i < vectorC.size(); i++)
 	{
-		if (vectorC[i] != 0)
+		if (vectorC[i] != 10)
 		{
 			check = false;
 			break;
@@ -109,7 +113,7 @@ void main(int argc, char *argv[])
 	std::cin.ignore();
 }
 
-void clVectorAdd(const std::vector<int>& vecA, const std::vector<int>& vecB, std::vector<int>& vecC)
+void clVectorAdd(const int *vectorA, const int *vectorB, int *vectorC, int numElements)
 {
 	cl::Context context;
 
@@ -150,20 +154,19 @@ void clVectorAdd(const std::vector<int>& vecA, const std::vector<int>& vecB, std
 	cl::CommandQueue queue = cl::CommandQueue(context, devices[deviceId], 0);
 
 	//create and fill buffers
-	size_t size = sizeof(int) * vecC.size();
+	size_t size = sizeof(int) * numElements;
 	cl::Buffer vecs[3];
-	auto it = vecA.begin();
 	vecs[0] = cl::Buffer(context, CL_MEM_READ_ONLY, size, 0);
 	vecs[1] = cl::Buffer(context, CL_MEM_READ_ONLY, size, 0);
 	vecs[2] = cl::Buffer(context, CL_MEM_WRITE_ONLY, size, 0);
 
-	queue.enqueueWriteBuffer(vecs[0], CL_FALSE, 0, size, vecA.data());
-	queue.enqueueWriteBuffer(vecs[1], CL_TRUE, 0, size, vecB.data());
+	queue.enqueueWriteBuffer(vecs[0], CL_FALSE, 0, size, vectorA);
+	queue.enqueueWriteBuffer(vecs[1], CL_TRUE, 0, size, vectorB);
 
 	kernel.setArg(0, vecs[0]);
 	kernel.setArg(1, vecs[1]);
 	kernel.setArg(2, vecs[2]);
-	kernel.setArg(3, vecC.size());
+	kernel.setArg(3, numElements);
 
 	//dispatch kernel
 	// calculate the global and local size
@@ -177,9 +180,38 @@ void clVectorAdd(const std::vector<int>& vecA, const std::vector<int>& vecB, std
 	queue.enqueueNDRangeKernel(kernel, offset, global, local);
 
 	//get result from GPU
-	queue.enqueueReadBuffer(vecs[2], CL_TRUE, 0, size, vecC.data());
+	queue.enqueueReadBuffer(vecs[2], CL_TRUE, 0, size, vectorC);
 
 	return;
+}
+
+void glslVectorAdd(const int * vectorA, const int * vectorB, int * vectorC, int numElements)
+{
+	//ofShader kernel;
+	//kernel.setupShaderFromFile(GL_COMPUTE_SHADER, "vectorAdd.compute");
+
+	//ofBufferObject glA, glB, glC;
+	//glA.allocate(sizeof(int) * numElements, GL_DYNAMIC_DRAW);
+	//glB.allocate(sizeof(int) * numElements, GL_DYNAMIC_DRAW);
+	//glC.allocate(sizeof(int) * numElements, GL_DYNAMIC_DRAW);
+
+	//glA.updateData(sizeof(int) * numElements, vectorA);
+	//glB.updateData(sizeof(int) * numElements, vectorB);
+
+	//glA.bindBase(GL_SHADER_STORAGE_BUFFER, 0);
+	//glB.bindBase(GL_SHADER_STORAGE_BUFFER, 1);
+	//glC.bindBase(GL_SHADER_STORAGE_BUFFER, 2);
+
+	//kernel.begin();
+	//kernel.setUniform1i("numberOfElements", numElements);
+
+	//kernel.dispatchCompute(std::ceilf(float(numElements) / 512), 1, 1);
+	//kernel.end();//forces the program to wait until the calculation is finished 
+
+	//// copy the GPU data back to the CPU
+	//int* result = glC.map<int>(GL_READ_ONLY);
+	//memcpy(vectorC, result, sizeof(int) * numElements);
+	//glC.unmap();
 }
 
 inline void handle_clerror(cl_int err, int line)

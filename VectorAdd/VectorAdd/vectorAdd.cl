@@ -1,12 +1,12 @@
 __kernel void vectorAdd(
-	__global int* A,
-	__global int* B,
+	__global const int* A,
+	__global const int* B,
 	__global int* C,
-	const size_t numberOfBoxes
+	const int numberOfElements
 ){
 	uint index = get_global_id(0);
 
-	if(index >= numberOfBoxes)
+	if(index >= numberOfElements)
 		return;
 
 	C[index] = A[index] + B[index];

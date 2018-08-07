@@ -73,7 +73,7 @@
     <IncludePath>$(CUDA_PATH_V9_1)/include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(CUDA_PATH_V9_1)/include;$(IncludePath)</IncludePath>
+    <IncludePath>$(CUDA_PATH_V9_1)/include;..\..\..\of_v0.9.8_vs_release\libs;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -96,7 +96,7 @@
       <Runtime>MTd</Runtime>
     </CudaCompile>
     <Link>
-      <AdditionalDependencies>./GL/glut32.lib;./GL/glew32.lib;./GL/glfw3d.lib;cudart_static.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>./GL/glut32.lib;./GL/glew32.lib;./GL/glfw3.lib;cudart_static.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
