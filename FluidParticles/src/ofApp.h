@@ -70,9 +70,4 @@ private:
 	ofParameter<float> mHudPressureMultiplier;
 	ofParameter<float> mHudViscosity;
 	ofParameter<float> mHudRestPressure;
-
-	ofParameterGroup mHudGameGroup;
-	ofParameter<std::string> mHudGameGameState;
-	ofParameter<std::string> mHudGameHelp;
-	ofParameter<float> mHudGameTime;
 };

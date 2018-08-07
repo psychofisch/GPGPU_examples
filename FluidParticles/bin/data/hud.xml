@@ -1,17 +1,17 @@
 <group>
 	<Debug_Information>
-		<FPS>52</FPS>
+		<FPS>291</FPS>
 	</Debug_Information>
 	<Program_Information>
 		<Mode>OpenCL</Mode>
-		<Particles>15000/50000</Particles>
+		<Particles>3000/50000</Particles>
 		<Particle_Color>63, 151, 58, 255</Particle_Color>
 	<Workgroup_Size>4095</Workgroup_Size>
 	<Pause>0</Pause>
 		<Step>0</Step>
 	<Time>1.00128</Time>
 	<Save_On_Exit>1</Save_On_Exit>
-	<Update>17.3551</Update>
+	<Update>2.09525</Update>
 	</Program_Information>
 	<Simulation_Settings>
 		<Interaction_Radius>0.142857</Interaction_Radius>

@@ -1,12 +1,15 @@
 # GPGPU_examples
 
 ## Intro
-This is a proof of concept implementation of fluid particles on CPU and GPU.
-Currently implemented modes are CPU, OpenGL Compute Shader, CUDA, OpenCL and Thrust.
-(Thrust is disabled in the Fluid Simulation by default, because of its bad performance)
+This repository contains multiple technical demos that show the power of GPU computing.
+- Fluid: This is a proof of concept implementation of a fluid particles system. The following modes are available: CPU, OpenGL Compute Shader, CUDA, OpenCL and Thrust. (Thrust is disabled by default, because only part of the implementation works)
+- Collision: This demo shows a simple AABB collision detection system. The following modes are available: CPU, OpenGL Compute Shader, CUDA, OpenCL and Thrust.
+- MiniGame: This is a *proof of concept* mini game that is a combination of the 2 demos above. Thrust is not available.
+- VectorAdd: A simple project that only shows the basics of GPU computing. Available modes: CPU, OpenGL Compute Shader, CUDA, OpenCL and Thrust.
 
 ### Build
-This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9.8/of_v0.9.8_vs_release.zip) and it is configured that the folder structure looks this:
+All of the included projects require [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9.8/of_v0.9.8_vs_release.zip) and are configured to support the following folder structure below.  
+They also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda-downloads).
 ```
 <some folder>
 └───GPGPU_examples
@@ -39,15 +42,14 @@ This project uses [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9
     └   ...
 ```
 
-It also requires the [Nvidia CUDA Toolkit 9.1](https://developer.nvidia.com/cuda-downloads) to be installed.
-
 ## CollisionDetection
 #### Controls
 | Key        | Function         
 | ---------- |-------------|
 | mouse | look around |
 | WASD  | move  |
-| M | switch between CPU and the different GPU modes (if more than 1000 particles are present in the scene "CPU" mode becomes unavailable -> performance) |
+| E  | add boxes  |
+| M | switch between CPU and the different GPU modes |
 | C | lock camera |
 | Esc | close application |
 
@@ -57,6 +59,9 @@ The file ```GPGPU_examples/CollisionDetection/bin/data/settings.xml``` holds all
 ┌───settings.xml
 │   └───GENERAL
 │   │   │   BOXES → int, number of boxes
+│   │   │   ADD → int, number of boxes that get added with each keypress
+│   │   │   VERT → string, filename of the vertex shader for the boxes
+│   │   │   FRAG → string, filename of the fragment shader for the boxes
 │   │
 │   └───CONTROLS
 │   │   │   MOUSESENS → float, mouse sensitivity
@@ -81,7 +86,7 @@ The file ```GPGPU_examples/CollisionDetection/bin/data/settings.xml``` holds all
 │   │   │   DEVICEID → int, specify deviceID
 │   │
 │   └───THRUST
-│   │   │   ENABLED → int, enables/disables mode (currently not implemented)
+│   │   │   ENABLED → int, enables/disables mode
 ```
 
 All settings in ```GPGPU_examples/CollisionDetection/bin/data/hud.xml``` are saved automatically and can be modified at runtime.
@@ -105,6 +110,8 @@ The file ```GPGPU_examples/FluidParticles/bin/data/settings.xml``` holds all ava
 │   └───GENERAL
 │   │   │   MAXPARTICLES → int, maximum number of particles
 │   │   │   DROPSIZE → int, number of particles dropped
+│   │   │   VERT → string, filename of the vertex shader for the particles
+│   │   │   FRAG → string, filename of the fragment shader for the particles
 │   │
 │   └───CONTROLS
 │   │   │   MOUSESENS → float, mouse sensitivity
@@ -115,6 +122,7 @@ The file ```GPGPU_examples/FluidParticles/bin/data/settings.xml``` holds all ava
 │   │
 │   └───COMPUTE
 │   │   │   ENABLED → int, enables/disables mode
+│   │   │   WORKGROUPCOUNT → int, size of the workgroup defined in the  compute shader
 │   │   │   SOURCE → string, path to source file
 │   │
 │   └───CUDA
@@ -186,6 +194,7 @@ All settings in ```GPGPU_examples/MiniGame/bin/data/hud.xml``` are saved automat
 
 # Known Issues
 * Collision: While developing my whole system crashed sometimes when switching into CUDA mode. I'm still not sure what is causing this, because I can't reproduce it. BEWARE!
+* Collision: After a lot of adding and removing of boxes the rendering failed. Boxes that are not colliding get rendered flickering in a cyan and red.
 
 # Author
 Thomas Fischer (psychofisch)

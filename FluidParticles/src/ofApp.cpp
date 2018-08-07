@@ -16,7 +16,7 @@ void ofApp::setup() {
 	}
 
 	// graphic setup
-	ofGetWindowPtr()->setWindowTitle(mXmlSettings.getValue("GENERAL:TITLE", "Minigame"));
+	ofGetWindowPtr()->setWindowTitle("Fluid Particle System");
 
 	//ofSetFrameRate(144);
 	ofSetVerticalSync(false);
@@ -79,16 +79,10 @@ void ofApp::setup() {
 	mHudSimulationGroup.add(mHudViscosity.set("Viscosity", 1.0f, 0.0f, 1000.f));
 	mHudSimulationGroup.add(mHudRestPressure.set("Rest Pressure", .1f, 0.0f, 1.f));
 
-	mHudGameGroup.setName("Game Info");
-	mHudGameGroup.add(mHudGameGameState.set("Gamestate", "???"));
-	mHudGameGroup.add(mHudGameTime.set("Time", -1.f));
-	mHudGameGroup.add(mHudGameHelp.set("Help", "???"));
-
 	mHud.setup();
 	mHud.add(mHudDebugGroup);
 	mHud.add(mHudControlGroup);
 	mHud.add(mHudSimulationGroup);
-	mHud.add(mHudGameGroup);
 	mHud.loadFromFile("hud.xml");
 
 	mHudMode = ParticleSystem::getComputeModeString(mParticleSystem->getMode());
