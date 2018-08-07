@@ -167,7 +167,7 @@
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\emscripten;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\Win32;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\lib\vs\x64;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\libs\assimp\license;..\..\of_v0.9.8_vs_release\addons\ofxAssimpModelLoader\src;..\..\of_v0.9.8_vs_release\addons\ofxGui\src;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\libs;..\..\of_v0.9.8_vs_release\addons\ofxXmlSettings\src;$(CUDA_PATH_V9_1)/include;..\NvidiaCUDA\inc;..\NvidiaOpenCL\inc</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
-      <OpenMPSupport>true</OpenMPSupport>
+      <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>

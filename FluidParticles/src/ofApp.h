@@ -41,6 +41,7 @@ private:
 	ofShader mWorldShader;
 	ofBoxPrimitive mWorld;
 	std::vector<Cube> mCollider;
+	float mMeasureTime;
 
 	ofxXmlSettings mXmlSettings;
 
@@ -59,6 +60,7 @@ private:
 	ofParameter<size_t> mHudWorkGroup;
 	ofParameter<std::string> mHudParticles;
 	ofParameter<float> mHudTime;
+	ofParameter<float> mHudLastUpdate;
 	ofParameter<bool> mHudSaveOnExit;
 
 	ofParameterGroup mHudSimulationGroup;

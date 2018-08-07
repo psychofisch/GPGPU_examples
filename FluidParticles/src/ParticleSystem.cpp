@@ -564,6 +564,11 @@ ofVec3f ParticleSystem::getGravity() const
 	return mGravity;
 }
 
+float ParticleSystem::getLastUpdate() const
+{
+	return mLastUpdateTime;
+}
+
 void ParticleSystem::measureNextUpdate()
 {
 	mMeasureTime = true;
@@ -575,10 +580,8 @@ void ParticleSystem::update(float dt)
 	if (mNumberOfParticles == 0)
 		return;
 
-	uint64_t cycle;
 	if (mMeasureTime)
 		mClock.start();
-		//cycle = __rdtsc();
 
 	// each update computes the new particle positions and stores them into mParticlePosition (on the CPU)
 	switch (mMode)
@@ -605,10 +608,9 @@ void ParticleSystem::update(float dt)
 
 	if (mMeasureTime)
 	{
-		double time = mClock.getDuration(mClock.stop());
-		std::cout << time << std::endl;
-		//cycle = __rdtsc() - cycle;
-		//std::cout << /*mNumberOfParticles << ";" <<*/ cycle << std::endl;
+		mLastUpdateTime = mClock.getDuration(mClock.stop());
+		//double time = mClock.getDuration(mClock.stop());
+		//std::cout << time * 1000 << std::endl;
 		mMeasureTime = false;
 	}
 }

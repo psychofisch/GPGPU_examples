@@ -1,12 +1,12 @@
 <group>
 	<Program_Information>
-		<FPS>34</FPS>
-		<Mode>OpenCL</Mode>
+		<FPS>238</FPS>
+		<Mode>CPU</Mode>
 		<Cubes>1000</Cubes>
-		<Collisions>17.35</Collisions>
+		<Collisions>12.75</Collisions>
 		<Measure_Next>0</Measure_Next>
-		<Time>26.2057</Time>
-	<Boxes>2000</Boxes>
+		<Time>2.851</Time>
+	<Boxes>800</Boxes>
 	</Program_Information>
 	<Settings>
 		<Movement>1</Movement>

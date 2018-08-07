@@ -128,6 +128,7 @@ public:
 	Particle::CUDAta& getCudata();
 	ofVec3f getPosition() const;
 	ofVec3f getGravity() const;
+	float getLastUpdate() const;
 
 	// simple setters
 
@@ -209,6 +210,7 @@ private:
 	std::vector<MinMaxData> mStaticCollision;
 	bool mMeasureTime,
 		mGenericSwitch;
+	float mLastUpdateTime;
 
 	void iUpdateCPU(float dt);
 	void iUpdateCompute(float dt);

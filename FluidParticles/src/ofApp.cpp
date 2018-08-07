@@ -68,6 +68,7 @@ void ofApp::setup() {
 	//mHudControlGroup.add(mHudWorkGroup.set("Workgroup Size", tmpCUDA.maxWorkGroupSize, 1, tmpCUDA.maxWorkGroupSize));
 	mHudControlGroup.add(mHudParticles.set("Particles", "0/XXX"));
 	mHudControlGroup.add(mHudTime.set("Time", 1.0f, 0.f, 5.f));
+	mHudControlGroup.add(mHudLastUpdate.set("Update", 1.0f, 0.f, 16.f));
 	mHudControlGroup.add(mHudSaveOnExit.set("Save On Exit", false));
 
 	mHudSimulationGroup.setName("Simulation Settings");
@@ -160,11 +161,24 @@ void ofApp::update() {
 		float dt = deltaTime;
 		dt *= mHudTime;
 
+		mMeasureTime += dt;
+
+		if (mMeasureTime > 0.1f)
+		{
+			mParticleSystem->measureNextUpdate();
+		}
+
 		if (mHudStep)
 			dt = 0.033f;
 
 		// update particles
 		mParticleSystem->update(dt);
+
+		if (mMeasureTime > 0.3f)
+		{
+			mMeasureTime = 0.f;
+			mHudLastUpdate = mParticleSystem->getLastUpdate() * 1000;
+		}
 
 		// reset this bool if step mode is activated (no unnecessary branching)
 		mHudStep = false;
