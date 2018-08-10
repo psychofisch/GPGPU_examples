@@ -363,16 +363,28 @@ void ParticleSystem::addDamBreak(uint particleAmount)
 void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmount, bool random)
 {
 	//some calculations to distribute the particles evenly
-	float cubedParticles = powf(particleAmount, 1.f / 3.f) * 3;
-	float ratio;
-	ratio = cubeSize.x / (cubeSize.x + cubeSize.y + cubeSize.z);
-	float gap;
-	gap = cubeSize.x / (cubedParticles * ratio);
+	float gap = mSimData.interactionRadius * .2f;
+	float ps = gap;
+	float cv = cubeSize.x * cubeSize.y * cubeSize.z;
+	float pv = ps * ps * ps;
+	float pvc = pv * particleAmount;
+	uint particleAmountNew = particleAmount;
+
+	if (pvc < cv)
+	{
+		gap = std::cbrtf(cv / particleAmount);
+		std::cout << "addCube: gap increased to " << gap << "!\n";
+	}
+	else
+	{
+		particleAmountNew = std::floorf(cv / pv);
+		std::cout << "addCube: capped to " << particleAmountNew << " particles!\n";
+	}
 
 	ofVec3f partPos;
 	uint particleCap = -1;
 
-	for (uint i = 0; i < particleAmount; i++)
+	for (uint i = 0; i < particleAmountNew; i++)
 	{
 		// stops if the maximum number of particles is reached
 		if (mNumberOfParticles + i >= mCapacity)
@@ -419,7 +431,7 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 
 	//if "particleCap" is still -1, all particles got spawned
 	if (particleCap == -1)
-		particleCap = particleAmount;
+		particleCap = particleAmountNew;
 
 	// sync the particles to the corresponding buffers
 	if (mMode == ComputeMode::COMPUTE_SHADER)

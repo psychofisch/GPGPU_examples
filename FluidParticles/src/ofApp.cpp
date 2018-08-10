@@ -315,9 +315,10 @@ void ofApp::keyReleased(int key) {
 		break;
 	case 'e':
 	{
-		ofVec3f tmpSize = mParticleSystem->getDimensions() * 0.5f;
+		ofVec3f tmpSize = mParticleSystem->getDimensions();
+		tmpSize.x *= 0.2f;
 		//mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
-		mParticleSystem->addCube(ofVec3f(0, 0.5f, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
+		mParticleSystem->addCube(ofVec3f(0, 0, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 	}
 	break;
 	case 'v':
