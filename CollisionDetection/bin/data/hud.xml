@@ -1,12 +1,12 @@
 <group>
 	<Program_Information>
-		<FPS>238</FPS>
-		<Mode>CPU</Mode>
+		<FPS>486</FPS>
+		<Mode>CUDA</Mode>
 		<Cubes>1000</Cubes>
-		<Collisions>12.75</Collisions>
+		<Collisions>0.00</Collisions>
 		<Measure_Next>0</Measure_Next>
-		<Time>2.851</Time>
-	<Boxes>800</Boxes>
+		<Time>0.843138</Time>
+	<Boxes>4</Boxes>
 	</Program_Information>
 	<Settings>
 		<Movement>1</Movement>

@@ -169,6 +169,7 @@ void CollisionSystem::getCollisions(const std::vector<Box>& boxes, OUT std::vect
 	if (boxes.size() != collisions.size())
 	{
 		std::cout << "CollisionSystem, " << __LINE__ << ": the input and output vector do not have the same size!\n";
+		return;
 	}
 
 	std::vector<MinMaxData> minMax(boxes.size());// OPT: storing mMinMax locally is about 10% faster than having a member
