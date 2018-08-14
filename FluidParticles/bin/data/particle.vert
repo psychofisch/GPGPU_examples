@@ -11,7 +11,7 @@ in vec3  normal;
 // layout(location = 3) in vec3  normal;
 
 // custom in
-layout (std140, binding = 4) buffer PositionBuffer{
+layout (std140, binding = 0) buffer PositionBuffer{
 	vec4 positionBuffer[];
 };
 
@@ -41,6 +41,8 @@ void main()
 	particleNumber = gl_InstanceID;
 	//vPos = (scale * position) + vec4(systemPos, 0.0) + positionBuffer[gl_InstanceID];
 	vPos = (scale * position) + positionBuffer[gl_InstanceID];
+	float speed = vPos.w;
+	vPos.w = 1.0;
 
 	//float val = float(gl_InstanceID)/particles;
 	//vec3 vCol = mix(vec3(1.0, 0, 0), vec3(0, 1.0, 0), val);
@@ -49,7 +51,9 @@ void main()
 	//gl_Position = projectionMatrix * modelViewMatrix * vPos;
 	
 	float val = float(particleNumber)/particles;
-	vCol = mix(vec3(1.0, 0, 0), vec3(0, 1.0, 0), val);
+	val = speed/3.0;
+	val *= val;
+	vCol = mix(vec3(0, 1.0, 1.0), vec3(1.0, 0, 1.0), val);
 	color = vec4(vCol, 1.0);
 	
 	normalF = normal;

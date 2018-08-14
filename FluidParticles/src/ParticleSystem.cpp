@@ -315,12 +315,6 @@ void ParticleSystem::setStaticCollision(std::vector<MinMaxData>& collision)
 		mOCLHelper.getCommandQueue().enqueueWriteBuffer(mOCLData.staticCollisionBuffer, CL_TRUE, 0, sizeof(MinMaxData) * colliderSize, mStaticCollision.data());
 		oclHelper::handle_clerror(err, __LINE__);
 	}
-
-	//Thrust
-	if (mAvailableModes[ComputeMode::THRUST])
-	{
-
-	}
 }
 
 void ParticleSystem::setGravity(ofVec3f g)
@@ -476,7 +470,7 @@ void ParticleSystem::draw(const ofVec3f& _camera, const ofVec3f& _sunDir, ofPoly
 	identity.scale(ofVec3f(mSimData.interactionRadius * 0.1f));
 
 	// bind the buffer positions
-	mParticlesVBO.getVertexBuffer().bindBase(GL_SHADER_STORAGE_BUFFER, 4);
+	mParticlesVBO.getVertexBuffer().bindBase(GL_SHADER_STORAGE_BUFFER, 0);
 
 	// set uniforms
 	//mParticleShader.setUniform3f("systemPos", mPosition);//TODO: evaluate if the "game world" should be able to move
@@ -490,7 +484,7 @@ void ParticleSystem::draw(const ofVec3f& _camera, const ofVec3f& _sunDir, ofPoly
 	mParticleModel.drawInstanced(OF_MESH_FILL, mNumberOfParticles);
 
 	// unbind and clean up
-	mParticlesVBO.getVertexBuffer().unbindBase(GL_SHADER_STORAGE_BUFFER, 4);
+	mParticlesVBO.getVertexBuffer().unbindBase(GL_SHADER_STORAGE_BUFFER, 0);
 
 	mParticleShader.end();
 
@@ -616,7 +610,7 @@ void ParticleSystem::update(float dt)
 	}
 
 	// copy CPU data to the GL buffer for drawing
-	mParticlesBuffer.updateData(sizeof(ofVec4f) * mNumberOfParticles, mParticlePosition.data());
+	mParticlesBuffer.updateData(mParticlePosition);
 
 	if (mMeasureTime)
 	{
@@ -717,6 +711,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 		mParticleVelocity[i] = particleVelocity;
 		//mParticlePosition[i] = particlePosition + mPosition; // add the system position offset
 		tmpPos[i] = particlePosition + mPosition; // add the system position offset
+		tmpPos[i].w = particleVelocity.length();
 	}
 
 	std::copy(tmpPos.begin(), tmpPos.end(), mParticlePosition.begin());

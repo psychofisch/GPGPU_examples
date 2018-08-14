@@ -100,7 +100,7 @@ __global__ void particleUpdate(
 	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
-	positionOut[index] = make_float4(particlePosition + position, 0.0f);
+	positionOut[index] = make_float4(particlePosition + position, length(particleVelocity));
 	velocity[index] = make_float4(particleVelocity, 0.0f);
 }
 
