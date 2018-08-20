@@ -367,13 +367,13 @@ void ParticleSystem::addCube(ofVec3f cubePos, ofVec3f cubeSize, uint particleAmo
 	if (pvc < cv)
 	{
 		gap = std::cbrtf(cv / particleAmount);
-		std::cout << "addCube: gap increased to " << gap << "!\n";
+		//std::cout << "addCube: gap increased to " << gap << "!\n";
 	}
-	else
+	/*else
 	{
 		particleAmountNew = std::floorf(cv / pv);
 		std::cout << "addCube: capped to " << particleAmountNew << " particles!\n";
-	}
+	}*/
 
 	ofVec3f partPos;
 	uint particleCap = -1;
