@@ -148,7 +148,7 @@ public:
 	void addCube(ofVec3f position, ofVec3f size, uint particleAmount, bool random = false);
 	// draws the particle VBO
 	void draw(const ofVec3f& _camera, const ofVec3f& _sunDir, ofPolyRenderMode _rm);
-	// removes all particles that are in the endzone and returns how many particles got removed
+	// removes all particles in the given box and returns how many particles got removed
 	uint removeInVolume(MinMaxData v);
 
 	//Simulation

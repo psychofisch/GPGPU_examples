@@ -40,7 +40,7 @@ void main()
 	// this tells you which primitive we are currently working on
 	particleNumber = gl_InstanceID;
 	//vPos = (scale * position) + vec4(systemPos, 0.0) + positionBuffer[gl_InstanceID];
-	vPos = (scale * position) + positionBuffer[gl_InstanceID];
+	vPos = (scale * position) + vec4(positionBuffer[gl_InstanceID].xyz, 0.f);
 
 	//float val = float(gl_InstanceID)/particles;
 	//vec3 vCol = mix(vec3(1.0, 0, 0), vec3(0, 1.0, 0), val);

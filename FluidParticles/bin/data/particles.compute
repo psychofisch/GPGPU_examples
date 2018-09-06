@@ -132,6 +132,9 @@ vec3 calculatePressure(uint index, vec3 pos, vec3 vel)
 		vec3 dirVec = pos - positionBuffer[i].xyz;
 		float dist = length(dirVec);
 
+		if (dist == 0)
+			continue;
+
 		if (dist > interactionRadius)
 			continue;
 

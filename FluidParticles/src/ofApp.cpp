@@ -93,13 +93,8 @@ void ofApp::setup() {
 
 	// level setup
 	Cube tmpCube;
-	tmpCube.set(.25f);
-
-	tmpCube.set(0.1f, 0.3f, 0.8f);
-	tmpCube.setPosition(ofVec3f(0.4f, -0.01f, -0.01f) + (tmpCube.getSize() * 0.5f));
-	mCollider.push_back(tmpCube);
-
-	tmpCube.setPosition(ofVec3f(0.699f, -0.01f, 0.21f) + (tmpCube.getSize() * 0.5f));
+	tmpCube.set(.3f);
+	tmpCube.setPosition(ofVec3f(0.35f, 0, 0.35f) + (tmpCube.getSize().y * 0.5f));
 	mCollider.push_back(tmpCube);
 
 	std::vector<MinMaxData> minMax(mCollider.size());
@@ -264,16 +259,16 @@ void ofApp::keyPressed(int key) {
 	case OF_KEY_ESC: quit();
 		break;
 	case 'w':
-		mMoveVec.z = .5f;
+		mMoveVec.z = 1.5f;
 		break;
 	case 's':
-		mMoveVec.z = -.5f;
+		mMoveVec.z = -1.5f;
 		break;
 	case 'a':
-		mMoveVec.x = .5f;
+		mMoveVec.x = 1.5f;
 		break;
 	case 'd':
-		mMoveVec.x = -.5f;
+		mMoveVec.x = -1.5f;
 		break;
 	case 'v':
 		mValve = true;
@@ -316,7 +311,7 @@ void ofApp::keyReleased(int key) {
 	case 'e':
 	{
 		ofVec3f tmpSize = mParticleSystem->getDimensions();
-		tmpSize.x *= 0.2f;
+		tmpSize.x *= 0.1f;
 		//mParticleSystem->addCube(tmpSize * ofVec3f(ofRandom(1.0f), 1, ofRandom(1.0f)), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 		mParticleSystem->addCube(ofVec3f(0, 0, 0), tmpSize, mXmlSettings.getValue("GENERAL:DROPSIZE", 1000));
 	}

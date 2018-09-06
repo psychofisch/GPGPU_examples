@@ -609,6 +609,18 @@ void ParticleSystem::update(float dt)
 			break;
 	}
 
+	for (int i = 0; uint(i) < mNumberOfParticles; ++i)
+	{
+		ofVec3f particlePosition = mParticlePosition[i];
+		ofVec3f particleVelocity = mParticleVelocity[i];
+
+		for (int i = 0; i < 3; i++)
+		{
+			if (isnan(particlePosition[i]) || isnan(particleVelocity[i]))
+				__debugbreak();
+		}
+	}
+
 	// copy CPU data to the GL buffer for drawing
 	mParticlesBuffer.updateData(mParticlePosition);
 
@@ -635,8 +647,7 @@ void ParticleSystem::iUpdateCPU(float dt)
 
 	std::vector<ofVec4f> tmpPos(mNumberOfParticles);//no need for single-thread usage but needed to get "correct" results in multi-threaded usage
 
-#pragma omp parallel for shared(tmpPos)
-	for (int i = 0; uint(i) < mNumberOfParticles; ++i)//warning: i can't be uint, because OMP needs an int (fix how?)
+	for (uint i = 0; i < mNumberOfParticles; ++i)
 	{
 		ofVec3f particlePosition = mParticlePosition[i];
 		ofVec3f particleVelocity = mParticleVelocity[i];

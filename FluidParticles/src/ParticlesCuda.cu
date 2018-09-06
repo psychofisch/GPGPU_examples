@@ -38,8 +38,7 @@ __global__ void particleUpdate(
 	float3 newPos = particlePosition + deltaVelocity;
 
 	// static collision
-	int collisionCnt = 3; //support multiple collisions
-	for (int i = 0; i < numberOfColliders && collisionCnt > 0; i++)
+	for (int i = 0; i < numberOfColliders; i++)
 	{
 		MinMaxDataCuda currentAABB = staticColliders[i];
 		float3 intersection;
@@ -57,23 +56,9 @@ __global__ void particleUpdate(
 			particleVelocity.y *= -fluidDamp;
 		else if (intersection.z == currentAABB.max.z || intersection.z == currentAABB.min.z)
 			particleVelocity.z *= -fluidDamp;
-		//else
-		//	std::cout << "W00T!?\n";//DEBUG
 
-		//particlePosition = intersection;
 		newPos = intersection;
-		break;// DEBUG! this prevents multiple collisions!
-
-			  //	//ofVec3f reflection;
-			  //	ofVec3f n = Particle::directions[closest];
-
-			  //	// source -> https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector#13266
-			  //	particleVelocity = particleVelocity - (2 * particleVelocity.dot(n) * n);
-			  //	particleVelocity *= fluidDamp;
-			  //	
-			  //	collisionCnt = 0;
-			  //	//result = j;
-			  //	//break;// OPT: do not delete this (30% performance loss)
+		break;
 	}
 	// *** sc
 
@@ -85,11 +70,6 @@ __global__ void particleUpdate(
 			|| (dim(newPos, i) < dim(worldAABBmin, i) && dim(tmpVel, i) < 0.0) // min boundary
 			)
 		{
-			/*if (newPos[i] < worldAABB.min[i])
-			newPos[i] = worldAABB.min[i];
-			else
-			newPos[i] = worldAABB.max[i];*/
-
 			dim(tmpVel, i) *= -fluidDamp;
 		}
 	}
@@ -97,7 +77,6 @@ __global__ void particleUpdate(
 	particleVelocity = tmpVel;
 	// *** bbc
 
-	// particleVelocity += dt * particleVelocity * -0.01f;//damping
 	particlePosition += particleVelocity * dt;
 
 	positionOut[index] = make_float4(particlePosition + position, length(particleVelocity));
@@ -144,7 +123,6 @@ __device__ __host__ float3 calculatePressure(const float4* __restrict__ position
 	}
 
 	//compress viscosity TODO: fix the root of this problem and not just limit it manually
-	//float threshold = 50.0;
 	if (influence > 0.f)
 	{
 		viscosityVec = viscosityVec / influence;
