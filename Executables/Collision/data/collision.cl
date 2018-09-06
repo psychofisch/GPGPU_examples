@@ -15,7 +15,9 @@ __kernel void getCollisions(
 	for (int j = 0; j < numberOfBoxes; j++)
 	{
 		if (index == j)
+		{
 			continue;
+		}
 		//int cnt = 0;
 		float3 otherMin = minMaxBuffer[j * 2].xyz;
 		float3 otherMax = minMaxBuffer[(j * 2) + 1].xyz;

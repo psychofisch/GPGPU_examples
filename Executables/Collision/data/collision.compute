@@ -29,21 +29,19 @@ void main(){
 		vec3 otherMin = minMaxBuffer[j * 2].xyz;
 		vec3 otherMax = minMaxBuffer[(j * 2) + 1].xyz;
 
-		bool loop = true;
 		int p = 0;
-		while (loop && p <= 3)
+		for (p = 0; p <= 3; p++)
 		{
 			if ((otherMin[p] < currentMax[p] && otherMin[p] > currentMin[p])
 				|| (otherMax[p] < currentMax[p] && otherMax[p] > currentMin[p])
 				|| (otherMax[p] > currentMax[p] && otherMin[p] < currentMin[p])
 				|| (otherMax[p] < currentMax[p] && otherMin[p] > currentMin[p])) // TODO: optimize this
 			{
-				loop = true;
-				++p;
+				continue;
 			}
 			else
 			{
-				loop = false;
+				break;
 			}
 		}
 
