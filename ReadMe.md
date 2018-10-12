@@ -197,4 +197,4 @@ All settings in ```GPGPU_examples/MiniGame/bin/data/hud.xml``` are saved automat
 * Collision: After a lot of adding and removing of boxes the rendering failed. Boxes that are not colliding get rendered flickering in a cyan and red.
 
 # Author
-Thomas Fischer (psychofisch)
+[psychofisch](https://twitter.com/psychofish_)
