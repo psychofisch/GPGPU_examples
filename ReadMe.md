@@ -1,11 +1,13 @@
 # GPGPU_examples
 
 ## Intro
-This repository contains multiple technical demos that show the power of GPU computing.
+This repository contains multiple technical demos that show the power of GPU computing and also the difference between the used APIs.
 - Fluid: This is a proof of concept implementation of a fluid particles system. The following modes are available: CPU, OpenGL Compute Shader, CUDA, OpenCL and Thrust. (Thrust is disabled by default, because only part of the implementation works)
 - Collision: This demo shows a simple AABB collision detection system. The following modes are available: CPU, OpenGL Compute Shader, CUDA, OpenCL and Thrust.
 - MiniGame: This is a *proof of concept* mini game that is a combination of the 2 demos above. Thrust is not available.
 - VectorAdd: A simple project that only shows the basics of GPU computing. Available modes: CPU, OpenGL Compute Shader, CUDA, OpenCL and Thrust.
+
+Disclaimer: none of these implementations use optimization algorithms! (like a k-d tree for example) They are not optimized in any way, because this was not the goal of the implementations. The goal was to compare the different APIs on a code and performance basis.
 
 ### Build
 All of the included projects require [OpenFrameworks v0.9.8](http://openframeworks.cc/versions/v0.9.8/of_v0.9.8_vs_release.zip) and are configured to support the following folder structure below.  
